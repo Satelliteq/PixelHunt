@@ -31,7 +31,7 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen flex flex-col bg-black text-white dark:bg-black dark:text-white">
+      <div className="min-h-screen flex flex-col bg-white text-black">
         <Header />
         <main className="flex-grow container mx-auto px-4 py-6">
           <Router />
