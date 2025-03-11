@@ -4,11 +4,11 @@ import { SunIcon, MoonIcon } from "lucide-react";
 import { Button } from "./ui/button";
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [theme, setTheme] = useState<"light" | "dark">("dark");
 
   useEffect(() => {
     // Sayfa yüklendiğinde mevcut temayı belirle
-    const savedTheme = localStorage.getItem("theme") as "light" | "dark" || "light";
+    const savedTheme = localStorage.getItem("theme") as "light" | "dark" || "dark";
     setTheme(savedTheme);
     applyTheme(savedTheme);
   }, []);
