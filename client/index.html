@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Pixelhunt - İlerleyen şekilde açılan görsel tahmin oyunu" />
+    <title>Pixelhunt - Görsel Tahmin Oyunu</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1ncmlkLTJ4MiI+PHJlY3QgeD0iMyIgeT0iMyIgd2lkdGg9IjciIGhlaWdodD0iNyIvPjxyZWN0IHg9IjE0IiB5PSIzIiB3aWR0aD0iNyIgaGVpZ2h0PSI3Ii8+PHJlY3QgeD0iMTQiIHk9IjE0IiB3aWR0aD0iNyIgaGVpZ2h0PSI3Ii8+PHJlY3QgeD0iMyIgeT0iMTQiIHdpZHRoPSI3IiBoZWlnaHQ9IjciLz48L3N2Zz4=" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <meta property="og:title" content="Pixelhunt - Görsel Tahmin Oyunu" />
+    <meta property="og:description" content="Resimler parça parça açıldıkça tahminler yapmaya çalışın, ne kadar erken doğru tahminde bulunursanız o kadar çok puan kazanın!" />
+    <meta property="og:type" content="website" />
+    <style>
+      :root {
+        --scrollbar-bg: #1E1E1E;
+        --scrollbar-thumb: #2D2D2D;
+        --scrollbar-thumb-hover: #555;
+      }
+      
+      /* Custom scrollbar for webkit browsers */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      
+      ::-webkit-scrollbar-track {
+        background: var(--scrollbar-bg);
+      }
+      
+      ::-webkit-scrollbar-thumb {
+        background: var(--scrollbar-thumb);
+        border-radius: 4px;
+      }
+      
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--scrollbar-thumb-hover);
+      }
+      
+      html, body {
+        scroll-behavior: smooth;
+        background-color: black;
+      }
+      
+      /* No JS warning - shown only when JS is disabled */
+      .no-js-warning {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #121212;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        font-family: 'Inter', sans-serif;
+        z-index: 9999;
+        padding: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Shown only when JavaScript is disabled -->
+    <noscript>
+      <div class="no-js-warning">
+        <div>
+          <h1>JavaScript Gerekli</h1>
+          <p>Pixelhunt uygulamasını kullanabilmek için lütfen JavaScript'i etkinleştirin.</p>
+        </div>
+      </div>
+    </noscript>
+    
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
