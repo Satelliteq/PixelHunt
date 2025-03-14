@@ -75,9 +75,8 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [heroSlides.length]);
 
-  // Navigation handlers with auto animation reset
-  const prevSlide = () => {
-    // Reset animation by applying new class then removing it after the DOM has updated
+  // Reset animation helper function
+  const resetSlideAnimation = (callback: () => void) => {
     const slides = document.querySelectorAll('.hero-carousel-slide');
     slides.forEach(slide => {
       slide.classList.add('animation-reset');
@@ -88,24 +87,29 @@ export default function Home() {
       slides.forEach(slide => {
         slide.classList.remove('animation-reset');
       });
-      setActiveHeroSlide(prev => (prev - 1 + heroSlides.length) % heroSlides.length);
+      callback();
     }, 10);
   };
   
-  const nextSlide = () => {
-    // Reset animation by applying new class then removing it after the DOM has updated
-    const slides = document.querySelectorAll('.hero-carousel-slide');
-    slides.forEach(slide => {
-      slide.classList.add('animation-reset');
+  // Navigation handlers with auto animation reset
+  const prevSlide = () => {
+    resetSlideAnimation(() => {
+      setActiveHeroSlide(prev => (prev - 1 + heroSlides.length) % heroSlides.length);
     });
-    
-    // Use timeout to ensure DOM changes are processed
-    setTimeout(() => {
-      slides.forEach(slide => {
-        slide.classList.remove('animation-reset');
-      });
+  };
+  
+  const nextSlide = () => {
+    resetSlideAnimation(() => {
       setActiveHeroSlide(prev => (prev + 1) % heroSlides.length);
-    }, 10);
+    });
+  };
+  
+  // For indicator dots
+  const goToSlide = (index: number) => {
+    if (index === activeHeroSlide) return;
+    resetSlideAnimation(() => {
+      setActiveHeroSlide(index);
+    });
   };
 
   // Fetch popular tests
@@ -172,7 +176,7 @@ export default function Home() {
               className={`w-2 h-2 rounded-full transition-colors ${
                 index === activeHeroSlide ? "bg-white" : "bg-white/30"
               }`}
-              onClick={() => setActiveHeroSlide(index)}
+              onClick={() => goToSlide(index)}
             />
           ))}
         </div>
