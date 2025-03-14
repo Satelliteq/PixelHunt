@@ -2,6 +2,8 @@ import {
   users, type User, type InsertUser,
   categories, type Category, type InsertCategory,
   images, type Image, type InsertImage,
+  tests, type Test, type InsertTest,
+  testComments, type TestComment, type InsertTestComment,
   gameScores, type GameScore, type InsertGameScore
 } from "@shared/schema";
 
@@ -28,6 +30,21 @@ export interface IStorage {
   getTopPlayedImages(limit: number): Promise<Image[]>;
   getTopLikedImages(limit: number): Promise<Image[]>;
   
+  // Test operations
+  getAllTests(): Promise<Test[]>;
+  getTest(id: number): Promise<Test | undefined>;
+  getTestsByCategory(categoryId: number): Promise<Test[]>;
+  createTest(test: InsertTest): Promise<Test>;
+  incrementTestPlayCount(id: number): Promise<void>;
+  incrementTestLikeCount(id: number): Promise<void>;
+  getPopularTests(limit: number): Promise<Test[]>;
+  getNewestTests(limit: number): Promise<Test[]>;
+  getFeaturedTests(limit: number): Promise<Test[]>;
+  
+  // Test comment operations
+  getTestComments(testId: number): Promise<TestComment[]>;
+  createTestComment(comment: InsertTestComment): Promise<TestComment>;
+  
   // Game score operations
   saveGameScore(score: InsertGameScore): Promise<GameScore>;
   getUserScores(userId: number): Promise<GameScore[]>;
@@ -39,25 +56,33 @@ export class MemStorage implements IStorage {
   private usersMap: Map<number, User>;
   private categoriesMap: Map<number, Category>;
   private imagesMap: Map<number, Image>;
+  private testsMap: Map<number, Test>;
+  private testCommentsMap: Map<number, TestComment>;
   private gameScoresMap: Map<number, GameScore>;
   
   private currentUserId: number;
   private currentCategoryId: number;
   private currentImageId: number;
+  private currentTestId: number;
+  private currentTestCommentId: number;
   private currentGameScoreId: number;
   
   constructor() {
     this.usersMap = new Map();
     this.categoriesMap = new Map();
     this.imagesMap = new Map();
+    this.testsMap = new Map();
+    this.testCommentsMap = new Map();
     this.gameScoresMap = new Map();
     
     this.currentUserId = 1;
     this.currentCategoryId = 1;
     this.currentImageId = 1;
+    this.currentTestId = 1;
+    this.currentTestCommentId = 1;
     this.currentGameScoreId = 1;
 
-    // Initialize with sample categories
+    // Initialize with sample data
     this.initSampleData();
   }
 
@@ -109,6 +134,62 @@ export class MemStorage implements IStorage {
     
     imagesSample.forEach(image => {
       this.createImage(image);
+    });
+
+    // Add sample tests
+    const testsSample: InsertTest[] = [
+      {
+        title: "Klasik Filmler Testi",
+        description: "Popüler filmler hakkında bilginizi test edin",
+        categoryId: 2,
+        creatorId: null,
+        imageIds: [2],
+        difficulty: 1,
+        isPublic: true,
+        thumbnail: "https://example.com/film-thumbnail.jpg"
+      },
+      {
+        title: "Spor Arabalar Testi",
+        description: "Lüks ve spor arabalar hakkında ne kadar bilgilisiniz?",
+        categoryId: 1,
+        creatorId: null,
+        imageIds: [1],
+        difficulty: 2,
+        isPublic: true,
+        thumbnail: "https://example.com/car-thumbnail.jpg"
+      },
+      {
+        title: "YouTuberlar Testi",
+        description: "Popüler YouTuber'ları ne kadar iyi tanıyorsunuz?",
+        categoryId: 3,
+        creatorId: null,
+        imageIds: [3],
+        difficulty: 1,
+        isPublic: true,
+        thumbnail: "https://example.com/youtuber-thumbnail.jpg"
+      },
+      {
+        title: "Video Oyunları Testi",
+        description: "Video oyunları hakkındaki bilginizi test edin",
+        categoryId: 4,
+        creatorId: null,
+        imageIds: [4],
+        difficulty: 3,
+        isPublic: true,
+        thumbnail: "https://example.com/game-thumbnail.jpg"
+      }
+    ];
+    
+    testsSample.forEach(test => {
+      const id = this.currentTestId++;
+      const newTest = {
+        ...test,
+        id,
+        playCount: 0,
+        likeCount: 0,
+        createdAt: new Date()
+      };
+      this.testsMap.set(id, newTest);
     });
   }
 
@@ -220,6 +301,111 @@ export class MemStorage implements IStorage {
       .slice(0, limit);
   }
 
+  // Test operations
+  async getAllTests(): Promise<Test[]> {
+    return Array.from(this.testsMap.values());
+  }
+
+  async getTest(id: number): Promise<Test | undefined> {
+    return this.testsMap.get(id);
+  }
+
+  async getTestsByCategory(categoryId: number): Promise<Test[]> {
+    return Array.from(this.testsMap.values()).filter(
+      test => test.categoryId === categoryId
+    );
+  }
+
+  async createTest(test: InsertTest): Promise<Test> {
+    const id = this.currentTestId++;
+    const newTest = {
+      ...test,
+      id,
+      playCount: 0,
+      likeCount: 0,
+      createdAt: new Date()
+    };
+    this.testsMap.set(id, newTest);
+    return newTest;
+  }
+
+  async incrementTestPlayCount(id: number): Promise<void> {
+    const test = await this.getTest(id);
+    if (test) {
+      const updatedTest = {
+        ...test,
+        playCount: test.playCount + 1
+      };
+      this.testsMap.set(id, updatedTest);
+    }
+  }
+
+  async incrementTestLikeCount(id: number): Promise<void> {
+    const test = await this.getTest(id);
+    if (test) {
+      const updatedTest = {
+        ...test,
+        likeCount: test.likeCount + 1
+      };
+      this.testsMap.set(id, updatedTest);
+    }
+  }
+
+  async getPopularTests(limit: number): Promise<Test[]> {
+    return Array.from(this.testsMap.values())
+      .sort((a, b) => b.playCount - a.playCount)
+      .slice(0, limit);
+  }
+
+  async getNewestTests(limit: number): Promise<Test[]> {
+    return Array.from(this.testsMap.values())
+      .sort((a, b) => {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      })
+      .slice(0, limit);
+  }
+
+  async getFeaturedTests(limit: number): Promise<Test[]> {
+    // For now, featured tests are a mix of popular and newest tests
+    const popular = await this.getPopularTests(Math.ceil(limit / 2));
+    const newest = await this.getNewestTests(limit);
+    
+    // Combine and remove duplicates
+    const combinedTests = [...popular];
+    
+    for (const test of newest) {
+      if (!combinedTests.some(t => t.id === test.id)) {
+        combinedTests.push(test);
+      }
+      
+      if (combinedTests.length >= limit) {
+        break;
+      }
+    }
+    
+    return combinedTests.slice(0, limit);
+  }
+
+  // Test comment operations
+  async getTestComments(testId: number): Promise<TestComment[]> {
+    return Array.from(this.testCommentsMap.values())
+      .filter(comment => comment.testId === testId)
+      .sort((a, b) => {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+  }
+
+  async createTestComment(comment: InsertTestComment): Promise<TestComment> {
+    const id = this.currentTestCommentId++;
+    const newComment = {
+      ...comment,
+      id,
+      createdAt: new Date()
+    };
+    this.testCommentsMap.set(id, newComment);
+    return newComment;
+  }
+
   // Game score operations
   async saveGameScore(score: InsertGameScore): Promise<GameScore> {
     const id = this.currentGameScoreId++;
@@ -230,8 +416,10 @@ export class MemStorage implements IStorage {
     };
     this.gameScoresMap.set(id, newScore);
     
-    // Update image play count
-    await this.incrementPlayCount(score.imageId);
+    // Update test play count if testId is provided
+    if (score.testId) {
+      await this.incrementTestPlayCount(score.testId);
+    }
     
     // Update user score if userId is provided
     if (score.userId) {
@@ -251,10 +439,6 @@ export class MemStorage implements IStorage {
 
   async getTopScores(limit: number, gameMode?: string): Promise<GameScore[]> {
     let scores = Array.from(this.gameScoresMap.values());
-    
-    if (gameMode) {
-      scores = scores.filter(score => score.gameMode === gameMode);
-    }
     
     return scores
       .sort((a, b) => b.score - a.score)

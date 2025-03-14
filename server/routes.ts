@@ -6,6 +6,8 @@ import {
   insertUserSchema, 
   insertCategorySchema, 
   insertImageSchema, 
+  insertTestSchema,
+  insertTestCommentSchema,
   insertGameScoreSchema,
   gameModesEnum
 } from "@shared/schema";
@@ -211,9 +213,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const gameScoreInput = insertGameScoreSchema.parse(req.body);
       
-      // Validate game mode
-      gameModesEnum.parse(gameScoreInput.gameMode);
-      
       const newScore = await storage.saveGameScore(gameScoreInput);
       res.status(201).json(newScore);
     } catch (error) {
@@ -227,17 +226,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/game/scores/top", async (req: Request, res: Response) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
-      const gameMode = req.query.gameMode as string | undefined;
-      
-      if (gameMode) {
-        try {
-          gameModesEnum.parse(gameMode);
-        } catch (error) {
-          return res.status(400).json({ message: "Invalid game mode" });
-        }
-      }
-      
-      const topScores = await storage.getTopScores(limit, gameMode);
+      const topScores = await storage.getTopScores(limit);
       res.json(topScores);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -283,6 +272,162 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Test routes
+  app.get("/api/tests", async (_req: Request, res: Response) => {
+    try {
+      const tests = await storage.getAllTests();
+      res.json(tests);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  app.get("/api/tests/popular", async (req: Request, res: Response) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
+      const popularTests = await storage.getPopularTests(limit);
+      res.json(popularTests);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  app.get("/api/tests/newest", async (req: Request, res: Response) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
+      const newestTests = await storage.getNewestTests(limit);
+      res.json(newestTests);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  app.get("/api/tests/featured", async (req: Request, res: Response) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
+      const featuredTests = await storage.getFeaturedTests(limit);
+      res.json(featuredTests);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  app.get("/api/tests/category/:categoryId", async (req: Request, res: Response) => {
+    try {
+      const categoryId = parseInt(req.params.categoryId);
+      
+      if (isNaN(categoryId)) {
+        return res.status(400).json({ message: "Invalid category ID" });
+      }
+      
+      const tests = await storage.getTestsByCategory(categoryId);
+      res.json(tests);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  app.get("/api/tests/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid test ID" });
+      }
+      
+      const test = await storage.getTest(id);
+      
+      if (!test) {
+        return res.status(404).json({ message: "Test not found" });
+      }
+      
+      res.json(test);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  app.post("/api/tests", async (req: Request, res: Response) => {
+    try {
+      const testInput = insertTestSchema.parse(req.body);
+      const newTest = await storage.createTest(testInput);
+      res.status(201).json(newTest);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid test data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  app.post("/api/tests/:id/like", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid test ID" });
+      }
+      
+      const test = await storage.getTest(id);
+      
+      if (!test) {
+        return res.status(404).json({ message: "Test not found" });
+      }
+      
+      await storage.incrementTestLikeCount(id);
+      const updatedTest = await storage.getTest(id);
+      
+      res.json(updatedTest);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  // Test comment routes
+  app.get("/api/tests/:testId/comments", async (req: Request, res: Response) => {
+    try {
+      const testId = parseInt(req.params.testId);
+      
+      if (isNaN(testId)) {
+        return res.status(400).json({ message: "Invalid test ID" });
+      }
+      
+      const comments = await storage.getTestComments(testId);
+      res.json(comments);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  app.post("/api/tests/:testId/comments", async (req: Request, res: Response) => {
+    try {
+      const testId = parseInt(req.params.testId);
+      
+      if (isNaN(testId)) {
+        return res.status(400).json({ message: "Invalid test ID" });
+      }
+      
+      const test = await storage.getTest(testId);
+      
+      if (!test) {
+        return res.status(404).json({ message: "Test not found" });
+      }
+      
+      const commentInput = insertTestCommentSchema.parse({
+        ...req.body,
+        testId
+      });
+      
+      const comment = await storage.createTestComment(commentInput);
+      res.status(201).json(comment);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid comment data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
