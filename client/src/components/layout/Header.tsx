@@ -57,7 +57,7 @@ export default function Header() {
       <div className="max-w-content py-3 flex items-center justify-between">
         <div className="flex items-center space-x-6">
           <Link href="/" className="flex items-center">
-            <LogoWithText className="h-9" textClassName="text-2xl" />
+            <LogoWithText className="h-8" textClassName="font-display text-xl tracking-wide" />
           </Link>
           
           <nav className="hidden md:flex items-center space-x-1">
@@ -154,7 +154,7 @@ export default function Header() {
       >
         <div className="flex justify-between items-center mb-8">
           <Link href="/" onClick={() => setMobileMenuOpen(false)}>
-            <LogoWithText className="h-9" textClassName="text-2xl" />
+            <LogoWithText className="h-8" textClassName="font-display text-xl tracking-wide" />
           </Link>
           <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)} aria-label="Kapat">
             <X className="h-5 w-5" />

@@ -92,7 +92,7 @@
     height: 100%;
     opacity: 0;
     visibility: hidden;
-    transform: translateX(80px); /* Reduced for smoother animation */
+    transform: translateX(100%);
     transition: none;
     z-index: 1;
     border-radius: var(--radius);
@@ -100,7 +100,7 @@
 
   .hero-carousel-slide.prev {
     opacity: 0;
-    transform: translateX(-80px); /* Reduced for smoother animation */
+    transform: translateX(-100%);
     z-index: 1;
     transition: none;
   }
@@ -110,12 +110,12 @@
     visibility: visible;
     transform: translateX(0);
     z-index: 10;
-    transition: transform 0.6s ease-out, opacity 0.6s ease-out, visibility 0s;
+    transition: transform 0.7s ease, opacity 0.7s ease, visibility 0s;
   }
 
   .hero-carousel-slide.next {
     opacity: 0;
-    transform: translateX(80px); /* Reduced for smoother animation */
+    transform: translateX(100%);
     z-index: 1;
     transition: none;
   }

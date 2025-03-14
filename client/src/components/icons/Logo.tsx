@@ -1,29 +1,23 @@
 import React from "react";
 
 // SVG representation of the Pixelhunt logo icon based on the provided image
-export function Logo({ className = "w-8 h-8" }: { className?: string }) {
+export function Logo({ className = "w-6 h-6" }: { className?: string }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 512 512"
       className={className}
       fill="currentColor"
-      aria-hidden="true"
     >
-      {/* Grid-based pixelated logo */}
+      {/* Custom SVG path based on the provided pixelated logo image */}
       <g>
-        {/* Top row */}
-        <rect x="0" y="0" width="120" height="120" />
-        <rect x="392" y="0" width="120" height="120" />
-        
-        {/* Middle section */}
-        <rect x="196" y="196" width="120" height="120" />
-        <rect x="392" y="196" width="120" height="120" />
-        <rect x="294" y="294" width="120" height="120" />
-        
-        {/* Bottom row */}
-        <rect x="0" y="392" width="220" height="120" />
-        <rect x="392" y="392" width="120" height="120" />
+        <rect x="0" y="0" width="100" height="100" />
+        <rect x="410" y="0" width="102" height="100" />
+        <rect x="200" y="200" width="100" height="100" />
+        <rect x="400" y="200" width="112" height="100" />
+        <rect x="300" y="300" width="100" height="100" />
+        <rect x="0" y="400" width="200" height="112" />
+        <rect x="400" y="400" width="112" height="112" />
       </g>
     </svg>
   );
@@ -37,7 +31,7 @@ export function LogoWithText({ className = "h-8", textClassName = "text-xl" }: {
   return (
     <div className="flex items-center space-x-3">
       <Logo className={className} />
-      <span className={`font-display text-theme-primary tracking-wider ${textClassName}`}>
+      <span className={`font-display text-theme-primary ${textClassName}`}>
         PIXELHUNT
       </span>
     </div>
