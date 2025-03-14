@@ -7,12 +7,12 @@ import { IconButton } from "@/components/ui/icon-button";
 import ThemeToggle from "@/components/ThemeToggle";
 import { 
   Grid2X2,
-  Zap,
-  List,
   Search,
   PlusCircle,
   User,
-  BookOpen
+  BookOpen,
+  HelpCircle,
+  Mail
 } from "lucide-react";
 
 export default function Header() {
@@ -27,28 +27,28 @@ export default function Header() {
             <span className="font-bold text-xl">Pixelhunt</span>
           </Link>
           
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-6">
             <IconButton
               variant="ghost"
               icon={<Grid2X2 className="w-4 h-4" />}
               label="Kategoriler"
-              className="text-muted-foreground hover:text-foreground text-sm"
+              className="text-muted-foreground hover:text-foreground text-sm px-3"
               onClick={() => {}}
             />
             
             <IconButton
               variant="ghost"
-              icon={<Zap className="w-4 h-4" />}
-              label="Trendler"
-              className="text-muted-foreground hover:text-foreground text-sm"
+              icon={<HelpCircle className="w-4 h-4" />}
+              label="Destek Ol"
+              className="text-muted-foreground hover:text-foreground text-sm px-3"
               onClick={() => {}}
             />
             
             <IconButton
               variant="ghost"
-              icon={<List className="w-4 h-4" />}
-              label="Lider Tablosu"
-              className="text-muted-foreground hover:text-foreground text-sm"
+              icon={<Mail className="w-4 h-4" />}
+              label="İletişim"
+              className="text-muted-foreground hover:text-foreground text-sm px-3"
               onClick={() => {}}
             />
           </div>

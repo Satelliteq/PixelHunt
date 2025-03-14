@@ -56,3 +56,50 @@
     @apply font-sans antialiased bg-background text-foreground;
   }
 }
+
+@layer components {
+  /* Hero Carousel */
+  .hero-carousel {
+    @apply relative overflow-hidden;
+  }
+
+  .hero-carousel-slide {
+    @apply opacity-0 pointer-events-none absolute inset-0 transition-opacity duration-500 ease-in-out;
+  }
+
+  .hero-carousel-slide.active {
+    @apply opacity-100 pointer-events-auto static;
+  }
+
+  /* Light & Dark Mode Styling */
+  :root {
+    --frame-bg: 203 20% 94%;
+    --frame-hover: 203 20% 84%;
+    --frame-tab-bg: 203 20% 88%; 
+    --hero-overlay: 0 0% 0% / 0.05;
+  }
+  
+  .dark {
+    --frame-bg: 240 3.7% 15.9%;
+    --frame-hover: 240 5% 26%;
+    --frame-tab-bg: 240 3.7% 15.9% / 0.5;
+    --hero-overlay: 0 0% 0% / 0.2;
+  }
+  
+  /* Custom frame colors controlled by CSS variables */
+  .custom-frame {
+    background-color: hsl(var(--frame-bg));
+  }
+  
+  .custom-frame:hover {
+    background-color: hsl(var(--frame-hover));
+  }
+  
+  .custom-tab-bg {
+    background-color: hsl(var(--frame-tab-bg));
+  }
+  
+  .custom-hero-overlay {
+    background-color: hsl(var(--hero-overlay));
+  }
+}

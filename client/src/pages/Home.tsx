@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Heart, Trophy, BookOpen, Filter, Clock, Users, Sparkles, Award } from "lucide-react";
+import { Heart, Trophy, BookOpen, Filter, Clock, Users, Sparkles, Award, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Test } from "@shared/schema";
 
 import ContentCard from "@/components/game/ContentCard";
@@ -12,7 +12,54 @@ export default function Home() {
   const [_, navigate] = useLocation();
 
   // Active tab state
-  const [activeTab, setActiveTab] = React.useState("featured");
+  const [activeTab, setActiveTab] = useState("featured");
+  
+  // Hero carousel state
+  const [activeHeroSlide, setActiveHeroSlide] = useState(0);
+  const heroSlides = [
+    {
+      title: "Görsel Hafıza Testlerine Hoş Geldiniz",
+      description: "Binlerce ilginç görsel testini keşfedin veya kendi testlerinizi oluşturun. Arkadaşlarınızla paylaşın ve sıralamada yerinizi alın.",
+      icon: <Award className="h-4 w-4 mr-2" />,
+      cardTitle: "Haftanın En İyi Testi",
+      primaryAction: { text: "Test Oluştur", icon: <BookOpen className="mr-2 h-4 w-4" />, url: "/create-test" },
+      secondaryAction: { text: "Popüler Testler", icon: <Trophy className="mr-2 h-4 w-4" />, url: "#popular" },
+    },
+    {
+      title: "Popüler Testlerle Başlayın",
+      description: "En popüler testlerle becerinizi test edin. Yüksek puan alın ve sıralamada yerinizi alın.",
+      icon: <Trophy className="h-4 w-4 mr-2" />,
+      cardTitle: "En Popüler Test",
+      primaryAction: { text: "Popüler Testler", icon: <Trophy className="mr-2 h-4 w-4" />, url: "#popular" },
+      secondaryAction: { text: "Test Oluştur", icon: <Plus className="mr-2 h-4 w-4" />, url: "/create-test" },
+    },
+    {
+      title: "Kendi Testlerinizi Oluşturun",
+      description: "Kendi görsel testlerinizi oluşturun ve arkadaşlarınızla paylaşın. Yaratıcılığınızı gösterin!",
+      icon: <Plus className="h-4 w-4 mr-2" />,
+      cardTitle: "Test Oluştur",
+      primaryAction: { text: "Test Oluştur", icon: <Plus className="mr-2 h-4 w-4" />, url: "/create-test" },
+      secondaryAction: { text: "Diğer Testler", icon: <BookOpen className="mr-2 h-4 w-4" />, url: "#featured" },
+    }
+  ];
+
+  // Carousel auto rotation
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveHeroSlide(prev => (prev + 1) % heroSlides.length);
+    }, 5000);
+    
+    return () => clearInterval(interval);
+  }, [heroSlides.length]);
+
+  // Navigation handlers
+  const prevSlide = () => {
+    setActiveHeroSlide(prev => (prev - 1 + heroSlides.length) % heroSlides.length);
+  };
+  
+  const nextSlide = () => {
+    setActiveHeroSlide(prev => (prev + 1) % heroSlides.length);
+  };
 
   // Fetch popular tests
   const { data: popularTests, isLoading: isPopularTestsLoading } = useQuery<Test[]>({
