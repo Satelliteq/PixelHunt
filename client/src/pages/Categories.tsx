@@ -15,15 +15,15 @@ export default function Categories() {
   const [activeView, setActiveView] = useState<"grid" | "list">("grid");
   
   // Fetch categories
-  const { data: categories, isLoading } = useQuery({
+  const { data: categories = [], isLoading } = useQuery<Category[]>({
     queryKey: ['/api/categories']
   });
   
   // Filter categories based on search term
-  const filteredCategories = categories ? categories.filter((category: Category) => 
+  const filteredCategories = categories.filter((category: Category) => 
     category.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
     (category.description && category.description.toLowerCase().includes(searchTerm.toLowerCase()))
-  ) : [];
+  );
   
   // Custom icon for each category based on name
   const getCategoryIcon = (name: string) => {
@@ -238,7 +238,7 @@ export default function Categories() {
             <LoadingCards />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {categories && categories.length > 0 
+              {categories.length > 0 
                 ? categories.slice(0, 5).map((category: Category) => (
                     <CategoryCard key={category.id} category={category} />
                   ))
@@ -258,7 +258,7 @@ export default function Categories() {
             <LoadingCards />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {categories && categories.length > 0 
+              {categories.length > 0 
                 ? [...categories].slice(-5).reverse().map((category: Category) => (
                     <CategoryCard key={category.id} category={category} />
                   ))

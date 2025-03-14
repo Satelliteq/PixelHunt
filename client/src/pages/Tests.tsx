@@ -20,17 +20,17 @@ export default function Tests() {
   const [sortOrder, setSortOrder] = useState<string>("newest");
   
   // Fetch tests data
-  const { data: tests, isLoading: testsLoading } = useQuery({
+  const { data: tests = [], isLoading: testsLoading } = useQuery<Test[]>({
     queryKey: ['/api/tests']
   });
   
   // Fetch categories for filter
-  const { data: categories, isLoading: categoriesLoading } = useQuery({
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery<any[]>({
     queryKey: ['/api/categories']
   });
   
   // Filter tests based on search term and other filters
-  const filteredTests = tests ? tests.filter((test: Test) => {
+  const filteredTests = tests.filter((test: Test) => {
     // Search filter
     const matchesSearch = 
       test.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -43,7 +43,7 @@ export default function Tests() {
     const matchesDifficulty = difficultyFilter === "all" || (test.difficulty ? test.difficulty.toString() === difficultyFilter : false);
     
     return matchesSearch && matchesCategory && matchesDifficulty;
-  }) : [];
+  });
   
   // Sort tests based on selected order
   const sortedTests = [...filteredTests].sort((a: Test, b: Test) => {

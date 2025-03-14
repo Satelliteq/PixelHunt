@@ -41,6 +41,7 @@ function Router() {
         </div>
       } />
       <Route path="/contact" component={Contact} />
+      <Route path="/how-to-play" component={HowToPlay} />
       <Route component={NotFound} />
     </Switch>
   );
