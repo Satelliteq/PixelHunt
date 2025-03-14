@@ -101,7 +101,7 @@ export default function Header() {
           
           <Button 
             className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded-full text-sm hidden sm:flex"
-            onClick={() => handleNavigation("/create-test")}
+            onClick={() => handleNavigation("/create")}
           >
             <PlusCircle className="w-4 h-4 mr-1" /> Test Oluştur
           </Button>
@@ -173,7 +173,7 @@ export default function Header() {
         <div className="mt-auto pt-8 flex flex-col space-y-4">
           <Button 
             className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold w-full" 
-            onClick={() => handleNavigation("/create-test")}
+            onClick={() => handleNavigation("/create")}
           >
             <PlusCircle className="w-5 h-5 mr-2" /> Test Oluştur
           </Button>

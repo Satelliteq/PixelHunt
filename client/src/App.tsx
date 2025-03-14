@@ -11,6 +11,7 @@ import TimeGame from "@/pages/TimeGame";
 import LiveGame from "@/pages/LiveGame";
 import TestGame from "@/pages/TestGame";
 import GameScreen from "@/pages/GameScreen";
+import TestCreate from "@/pages/TestCreate";
 import NotFound from "@/pages/not-found";
 
 import Header from "@/components/layout/Header";
@@ -38,12 +39,7 @@ function Router() {
           <p className="text-muted-foreground">Bu sayfa geliştirme aşamasındadır.</p>
         </div>
       } />
-      <Route path="/create" component={() => 
-        <div className="text-center p-10">
-          <h1 className="text-2xl font-bold mb-4">Test Oluştur</h1>
-          <p className="text-muted-foreground">Bu sayfa geliştirme aşamasındadır.</p>
-        </div>
-      } />
+      <Route path="/create" component={TestCreate} />
       <Route path="/support" component={() => 
         <div className="text-center p-10">
           <h1 className="text-2xl font-bold mb-4">Destek</h1>
