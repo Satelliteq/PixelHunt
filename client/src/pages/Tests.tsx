@@ -64,22 +64,22 @@ export default function Tests() {
   });
 
   // Tabs content: popular, newest, featured
-  const { data: popularTests, isLoading: popularLoading } = useQuery({
+  const { data: popularTests = [], isLoading: popularLoading } = useQuery<Test[]>({
     queryKey: ['/api/tests/popular']
   });
   
-  const { data: newestTests, isLoading: newestLoading } = useQuery({
+  const { data: newestTests = [], isLoading: newestLoading } = useQuery<Test[]>({
     queryKey: ['/api/tests/newest']
   });
   
-  const { data: featuredTests, isLoading: featuredLoading } = useQuery({
+  const { data: featuredTests = [], isLoading: featuredLoading } = useQuery<Test[]>({
     queryKey: ['/api/tests/featured']
   });
 
   // Date formatter helper
-  const formatDate = (dateString: string | null) => {
+  const formatDate = (dateString: string | null | Date) => {
     if (!dateString) return "-";
-    const date = new Date(dateString);
+    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
     return new Intl.DateTimeFormat('tr-TR', { 
       year: 'numeric', 
       month: 'short', 
@@ -239,7 +239,7 @@ export default function Tests() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tüm Kategoriler</SelectItem>
-                  {categories && categories.length > 0 ? categories.map((category: any) => (
+                  {categories.length > 0 ? categories.map((category: any) => (
                     <SelectItem key={category.id} value={category.id.toString()}>
                       {category.name}
                     </SelectItem>
@@ -332,7 +332,7 @@ export default function Tests() {
             <LoadingCards />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {popularTests && popularTests.length > 0 
+              {popularTests.length > 0 
                 ? popularTests.map((test: Test) => (
                     <TestCard key={test.id} test={test} />
                   ))
@@ -352,7 +352,7 @@ export default function Tests() {
             <LoadingCards />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {newestTests && newestTests.length > 0 
+              {newestTests.length > 0 
                 ? newestTests.map((test: Test) => (
                     <TestCard key={test.id} test={test} />
                   ))
@@ -372,7 +372,7 @@ export default function Tests() {
             <LoadingCards />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {featuredTests && featuredTests.length > 0 
+              {featuredTests.length > 0 
                 ? featuredTests.map((test: Test) => (
                     <TestCard key={test.id} test={test} />
                   ))
