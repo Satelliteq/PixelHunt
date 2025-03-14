@@ -5,7 +5,8 @@ export default {
   content: ["./client/index.html", "./client/src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     fontFamily: {
-      sans: ['Outfit', 'sans-serif'],
+      sans: ['Rubik', 'sans-serif'],
+      outfit: ['Outfit', 'sans-serif'],
     },
     extend: {
       borderRadius: {
