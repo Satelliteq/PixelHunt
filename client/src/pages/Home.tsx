@@ -36,6 +36,14 @@ export default function Home() {
     navigate(`/test/${testId}`);
   };
 
+  // Helper function to get the number of questions from imageIds
+  const getQuestionCount = (imageIds: unknown): number => {
+    if (Array.isArray(imageIds)) {
+      return imageIds.length;
+    }
+    return 0;
+  };
+
   return (
     <div className="space-y-10">
       {/* Hero Banner */}
@@ -87,7 +95,7 @@ export default function Home() {
                 <div className="flex justify-between items-center mt-2">
                   <div className="flex items-center text-xs text-white/60">
                     <Users className="h-3 w-3 mr-1" /> 
-                    <span>{featuredTests && featuredTests[0] ? featuredTests[0].playCount : "0"} oyuncu</span>
+                    <span>{featuredTests && featuredTests[0] ? (featuredTests[0].playCount || 0) : "0"} oyuncu</span>
                   </div>
                   <Button 
                     variant="ghost" 
@@ -143,7 +151,7 @@ export default function Home() {
                     imageUrl={test.thumbnail || '/default-test-thumb.jpg'}
                     playCount={test.playCount}
                     likeCount={test.likeCount}
-                    duration={`${test.imageIds?.length || 0} soru`}
+                    duration={`${getQuestionCount(test.imageIds)} soru`}
                     onClick={() => handleTestClick(test.id)}
                   />
                 ))
@@ -165,7 +173,7 @@ export default function Home() {
                     imageUrl={test.thumbnail || '/default-test-thumb.jpg'}
                     playCount={test.playCount}
                     likeCount={test.likeCount}
-                    duration={`${test.imageIds?.length || 0} soru`}
+                    duration={`${getQuestionCount(test.imageIds)} soru`}
                     onClick={() => handleTestClick(test.id)}
                   />
                 ))
@@ -187,7 +195,7 @@ export default function Home() {
                     imageUrl={test.thumbnail || '/default-test-thumb.jpg'}
                     playCount={test.playCount}
                     likeCount={test.likeCount}
-                    duration={`${test.imageIds?.length || 0} soru`}
+                    duration={`${getQuestionCount(test.imageIds)} soru`}
                     onClick={() => handleTestClick(test.id)}
                   />
                 ))
