@@ -116,6 +116,11 @@
     transition: none;
   }
   
+  /* Animation reset class for manual slide selection */
+  .hero-carousel-slide.animation-reset {
+    transition: none !important;
+  }
+  
   /* Light mode gradient backgrounds */
   :root:not(.dark) .hero-carousel-slide:nth-child(1) {
     background: linear-gradient(to right, #3494E6, #EC6EAD);
@@ -177,6 +182,13 @@
     --test-frame-hover: 203 20% 96%;
     --test-frame-border: 203 20% 90%;
     --max-content-width: 1400px;
+    
+    /* Text colors for light mode */
+    --text-primary: 240 10% 3.9%;
+    --text-secondary: 240 5.9% 30%;
+    --text-muted: 240 3.8% 46.1%;
+    --text-accent: 47 95% 40%; /* Slightly darker primary for text contrast */
+    --icon-hover: 240 5.9% 10%;
   }
   
   .dark {
@@ -188,6 +200,13 @@
     --test-frame-hover: 240 4% 20%;
     --test-frame-border: 240 5% 26%;
     --max-content-width: 1400px;
+    
+    /* Text colors for dark mode */
+    --text-primary: 0 0% 98%; 
+    --text-secondary: 240 5% 84%;
+    --text-muted: 240 5% 64.9%;
+    --text-accent: 47 95% 60%; /* Slightly brighter primary for text contrast */
+    --icon-hover: 0 0% 98%;
   }
   
   /* Custom frame colors controlled by CSS variables */
@@ -205,6 +224,41 @@
   
   .custom-hero-overlay {
     background-color: hsl(var(--hero-overlay));
+  }
+  
+  /* Custom text color classes for consistent light/dark mode styling */
+  .text-theme-primary {
+    color: hsl(var(--text-primary));
+  }
+  
+  .text-theme-secondary {
+    color: hsl(var(--text-secondary));
+  }
+  
+  .text-theme-muted {
+    color: hsl(var(--text-muted));
+  }
+  
+  .text-theme-accent {
+    color: hsl(var(--text-accent));
+  }
+  
+  /* Hover text effects */
+  .hover-text-primary:hover {
+    color: hsl(var(--text-primary));
+  }
+  
+  .hover-text-accent:hover {
+    color: hsl(var(--text-accent));
+  }
+  
+  /* Hover icons that need to adapt to theme */
+  .icon-hover-effect {
+    transition: color 0.2s ease;
+  }
+  
+  .icon-hover-effect:hover {
+    color: hsl(var(--icon-hover));
   }
   
   /* Test cards styling */

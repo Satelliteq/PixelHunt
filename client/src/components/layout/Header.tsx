@@ -65,7 +65,7 @@ export default function Header() {
               variant="ghost"
               icon={<Grid2X2 className="w-4 h-4" />}
               label="Kategoriler"
-              className="text-muted-foreground hover:text-foreground text-sm px-3"
+              className="text-theme-muted hover-text-primary text-sm px-3 icon-hover-effect"
               onClick={() => handleNavigation("/categories")}
             />
             
@@ -73,7 +73,7 @@ export default function Header() {
               variant="ghost"
               icon={<BookOpen className="w-4 h-4" />}
               label="Testler"
-              className="text-muted-foreground hover:text-foreground text-sm px-3"
+              className="text-theme-muted hover-text-primary text-sm px-3 icon-hover-effect"
               onClick={() => handleNavigation("/tests")}
             />
             
@@ -81,7 +81,7 @@ export default function Header() {
               variant="ghost"
               icon={<HelpCircle className="w-4 h-4" />}
               label="Destek Ol"
-              className="text-muted-foreground hover:text-foreground text-sm px-3"
+              className="text-theme-muted hover-text-primary text-sm px-3 icon-hover-effect"
               onClick={() => handleNavigation("/support")}
             />
             
@@ -89,7 +89,7 @@ export default function Header() {
               variant="ghost"
               icon={<Mail className="w-4 h-4" />}
               label="İletişim"
-              className="text-muted-foreground hover:text-foreground text-sm px-3"
+              className="text-theme-muted hover-text-primary text-sm px-3 icon-hover-effect"
               onClick={() => handleNavigation("/contact")}
             />
           </nav>
@@ -115,7 +115,7 @@ export default function Header() {
             <Button
               variant="ghost"
               size="icon"
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground h-8 w-8"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-theme-muted h-8 w-8 icon-hover-effect"
             >
               <Search className="h-4 w-4" />
             </Button>
@@ -170,7 +170,7 @@ export default function Header() {
           <Button
             variant="ghost"
             size="icon"
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground h-8 w-8"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-theme-muted h-8 w-8 icon-hover-effect"
           >
             <Search className="h-4 w-4" />
           </Button>
@@ -179,7 +179,7 @@ export default function Header() {
         <div className="flex flex-col space-y-4">
           <Button 
             variant="ghost" 
-            className="justify-start" 
+            className="justify-start text-theme-primary icon-hover-effect" 
             onClick={() => handleNavigation("/categories")}
           >
             <Grid2X2 className="w-5 h-5 mr-3" /> Kategoriler
@@ -187,7 +187,7 @@ export default function Header() {
           
           <Button 
             variant="ghost" 
-            className="justify-start" 
+            className="justify-start text-theme-primary icon-hover-effect" 
             onClick={() => handleNavigation("/tests")}
           >
             <BookOpen className="w-5 h-5 mr-3" /> Testler
@@ -195,7 +195,7 @@ export default function Header() {
           
           <Button 
             variant="ghost" 
-            className="justify-start" 
+            className="justify-start text-theme-primary icon-hover-effect" 
             onClick={() => handleNavigation("/support")}
           >
             <HelpCircle className="w-5 h-5 mr-3" /> Destek Ol
@@ -203,7 +203,7 @@ export default function Header() {
           
           <Button 
             variant="ghost" 
-            className="justify-start" 
+            className="justify-start text-theme-primary icon-hover-effect" 
             onClick={() => handleNavigation("/contact")}
           >
             <Mail className="w-5 h-5 mr-3" /> İletişim
