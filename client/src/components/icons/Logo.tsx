@@ -50,8 +50,7 @@ export function LogoWithText({ className = "h-8", textClassName = "text-xl" }: {
   textClassName?: string 
 }) {
   return (
-    <div className="flex items-center space-x-2">
-      <Logo className={className} />
+    <div className="flex items-center">
       <span className={`font-bold tracking-wide ${textClassName}`}>
         Pixelhunt
       </span>
@@ -65,8 +64,7 @@ export function LogoWithTextInverted({ className = "h-8", textClassName = "text-
   textClassName?: string 
 }) {
   return (
-    <div className="flex items-center space-x-2">
-      <LogoInverted className={className} />
+    <div className="flex items-center">
       <span className={`font-bold tracking-wide text-white ${textClassName}`}>
         Pixelhunt
       </span>

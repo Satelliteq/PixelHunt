@@ -274,33 +274,60 @@ export default function Contact() {
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Adresimiz</CardTitle>
-              <CardDescription>Ofisimize uğrayabilir veya mektup gönderebilirsiniz</CardDescription>
+              <CardTitle>Ekibimiz</CardTitle>
+              <CardDescription>Pixelhunt'ın arkasındaki yaratıcı ekip</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <div className="flex items-start space-x-3">
-                <MapPin className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+                  AA
+                </div>
                 <div>
-                  <p className="text-sm font-medium">Merkez Ofis</p>
-                  <p className="text-sm text-muted-foreground">
-                    Levent Mah. Büyükdere Cad. No: 123<br />
-                    Kat: 5, 34394 Şişli/İstanbul
+                  <p className="text-sm font-medium">Ali Aydın</p>
+                  <p className="text-xs text-muted-foreground">Kurucu & Baş Tasarımcı</p>
+                  <p className="text-xs mt-1">
+                    <a href="mailto:ali@pixelhunt.com" className="text-primary hover:underline">ali@pixelhunt.com</a>
                   </p>
                 </div>
               </div>
               
-              <Separator />
+              <div className="flex items-start space-x-3">
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+                  MY
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Merve Yılmaz</p>
+                  <p className="text-xs text-muted-foreground">Yazılım Geliştirme Lideri</p>
+                  <p className="text-xs mt-1">
+                    <a href="mailto:merve@pixelhunt.com" className="text-primary hover:underline">merve@pixelhunt.com</a>
+                  </p>
+                </div>
+              </div>
               
-              <div className="aspect-video w-full rounded-md overflow-hidden">
-                <iframe 
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d12036.049236174268!2d29.006676023010255!3d41.07278267756741!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14cab63f6f8193f1%3A0x68c5c707ab706d58!2sLevent%2C%20%C4%B0stanbul!5e0!3m2!1str!2str!4v1679865327865!5m2!1str!2str" 
-                  width="100%" 
-                  height="100%" 
-                  style={{ border: 0 }} 
-                  allowFullScreen 
-                  loading="lazy" 
-                  referrerPolicy="no-referrer-when-downgrade"
-                />
+              <div className="flex items-start space-x-3">
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+                  CK
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Can Kaya</p>
+                  <p className="text-xs text-muted-foreground">İçerik Yöneticisi</p>
+                  <p className="text-xs mt-1">
+                    <a href="mailto:can@pixelhunt.com" className="text-primary hover:underline">can@pixelhunt.com</a>
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-3">
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+                  ZT
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Zeynep Tekin</p>
+                  <p className="text-xs text-muted-foreground">Kullanıcı Deneyimi Tasarımcısı</p>
+                  <p className="text-xs mt-1">
+                    <a href="mailto:zeynep@pixelhunt.com" className="text-primary hover:underline">zeynep@pixelhunt.com</a>
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
