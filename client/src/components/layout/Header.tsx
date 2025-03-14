@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Logo } from "@/components/icons/Logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { IconButton } from "@/components/ui/icon-button";
 import ThemeToggle from "@/components/ThemeToggle";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { 
   Grid2X2,
   Search,
@@ -20,6 +21,27 @@ import {
 export default function Header() {
   const [_location, navigate] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const isMobile = useIsMobile();
+
+  // Close mobile menu when resizing to desktop
+  useEffect(() => {
+    if (!isMobile && mobileMenuOpen) {
+      setMobileMenuOpen(false);
+    }
+  }, [isMobile, mobileMenuOpen]);
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileMenuOpen]);
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -39,7 +61,7 @@ export default function Header() {
             <span className="font-bold text-xl">Pixelhunt</span>
           </Link>
           
-          <nav className="header-nav items-center space-x-1">
+          <nav className="hidden md:flex items-center space-x-1">
             <IconButton
               variant="ghost"
               icon={<Grid2X2 className="w-4 h-4" />}
@@ -78,8 +100,9 @@ export default function Header() {
           <Button
             variant="ghost"
             size="icon"
-            className="mobile-menu-button mr-2"
+            className="md:hidden mr-2"
             onClick={toggleMobileMenu}
+            aria-label="Menü"
           >
             <Menu className="h-5 w-5" />
           </Button>
@@ -100,7 +123,7 @@ export default function Header() {
           </div>
           
           <Button 
-            className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded-full text-sm hidden sm:flex"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded-full text-sm hidden md:flex"
             onClick={() => handleNavigation("/create")}
           >
             <PlusCircle className="w-4 h-4 mr-1" /> Test Oluştur
@@ -108,7 +131,7 @@ export default function Header() {
           
           <Button
             variant="outline"
-            className="border-border px-4 py-2 rounded-full text-sm hover:bg-accent hidden sm:flex"
+            className="border-border px-4 py-2 rounded-full text-sm hover:bg-accent hidden md:flex"
             onClick={() => handleNavigation("/login")}
           >
             <User className="w-4 h-4 mr-1" /> Giriş Yap
@@ -122,17 +145,36 @@ export default function Header() {
       <div 
         className={`mobile-menu-overlay ${mobileMenuOpen ? 'open' : ''}`}
         onClick={() => setMobileMenuOpen(false)}
+        aria-hidden="true"
       ></div>
       
       {/* Mobile Menu */}
-      <div className={`mobile-menu ${mobileMenuOpen ? 'open' : ''}`}>
+      <div 
+        className={`mobile-menu ${mobileMenuOpen ? 'open' : ''}`}
+        aria-hidden={!mobileMenuOpen}
+      >
         <div className="flex justify-between items-center mb-8">
           <Link href="/" className="flex items-center space-x-2" onClick={() => setMobileMenuOpen(false)}>
             <Logo />
             <span className="font-bold text-xl">Pixelhunt</span>
           </Link>
-          <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}>
+          <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)} aria-label="Kapat">
             <X className="h-5 w-5" />
+          </Button>
+        </div>
+        
+        <div className="relative mb-6">
+          <Input
+            type="text"
+            placeholder="Ara..."
+            className="bg-muted w-full rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground h-8 w-8"
+          >
+            <Search className="h-4 w-4" />
           </Button>
         </div>
         

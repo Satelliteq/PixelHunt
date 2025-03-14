@@ -64,6 +64,7 @@
     overflow: hidden;
     height: 380px;
     padding: 0 1.5rem;
+    margin-bottom: 2rem;
   }
 
   .hero-carousel-slide {
@@ -74,8 +75,15 @@
     height: 100%;
     opacity: 0;
     visibility: hidden;
+    transform: translateX(100%);
+    transition: all 0.7s ease;
+    z-index: 1;
+    border-radius: var(--radius);
+  }
+
+  .hero-carousel-slide.prev {
+    opacity: 0;
     transform: translateX(-100%);
-    transition: transform 0.6s ease, opacity 0.4s ease, visibility 0s 0.4s;
     z-index: 1;
   }
 
@@ -83,21 +91,64 @@
     opacity: 1;
     visibility: visible;
     transform: translateX(0);
-    transition: transform 0.6s ease, opacity 0.4s ease, visibility 0s;
     z-index: 10;
   }
+
+  .hero-carousel-slide.next {
+    opacity: 0;
+    transform: translateX(100%);
+    z-index: 1;
+  }
   
-  /* Her carousel için farklı gradient arka planlar */
-  .hero-carousel-slide:nth-child(1) {
+  /* Light mode gradient backgrounds */
+  :root:not(.dark) .hero-carousel-slide:nth-child(1) {
     background: linear-gradient(to right, #3494E6, #EC6EAD);
   }
   
-  .hero-carousel-slide:nth-child(2) {
+  :root:not(.dark) .hero-carousel-slide:nth-child(2) {
     background: linear-gradient(to right, #11998e, #38ef7d);
   }
   
-  .hero-carousel-slide:nth-child(3) {
+  :root:not(.dark) .hero-carousel-slide:nth-child(3) {
     background: linear-gradient(to right, #FC5C7D, #6A82FB);
+  }
+  
+  /* Dark mode gradient backgrounds - slightly darker to match dark theme */
+  .dark .hero-carousel-slide:nth-child(1) {
+    background: linear-gradient(to right, #1F5C9B, #B53F7E);
+  }
+  
+  .dark .hero-carousel-slide:nth-child(2) {
+    background: linear-gradient(to right, #0B6D5F, #26A857);
+  }
+  
+  .dark .hero-carousel-slide:nth-child(3) {
+    background: linear-gradient(to right, #A13953, #4D5EB8);
+  }
+  
+  /* Carousel controls */
+  .carousel-controls {
+    position: absolute;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 0.5rem;
+    z-index: 20;
+  }
+  
+  .carousel-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .carousel-dot.active {
+    background-color: white;
+    transform: scale(1.2);
   }
 
   /* Light & Dark Mode Styling */

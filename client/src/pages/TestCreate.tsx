@@ -124,6 +124,38 @@ export default function TestCreate() {
     newImages[index].imageUrl = url;
     setImageInputs(newImages);
   };
+  
+  const handleFileUpload = (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Hata",
+        description: "Lütfen bir görsel dosyası yükleyin.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Dosya boyutu kontrolü (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Hata",
+        description: "Görsel boyutu 5MB'dan küçük olmalıdır.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const newImages = [...imageInputs];
+      newImages[index].imageUrl = reader.result as string;
+      setImageInputs(newImages);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const addAnswer = (index: number) => {
     if (!imageInputs[index].tempAnswer.trim()) return;
@@ -311,14 +343,28 @@ export default function TestCreate() {
                   
                   <div className="flex flex-col md:flex-row gap-4">
                     <div className="flex-1">
-                      <FormLabel className="block mb-2">Görsel URL</FormLabel>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="url"
-                          placeholder="https://örnek.com/görsel.jpg"
-                          value={image.imageUrl}
-                          onChange={(e) => updateImageUrl(index, e.target.value)}
-                        />
+                      <FormLabel className="block mb-2">Görsel URL veya Dosya Yükle</FormLabel>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="url"
+                            placeholder="https://örnek.com/görsel.jpg"
+                            value={image.imageUrl}
+                            onChange={(e) => updateImageUrl(index, e.target.value)}
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <label className="flex items-center justify-center cursor-pointer w-full py-2 px-3 border border-dashed rounded text-sm text-muted-foreground hover:bg-muted/50 transition-colors">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => handleFileUpload(index, e)}
+                            />
+                            <Upload className="h-4 w-4 mr-2" />
+                            Bilgisayardan Görsel Yükle
+                          </label>
+                        </div>
                       </div>
                     </div>
                     

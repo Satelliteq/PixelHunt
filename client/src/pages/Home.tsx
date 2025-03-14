@@ -43,11 +43,34 @@ export default function Home() {
     }
   ];
 
+  // Carousel state to track previous and next slides
+  const [slideState, setSlideState] = useState<{
+    prev: number | null;
+    active: number;
+    next: number | null;
+  }>({
+    prev: null,
+    active: 0,
+    next: 1
+  });
+
+  // Update slide state whenever active slide changes
+  useEffect(() => {
+    const prevIndex = (activeHeroSlide - 1 + heroSlides.length) % heroSlides.length;
+    const nextIndex = (activeHeroSlide + 1) % heroSlides.length;
+    
+    setSlideState({
+      prev: prevIndex,
+      active: activeHeroSlide,
+      next: nextIndex
+    });
+  }, [activeHeroSlide, heroSlides.length]);
+
   // Carousel auto rotation
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveHeroSlide(prev => (prev + 1) % heroSlides.length);
-    }, 5000);
+    }, 6000);
     
     return () => clearInterval(interval);
   }, [heroSlides.length]);
@@ -134,7 +157,11 @@ export default function Home() {
         {heroSlides.map((slide, index) => (
           <div 
             key={index} 
-            className={`hero-carousel-slide ${index === activeHeroSlide ? 'active' : ''}`}
+            className={`hero-carousel-slide ${
+              index === slideState.prev ? 'prev' : 
+              index === activeHeroSlide ? 'active' : 
+              index === slideState.next ? 'next' : ''
+            }`}
           >
             <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-10"></div>
             <div className="relative z-10 px-8 py-10 md:p-12 flex flex-col md:flex-row items-center justify-between">
