@@ -1,11 +1,11 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 /* Import Rubik font for Jersey-like appearance */
 @import '@fontsource/rubik/400.css';
 @import '@fontsource/rubik/700.css';
 @import '@fontsource/rubik/900.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @layer base {
   :root {
@@ -89,7 +89,7 @@
     opacity: 0;
     visibility: hidden;
     transform: translateX(100%);
-    transition: all 0.7s ease;
+    transition: none;
     z-index: 1;
     border-radius: var(--radius);
   }
@@ -98,6 +98,7 @@
     opacity: 0;
     transform: translateX(-100%);
     z-index: 1;
+    transition: none;
   }
 
   .hero-carousel-slide.active {
@@ -105,12 +106,14 @@
     visibility: visible;
     transform: translateX(0);
     z-index: 10;
+    transition: transform 0.7s ease, opacity 0.7s ease, visibility 0s;
   }
 
   .hero-carousel-slide.next {
     opacity: 0;
     transform: translateX(100%);
     z-index: 1;
+    transition: none;
   }
   
   /* Light mode gradient backgrounds */

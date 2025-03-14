@@ -75,13 +75,37 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [heroSlides.length]);
 
-  // Navigation handlers
+  // Navigation handlers with auto animation reset
   const prevSlide = () => {
-    setActiveHeroSlide(prev => (prev - 1 + heroSlides.length) % heroSlides.length);
+    // Reset animation by applying new class then removing it after the DOM has updated
+    const slides = document.querySelectorAll('.hero-carousel-slide');
+    slides.forEach(slide => {
+      slide.classList.add('animation-reset');
+    });
+    
+    // Use timeout to ensure DOM changes are processed
+    setTimeout(() => {
+      slides.forEach(slide => {
+        slide.classList.remove('animation-reset');
+      });
+      setActiveHeroSlide(prev => (prev - 1 + heroSlides.length) % heroSlides.length);
+    }, 10);
   };
   
   const nextSlide = () => {
-    setActiveHeroSlide(prev => (prev + 1) % heroSlides.length);
+    // Reset animation by applying new class then removing it after the DOM has updated
+    const slides = document.querySelectorAll('.hero-carousel-slide');
+    slides.forEach(slide => {
+      slide.classList.add('animation-reset');
+    });
+    
+    // Use timeout to ensure DOM changes are processed
+    setTimeout(() => {
+      slides.forEach(slide => {
+        slide.classList.remove('animation-reset');
+      });
+      setActiveHeroSlide(prev => (prev + 1) % heroSlides.length);
+    }, 10);
   };
 
   // Fetch popular tests

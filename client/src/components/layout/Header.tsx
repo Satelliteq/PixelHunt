@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Logo } from "@/components/icons/Logo";
+import { Logo, LogoWithText } from "@/components/icons/Logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { IconButton } from "@/components/ui/icon-button";
@@ -56,9 +56,8 @@ export default function Header() {
     <header className="border-b border-border sticky top-0 bg-background z-20">
       <div className="max-w-content py-3 flex items-center justify-between">
         <div className="flex items-center space-x-6">
-          <Link href="/" className="flex items-center space-x-2">
-            <Logo />
-            <span className="font-bold text-xl">Pixelhunt</span>
+          <Link href="/" className="flex items-center">
+            <LogoWithText className="h-8" textClassName="font-display text-xl tracking-wide" />
           </Link>
           
           <nav className="hidden md:flex items-center space-x-1">
@@ -154,9 +153,8 @@ export default function Header() {
         aria-hidden={!mobileMenuOpen}
       >
         <div className="flex justify-between items-center mb-8">
-          <Link href="/" className="flex items-center space-x-2" onClick={() => setMobileMenuOpen(false)}>
-            <Logo />
-            <span className="font-bold text-xl">Pixelhunt</span>
+          <Link href="/" onClick={() => setMobileMenuOpen(false)}>
+            <LogoWithText className="h-8" textClassName="font-display text-xl tracking-wide" />
           </Link>
           <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)} aria-label="Kapat">
             <X className="h-5 w-5" />
