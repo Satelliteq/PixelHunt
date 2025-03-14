@@ -1,7 +1,7 @@
 import React from "react";
 import { useTheme } from "next-themes";
 
-// SVG representation of the Pixelhunt logo icon based on the provided image
+// SVG representation of the Pixelhunt logo icon with 4 blocks
 export function Logo({ className = "w-6 h-6" }: { className?: string }) {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
@@ -13,20 +13,12 @@ export function Logo({ className = "w-6 h-6" }: { className?: string }) {
       className={className}
       fill={isDark ? "white" : "black"}
     >
-      {/* Custom SVG path based on the provided pixelated logo image */}
+      {/* Simple 4-block grid */}
       <g>
-        {/* Top row */}
-        <rect x="0" y="0" width="20" height="20" />
-        <rect x="80" y="0" width="20" height="20" />
-        
-        {/* Middle section */}
-        <rect x="40" y="40" width="20" height="20" />
-        <rect x="80" y="40" width="20" height="20" />
-        <rect x="60" y="60" width="20" height="20" />
-        
-        {/* Bottom row */}
-        <rect x="0" y="80" width="40" height="20" />
-        <rect x="80" y="80" width="20" height="20" />
+        <rect x="0" y="0" width="45" height="45" />
+        <rect x="55" y="0" width="45" height="45" />
+        <rect x="0" y="55" width="45" height="45" />
+        <rect x="55" y="55" width="45" height="45" />
       </g>
     </svg>
   );
@@ -41,15 +33,12 @@ export function LogoInverted({ className = "w-6 h-6" }: { className?: string }) 
       className={className}
       fill="white"
     >
-      {/* Same structure, but always white fill */}
+      {/* Simple 4-block grid */}
       <g>
-        <rect x="0" y="0" width="20" height="20" />
-        <rect x="80" y="0" width="20" height="20" />
-        <rect x="40" y="40" width="20" height="20" />
-        <rect x="80" y="40" width="20" height="20" />
-        <rect x="60" y="60" width="20" height="20" />
-        <rect x="0" y="80" width="40" height="20" />
-        <rect x="80" y="80" width="20" height="20" />
+        <rect x="0" y="0" width="45" height="45" />
+        <rect x="55" y="0" width="45" height="45" />
+        <rect x="0" y="55" width="45" height="45" />
+        <rect x="55" y="55" width="45" height="45" />
       </g>
     </svg>
   );

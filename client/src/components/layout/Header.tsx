@@ -15,7 +15,8 @@ import {
   HelpCircle,
   Mail,
   Menu,
-  X
+  X,
+  PlayCircle
 } from "lucide-react";
 
 export default function Header() {
@@ -65,7 +66,7 @@ export default function Header() {
               variant="ghost"
               icon={<Grid2X2 className="w-4 h-4" />}
               label="Kategoriler"
-              className="text-theme-muted hover-text-primary text-sm px-3 icon-hover-effect"
+              className="text-foreground hover:text-primary text-sm px-3 font-medium"
               onClick={() => handleNavigation("/categories")}
             />
             
@@ -73,15 +74,23 @@ export default function Header() {
               variant="ghost"
               icon={<BookOpen className="w-4 h-4" />}
               label="Testler"
-              className="text-theme-muted hover-text-primary text-sm px-3 icon-hover-effect"
+              className="text-foreground hover:text-primary text-sm px-3 font-medium"
               onClick={() => handleNavigation("/tests")}
+            />
+            
+            <IconButton
+              variant="ghost"
+              icon={<PlayCircle className="w-4 h-4" />}
+              label="Nasıl Oynanır?"
+              className="text-foreground hover:text-primary text-sm px-3 font-medium"
+              onClick={() => handleNavigation("/how-to-play")}
             />
             
             <IconButton
               variant="ghost"
               icon={<HelpCircle className="w-4 h-4" />}
               label="Destek Ol"
-              className="text-theme-muted hover-text-primary text-sm px-3 icon-hover-effect"
+              className="text-foreground hover:text-primary text-sm px-3 font-medium"
               onClick={() => handleNavigation("/support")}
             />
             
@@ -89,7 +98,7 @@ export default function Header() {
               variant="ghost"
               icon={<Mail className="w-4 h-4" />}
               label="İletişim"
-              className="text-theme-muted hover-text-primary text-sm px-3 icon-hover-effect"
+              className="text-foreground hover:text-primary text-sm px-3 font-medium"
               onClick={() => handleNavigation("/contact")}
             />
           </nav>
@@ -179,7 +188,7 @@ export default function Header() {
         <div className="flex flex-col space-y-4">
           <Button 
             variant="ghost" 
-            className="justify-start text-theme-primary icon-hover-effect" 
+            className="justify-start text-foreground" 
             onClick={() => handleNavigation("/categories")}
           >
             <Grid2X2 className="w-5 h-5 mr-3" /> Kategoriler
@@ -187,7 +196,7 @@ export default function Header() {
           
           <Button 
             variant="ghost" 
-            className="justify-start text-theme-primary icon-hover-effect" 
+            className="justify-start text-foreground" 
             onClick={() => handleNavigation("/tests")}
           >
             <BookOpen className="w-5 h-5 mr-3" /> Testler
@@ -195,7 +204,15 @@ export default function Header() {
           
           <Button 
             variant="ghost" 
-            className="justify-start text-theme-primary icon-hover-effect" 
+            className="justify-start text-foreground" 
+            onClick={() => handleNavigation("/how-to-play")}
+          >
+            <PlayCircle className="w-5 h-5 mr-3" /> Nasıl Oynanır?
+          </Button>
+          
+          <Button 
+            variant="ghost" 
+            className="justify-start text-foreground" 
             onClick={() => handleNavigation("/support")}
           >
             <HelpCircle className="w-5 h-5 mr-3" /> Destek Ol
@@ -203,7 +220,7 @@ export default function Header() {
           
           <Button 
             variant="ghost" 
-            className="justify-start text-theme-primary icon-hover-effect" 
+            className="justify-start text-foreground" 
             onClick={() => handleNavigation("/contact")}
           >
             <Mail className="w-5 h-5 mr-3" /> İletişim

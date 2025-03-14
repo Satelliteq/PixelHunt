@@ -15,6 +15,7 @@ import TestCreate from "@/pages/TestCreate";
 import Categories from "@/pages/Categories";
 import Tests from "@/pages/Tests"; 
 import Contact from "@/pages/Contact";
+import HowToPlay from "@/pages/HowToPlay";
 import NotFound from "@/pages/not-found";
 
 import Header from "@/components/layout/Header";
