@@ -7,6 +7,8 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   score: integer("score").default(0),
+  avatar: text("avatar"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const categories = pgTable("categories", {
@@ -27,13 +29,35 @@ export const images = pgTable("images", {
   likeCount: integer("like_count").default(0),
 });
 
+export const tests = pgTable("tests", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  creatorId: integer("creator_id"), // null if created by system
+  categoryId: integer("category_id"),
+  imageIds: jsonb("image_ids").notNull(), // Array of image IDs
+  difficulty: integer("difficulty").default(1),
+  playCount: integer("play_count").default(0),
+  likeCount: integer("like_count").default(0),
+  isPublic: boolean("is_public").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  thumbnail: text("thumbnail"), // URL for test thumbnail
+});
+
+export const testComments = pgTable("test_comments", {
+  id: serial("id").primaryKey(),
+  testId: integer("test_id").notNull(),
+  userId: integer("user_id").notNull(),
+  comment: text("comment").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const gameScores = pgTable("game_scores", {
   id: serial("id").primaryKey(),
   userId: integer("user_id"),
-  imageId: integer("image_id").notNull(),
-  gameMode: text("game_mode").notNull(),
+  testId: integer("test_id").notNull(),
+  completionTime: integer("completion_time"), // in seconds
   attemptsCount: integer("attempts_count").notNull(),
-  timeSpent: integer("time_spent").notNull(), // in seconds
   score: integer("score").notNull(),
   completed: boolean("completed").default(false),
   createdAt: timestamp("created_at").defaultNow(),
@@ -43,6 +67,7 @@ export const gameScores = pgTable("game_scores", {
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
+  avatar: true,
 });
 
 export const insertCategorySchema = createInsertSchema(categories).pick({
@@ -59,12 +84,28 @@ export const insertImageSchema = createInsertSchema(images).pick({
   difficulty: true,
 });
 
+export const insertTestSchema = createInsertSchema(tests).pick({
+  title: true,
+  description: true,
+  creatorId: true,
+  categoryId: true,
+  imageIds: true,
+  difficulty: true,
+  isPublic: true,
+  thumbnail: true,
+});
+
+export const insertTestCommentSchema = createInsertSchema(testComments).pick({
+  testId: true,
+  userId: true,
+  comment: true,
+});
+
 export const insertGameScoreSchema = createInsertSchema(gameScores).pick({
   userId: true,
-  imageId: true,
-  gameMode: true,
+  testId: true,
+  completionTime: true,
   attemptsCount: true,
-  timeSpent: true,
   score: true,
   completed: true,
 });
@@ -78,6 +119,12 @@ export type Category = typeof categories.$inferSelect;
 
 export type InsertImage = z.infer<typeof insertImageSchema>;
 export type Image = typeof images.$inferSelect;
+
+export type InsertTest = z.infer<typeof insertTestSchema>;
+export type Test = typeof tests.$inferSelect;
+
+export type InsertTestComment = z.infer<typeof insertTestCommentSchema>;
+export type TestComment = typeof testComments.$inferSelect;
 
 export type InsertGameScore = z.infer<typeof insertGameScoreSchema>;
 export type GameScore = typeof gameScores.$inferSelect;

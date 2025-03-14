@@ -10,8 +10,9 @@ import {
   Zap,
   List,
   Search,
-  Gamepad,
-  User
+  PlusCircle,
+  User,
+  BookOpen
 } from "lucide-react";
 
 export default function Header() {
@@ -71,9 +72,9 @@ export default function Header() {
           
           <Button 
             className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded-full text-sm"
-            onClick={() => navigate("/game/test")}
+            onClick={() => navigate("/create-test")}
           >
-            <Gamepad className="w-4 h-4 mr-1" /> Test Oyna
+            <PlusCircle className="w-4 h-4 mr-1" /> Test Oluştur
           </Button>
           
           <Button
