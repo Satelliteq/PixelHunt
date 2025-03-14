@@ -1,7 +1,9 @@
-/* Import Rubik font for Jersey-like appearance */
+/* Import fonts */
 @import '@fontsource/rubik/400.css';
 @import '@fontsource/rubik/700.css';
 @import '@fontsource/rubik/900.css';
+/* Import Bebas Neue as primary display font (similar to Jersey 10) */
+@import '@fontsource/bebas-neue/400.css';
 
 @tailwind base;
 @tailwind components;
@@ -61,11 +63,11 @@
     @apply font-sans antialiased bg-background text-foreground;
   }
   
-  /* Jersey-style font class for logo and headings */
+  /* Jersey 10 style font class for logo and headings */
   .font-display {
-    font-family: 'Rubik', sans-serif;
-    font-weight: 900;
-    letter-spacing: -0.025em;
+    font-family: 'Bebas Neue', 'Rubik', sans-serif;
+    font-weight: 400; /* Bebas Neue is already bold/heavy by default */
+    letter-spacing: 0.02em;
     text-transform: uppercase;
   }
 }

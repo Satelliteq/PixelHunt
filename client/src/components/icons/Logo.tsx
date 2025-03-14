@@ -24,14 +24,16 @@ export function Logo({ className = "w-6 h-6" }: { className?: string }) {
 }
 
 // Full logo with text - use this when you need the logo + text
-export function LogoWithText({ className = "h-8", textClassName = "font-bold text-xl" }: { 
+export function LogoWithText({ className = "h-8", textClassName = "text-xl" }: { 
   className?: string, 
   textClassName?: string 
 }) {
   return (
-    <div className="flex items-center space-x-2">
+    <div className="flex items-center space-x-3">
       <Logo className={className} />
-      <span className={`font-display tracking-wide ${textClassName}`}>Pixelhunt</span>
+      <span className={`font-display text-theme-primary ${textClassName}`}>
+        PIXELHUNT
+      </span>
     </div>
   );
 }
