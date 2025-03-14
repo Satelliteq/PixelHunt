@@ -12,6 +12,9 @@ import LiveGame from "@/pages/LiveGame";
 import TestGame from "@/pages/TestGame";
 import GameScreen from "@/pages/GameScreen";
 import TestCreate from "@/pages/TestCreate";
+import Categories from "@/pages/Categories";
+import Tests from "@/pages/Tests"; 
+import Contact from "@/pages/Contact";
 import NotFound from "@/pages/not-found";
 
 import Header from "@/components/layout/Header";
@@ -27,18 +30,8 @@ function Router() {
       <Route path="/game/live" component={LiveGame} />
       <Route path="/game/test" component={TestGame} />
       <Route path="/play/:testId" component={GameScreen} />
-      <Route path="/categories" component={() => 
-        <div className="text-center p-10">
-          <h1 className="text-2xl font-bold mb-4">Kategoriler</h1>
-          <p className="text-muted-foreground">Bu sayfa geliştirme aşamasındadır.</p>
-        </div>
-      } />
-      <Route path="/tests" component={() => 
-        <div className="text-center p-10">
-          <h1 className="text-2xl font-bold mb-4">Testler</h1>
-          <p className="text-muted-foreground">Bu sayfa geliştirme aşamasındadır.</p>
-        </div>
-      } />
+      <Route path="/categories" component={Categories} />
+      <Route path="/tests" component={Tests} />
       <Route path="/create" component={TestCreate} />
       <Route path="/support" component={() => 
         <div className="text-center p-10">
@@ -46,6 +39,7 @@ function Router() {
           <p className="text-muted-foreground">Bu sayfa geliştirme aşamasındadır.</p>
         </div>
       } />
+      <Route path="/contact" component={Contact} />
       <Route component={NotFound} />
     </Switch>
   );
