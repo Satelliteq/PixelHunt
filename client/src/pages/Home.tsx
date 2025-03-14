@@ -92,9 +92,9 @@ export default function Home() {
   };
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-12">
       {/* Hero Banner Carousel */}
-      <section className="relative overflow-hidden rounded-2xl hero-carousel">
+      <section className="relative overflow-hidden rounded-2xl hero-carousel max-w-content mx-auto">
         {/* Carousel Navigation Buttons */}
         <div className="absolute left-4 top-1/2 -translate-y-1/2 z-30">
           <Button 
@@ -134,7 +134,7 @@ export default function Home() {
         {heroSlides.map((slide, index) => (
           <div 
             key={index} 
-            className={`hero-carousel-slide bg-gradient-to-r from-primary/80 to-primary ${index === activeHeroSlide ? 'active' : ''}`}
+            className={`hero-carousel-slide ${index === activeHeroSlide ? 'active' : ''}`}
           >
             <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-10"></div>
             <div className="relative z-10 px-8 py-10 md:p-12 flex flex-col md:flex-row items-center justify-between">
@@ -206,9 +206,9 @@ export default function Home() {
       </section>
 
       {/* Main Content */}
-      <section>
+      <section className="max-w-content mx-auto">
         <Tabs defaultValue="featured" onValueChange={setActiveTab} className="w-full">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
             <TabsList className="custom-tab-bg">
               <TabsTrigger value="featured" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 <Sparkles className="w-4 h-4 mr-2" />
@@ -224,17 +224,17 @@ export default function Home() {
               </TabsTrigger>
             </TabsList>
             
-            <Button variant="outline" size="sm" className="flex items-center gap-2 custom-frame border-none hover:custom-frame">
+            <Button variant="outline" size="sm" className="flex items-center gap-2 custom-frame border-none hover:custom-frame self-end sm:self-auto">
               <Filter className="w-4 h-4" />
               <span>Filtrele</span>
             </Button>
           </div>
           
           <TabsContent value="featured" className="mt-0">
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {isFeaturedTestsLoading ? (
-                Array(8).fill(0).map((_, index) => (
-                  <div key={index} className="animate-pulse bg-zinc-800 rounded-xl h-[220px]"></div>
+                Array(10).fill(0).map((_, index) => (
+                  <div key={index} className="animate-pulse test-card rounded-xl h-[220px]"></div>
                 ))
               ) : (
                 featuredTests?.map((test) => (
@@ -253,10 +253,10 @@ export default function Home() {
           </TabsContent>
           
           <TabsContent value="popular" className="mt-0">
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {isPopularTestsLoading ? (
-                Array(8).fill(0).map((_, index) => (
-                  <div key={index} className="animate-pulse bg-zinc-800 rounded-xl h-[220px]"></div>
+                Array(10).fill(0).map((_, index) => (
+                  <div key={index} className="animate-pulse test-card rounded-xl h-[220px]"></div>
                 ))
               ) : (
                 popularTests?.map((test) => (
@@ -275,10 +275,10 @@ export default function Home() {
           </TabsContent>
           
           <TabsContent value="newest" className="mt-0">
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {isNewestTestsLoading ? (
-                Array(8).fill(0).map((_, index) => (
-                  <div key={index} className="animate-pulse bg-zinc-800 rounded-xl h-[220px]"></div>
+                Array(10).fill(0).map((_, index) => (
+                  <div key={index} className="animate-pulse test-card rounded-xl h-[220px]"></div>
                 ))
               ) : (
                 newestTests?.map((test) => (
@@ -299,17 +299,17 @@ export default function Home() {
       </section>
 
       {/* Categories Section */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
+      <section className="max-w-content mx-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
           <h2 className="text-xl font-bold flex items-center">
             <Filter className="w-5 h-5 text-primary mr-2" /> Kategorilere Göre Keşfet
           </h2>
-          <Button variant="outline" size="sm" className="text-xs">
+          <Button variant="outline" size="sm" className="text-xs self-end sm:self-auto">
             Tüm Kategoriler
           </Button>
         </div>
         
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
           {/* Category cards - hardcoded for now */}
           <div className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-4 text-center cursor-pointer">
             <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">

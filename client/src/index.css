@@ -63,6 +63,7 @@
     position: relative;
     overflow: hidden;
     height: 380px;
+    padding: 0 1.5rem;
   }
 
   .hero-carousel-slide {
@@ -72,15 +73,31 @@
     width: 100%;
     height: 100%;
     opacity: 0;
-    transform: translateX(100%);
-    transition: transform 0.5s ease, opacity 0.5s ease;
+    visibility: hidden;
+    transform: translateX(-100%);
+    transition: transform 0.6s ease, opacity 0.4s ease, visibility 0s 0.4s;
     z-index: 1;
   }
 
   .hero-carousel-slide.active {
     opacity: 1;
+    visibility: visible;
     transform: translateX(0);
+    transition: transform 0.6s ease, opacity 0.4s ease, visibility 0s;
     z-index: 10;
+  }
+  
+  /* Her carousel için farklı gradient arka planlar */
+  .hero-carousel-slide:nth-child(1) {
+    background: linear-gradient(to right, #3494E6, #EC6EAD);
+  }
+  
+  .hero-carousel-slide:nth-child(2) {
+    background: linear-gradient(to right, #11998e, #38ef7d);
+  }
+  
+  .hero-carousel-slide:nth-child(3) {
+    background: linear-gradient(to right, #FC5C7D, #6A82FB);
   }
 
   /* Light & Dark Mode Styling */
@@ -88,14 +105,22 @@
     --frame-bg: 203 20% 94%;
     --frame-hover: 203 20% 84%;
     --frame-tab-bg: 203 20% 88%; 
-    --hero-overlay: 0 0% 0% / 0.05;
+    --hero-overlay: 0 0% 100% / 0.85;
+    --test-frame-bg: 0 0% 100%;
+    --test-frame-hover: 203 20% 96%;
+    --test-frame-border: 203 20% 90%;
+    --max-content-width: 1400px;
   }
   
   .dark {
     --frame-bg: 240 3.7% 15.9%;
     --frame-hover: 240 5% 26%;
     --frame-tab-bg: 240 3.7% 15.9% / 0.5;
-    --hero-overlay: 0 0% 0% / 0.2;
+    --hero-overlay: 240 10% 3.9% / 0.75;
+    --test-frame-bg: 240 3.7% 15.9%;
+    --test-frame-hover: 240 4% 20%;
+    --test-frame-border: 240 5% 26%;
+    --max-content-width: 1400px;
   }
   
   /* Custom frame colors controlled by CSS variables */
@@ -115,6 +140,67 @@
     background-color: hsl(var(--hero-overlay));
   }
   
+  /* Test cards styling */
+  .test-card {
+    background-color: hsl(var(--test-frame-bg));
+    border: 1px solid hsl(var(--test-frame-border));
+    transition: all 0.2s ease-in-out;
+    overflow: hidden;
+  }
+  
+  .test-card:hover {
+    background-color: hsl(var(--test-frame-hover));
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Max width content containers */
+  .max-w-content {
+    max-width: var(--max-content-width);
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+  
+  /* Mobile Menu */
+  .mobile-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background-color: hsl(var(--background));
+    z-index: 50;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    padding: 2rem;
+  }
+  
+  .mobile-menu.open {
+    transform: translateX(0);
+  }
+  
+  .mobile-menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 40;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease-in-out;
+  }
+  
+  .mobile-menu-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  
   /* Responsive adjustments */
   @media (max-width: 768px) {
     .hero-carousel {
@@ -125,6 +211,56 @@
     .hero-carousel-slide {
       position: relative;
       height: auto;
+    }
+    
+    .header-nav {
+      display: none;
+    }
+    
+    .mobile-menu-button {
+      display: flex;
+    }
+  }
+  
+  @media (min-width: 769px) {
+    .mobile-menu-button {
+      display: none;
+    }
+  }
+  
+  /* Game screen layout */
+  .game-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(auto, 800px) minmax(0, 1fr);
+    gap: 1rem;
+    padding: 1rem;
+  }
+  
+  .game-content {
+    grid-column: 2 / 3;
+    background-color: hsl(var(--background));
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .game-ad-left, .game-ad-right {
+    display: none;
+  }
+  
+  @media (min-width: 1200px) {
+    .game-layout {
+      grid-template-columns: 160px minmax(auto, 800px) 160px;
+    }
+    
+    .game-ad-left {
+      grid-column: 1 / 2;
+      display: block;
+    }
+    
+    .game-ad-right {
+      grid-column: 3 / 4;
+      display: block;
     }
   }
 }
