@@ -178,18 +178,29 @@ export default function Tests() {
   const LoadingCards = () => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {[...Array(6)].map((_, i) => (
-        <Card key={i} className="overflow-hidden animate-pulse">
-          <CardHeader className="bg-muted h-32"></CardHeader>
-          <CardContent className="p-4">
-            <div className="h-5 bg-muted rounded-md mb-3"></div>
-            <div className="h-4 bg-muted rounded-md mb-2 w-3/4"></div>
-            <div className="h-4 bg-muted rounded-md w-1/2"></div>
-          </CardContent>
-          <CardFooter className="px-4 py-3 border-t flex justify-between bg-muted/30">
-            <div className="h-4 bg-muted rounded-md w-1/4"></div>
-            <div className="h-4 bg-muted rounded-md w-1/4"></div>
-          </CardFooter>
-        </Card>
+        <div key={i} className="custom-frame rounded-xl p-5 animate-pulse">
+          <div className="mb-4 flex justify-between items-start">
+            <div className="flex gap-3 items-center">
+              <div className="w-12 h-12 bg-muted rounded-full"></div>
+              <div>
+                <div className="h-5 bg-muted rounded-md w-24 mb-2"></div>
+                <div className="h-3 bg-muted rounded-md w-16"></div>
+              </div>
+            </div>
+            <div className="h-5 bg-muted rounded-full w-16"></div>
+          </div>
+          
+          <div className="h-4 bg-muted rounded-md mb-2 w-full"></div>
+          <div className="h-4 bg-muted rounded-md mb-4 w-3/4"></div>
+          
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-3 bg-muted rounded-md w-16"></div>
+              <div className="h-3 bg-muted rounded-md w-16"></div>
+            </div>
+            <div className="h-7 w-7 bg-muted rounded-full"></div>
+          </div>
+        </div>
       ))}
     </div>
   );

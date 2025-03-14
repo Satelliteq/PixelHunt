@@ -69,18 +69,11 @@ export default function Categories() {
   const LoadingCards = () => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {[...Array(6)].map((_, i) => (
-        <Card key={i} className="overflow-hidden animate-pulse">
-          <CardHeader className="bg-muted h-32"></CardHeader>
-          <CardContent className="p-4">
-            <div className="h-5 bg-muted rounded-md mb-3"></div>
-            <div className="h-4 bg-muted rounded-md mb-2 w-3/4"></div>
-            <div className="h-4 bg-muted rounded-md w-1/2"></div>
-          </CardContent>
-          <CardFooter className="px-4 py-3 border-t flex justify-between bg-muted/30">
-            <div className="h-4 bg-muted rounded-md w-1/4"></div>
-            <div className="h-4 bg-muted rounded-md w-1/4"></div>
-          </CardFooter>
-        </Card>
+        <div key={i} className="custom-frame rounded-xl p-4 text-center animate-pulse">
+          <div className="w-12 h-12 bg-muted rounded-full mx-auto mb-3"></div>
+          <div className="h-5 bg-muted rounded-md w-24 mx-auto mb-2"></div>
+          <div className="h-3 bg-muted rounded-md w-16 mx-auto"></div>
+        </div>
       ))}
     </div>
   );
