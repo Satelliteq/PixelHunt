@@ -80,6 +80,8 @@
     height: 380px;
     padding: 0 1.5rem;
     margin-bottom: 2rem;
+    border-radius: var(--radius);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   }
 
   .hero-carousel-slide {
@@ -90,7 +92,7 @@
     height: 100%;
     opacity: 0;
     visibility: hidden;
-    transform: translateX(100%);
+    transform: translateX(80px); /* Reduced for smoother animation */
     transition: none;
     z-index: 1;
     border-radius: var(--radius);
@@ -98,7 +100,7 @@
 
   .hero-carousel-slide.prev {
     opacity: 0;
-    transform: translateX(-100%);
+    transform: translateX(-80px); /* Reduced for smoother animation */
     z-index: 1;
     transition: none;
   }
@@ -108,12 +110,12 @@
     visibility: visible;
     transform: translateX(0);
     z-index: 10;
-    transition: transform 0.7s ease, opacity 0.7s ease, visibility 0s;
+    transition: transform 0.6s ease-out, opacity 0.6s ease-out, visibility 0s;
   }
 
   .hero-carousel-slide.next {
     opacity: 0;
-    transform: translateX(100%);
+    transform: translateX(80px); /* Reduced for smoother animation */
     z-index: 1;
     transition: none;
   }
@@ -328,12 +330,22 @@
   @media (max-width: 768px) {
     .hero-carousel {
       height: auto;
-      min-height: 500px;
+      min-height: 580px; /* Increased for better mobile content display */
     }
     
     .hero-carousel-slide {
-      position: relative;
-      height: auto;
+      position: absolute; /* Keep as absolute to maintain transitions */
+      height: 100%;
+    }
+    
+    .hero-carousel-slide .custom-hero-overlay {
+      width: 100% !important; /* Force full width on mobile */
+      margin-top: 1rem;
+    }
+
+    .hero-carousel-slide .relative.z-10 {
+      flex-direction: column !important; /* Force column layout */
+      height: 100%;
     }
     
     .header-nav {
