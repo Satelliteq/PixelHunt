@@ -4,8 +4,8 @@ import { Play } from "lucide-react";
 type ContentCardProps = {
   title: string;
   imageUrl?: string;
-  playCount: number;
-  likeCount: number;
+  playCount: number | null;
+  likeCount: number | null;
   duration: string;
   onClick: () => void;
 };
@@ -47,9 +47,9 @@ export default function ContentCard({
       <div className="p-3">
         <p className="text-sm font-medium line-clamp-2">{title}</p>
         <div className="flex items-center mt-2">
-          <span className="text-xs text-zinc-400">{playCount} Oynama</span>
+          <span className="text-xs text-zinc-400">{playCount || 0} Oynama</span>
           <span className="mx-2 text-zinc-500">•</span>
-          <span className="text-xs text-zinc-400">{likeCount} Beğeni</span>
+          <span className="text-xs text-zinc-400">{likeCount || 0} Beğeni</span>
         </div>
       </div>
     </div>
