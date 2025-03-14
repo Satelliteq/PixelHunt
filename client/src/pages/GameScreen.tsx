@@ -5,7 +5,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Clock, Heart, ThumbsUp, User, Award, AlertTriangle } from 'lucide-react';
-import { Image, Test } from '@/shared/schema';
+import { Image, Test } from '../../shared/schema';
 import { toast } from '@/hooks/use-toast';
 
 export default function GameScreen() {
@@ -70,7 +70,7 @@ export default function GameScreen() {
         toast({
           title: "Doğru Cevap!",
           description: `+${response.score} puan kazandınız.`,
-          variant: "success"
+          variant: "default"
         });
 
         // Move to next image or finish game
@@ -97,7 +97,7 @@ export default function GameScreen() {
         toast({
           title: "Yanlış Cevap",
           description: "Tekrar deneyin veya ipucu için biraz bekleyin.",
-          variant: "warning"
+          variant: "default"
         });
       }
     } catch (error) {
@@ -105,7 +105,7 @@ export default function GameScreen() {
       toast({
         title: "Bir hata oluştu",
         description: "Cevabınız kontrol edilirken bir sorun oluştu.",
-        variant: "error"
+        variant: "destructive"
       });
     }
   };
@@ -294,13 +294,13 @@ export default function GameScreen() {
                       toast({
                         title: "Beğeni eklendi",
                         description: "Bu testi beğendiniz!",
-                        variant: "success"
+                        variant: "default"
                       });
                     } catch (error) {
                       toast({
                         title: "Hata",
                         description: "Beğeni eklenirken bir sorun oluştu.",
-                        variant: "error"
+                        variant: "destructive"
                       });
                     }
                   }}
