@@ -27,13 +27,21 @@ export default function Header() {
             <span className="font-bold text-xl">Pixelhunt</span>
           </Link>
           
-          <div className="hidden md:flex items-center space-x-6">
+          <nav className="hidden md:flex items-center space-x-1">
             <IconButton
               variant="ghost"
               icon={<Grid2X2 className="w-4 h-4" />}
               label="Kategoriler"
               className="text-muted-foreground hover:text-foreground text-sm px-3"
-              onClick={() => {}}
+              onClick={() => navigate("/categories")}
+            />
+            
+            <IconButton
+              variant="ghost"
+              icon={<BookOpen className="w-4 h-4" />}
+              label="Testler"
+              className="text-muted-foreground hover:text-foreground text-sm px-3"
+              onClick={() => navigate("/tests")}
             />
             
             <IconButton
@@ -41,7 +49,7 @@ export default function Header() {
               icon={<HelpCircle className="w-4 h-4" />}
               label="Destek Ol"
               className="text-muted-foreground hover:text-foreground text-sm px-3"
-              onClick={() => {}}
+              onClick={() => navigate("/support")}
             />
             
             <IconButton
@@ -49,9 +57,9 @@ export default function Header() {
               icon={<Mail className="w-4 h-4" />}
               label="İletişim"
               className="text-muted-foreground hover:text-foreground text-sm px-3"
-              onClick={() => {}}
+              onClick={() => navigate("/contact")}
             />
-          </div>
+          </nav>
         </div>
         
         <div className="flex items-center space-x-3">

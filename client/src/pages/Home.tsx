@@ -93,77 +93,123 @@ export default function Home() {
 
   return (
     <div className="space-y-10">
-      {/* Hero Banner */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/80 to-primary">
-        <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-10"></div>
-        <div className="relative z-10 p-8 md:p-12 flex flex-col md:flex-row items-center justify-between">
-          <div className="mb-6 md:mb-0 md:max-w-[60%]">
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">Görsel Hafıza Testlerine Hoş Geldiniz</h1>
-            <p className="text-white/80 mb-5">
-              Binlerce ilginç görsel testini keşfedin veya kendi testlerinizi oluşturun.
-              Arkadaşlarınızla paylaşın ve sıralamada yerinizi alın.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Button 
-                onClick={() => navigate("/create-test")}
-                className="bg-white text-primary hover:bg-white/90 font-medium"
-              >
-                <BookOpen className="mr-2 h-4 w-4" /> 
-                Test Oluştur
-              </Button>
-              <Button 
-                variant="outline"
-                className="bg-transparent border-white text-white hover:bg-white/10"
-              >
-                <Trophy className="mr-2 h-4 w-4" /> 
-                Popüler Testler
-              </Button>
-            </div>
-          </div>
-          <div className="flex-shrink-0 w-full md:w-[280px] rounded-xl overflow-hidden bg-black/20 backdrop-blur-sm">
-            <div className="p-4">
-              <h3 className="text-white font-semibold flex items-center">
-                <Award className="h-4 w-4 mr-2" /> Haftanın En İyi Testi
-              </h3>
-              <div className="mt-3 aspect-video rounded-lg overflow-hidden bg-zinc-800">
-                {/* Haftanın test görseli */}
-                {featuredTests && featuredTests[0] && (
-                  <img 
-                    src={featuredTests[0].thumbnail || '/default-test-thumb.jpg'} 
-                    alt={featuredTests[0].title}
-                    className="w-full h-full object-cover" 
-                  />
-                )}
-              </div>
-              <div className="mt-3">
-                <h4 className="text-white text-sm font-medium">
-                  {featuredTests && featuredTests[0] ? featuredTests[0].title : "Test Yükleniyor..."}
-                </h4>
-                <div className="flex justify-between items-center mt-2">
-                  <div className="flex items-center text-xs text-white/60">
-                    <Users className="h-3 w-3 mr-1" /> 
-                    <span>{featuredTests && featuredTests[0] ? (featuredTests[0].playCount || 0) : "0"} oyuncu</span>
-                  </div>
+      {/* Hero Banner Carousel */}
+      <section className="relative overflow-hidden rounded-2xl hero-carousel">
+        {/* Carousel Navigation Buttons */}
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 z-30">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="rounded-full bg-black/20 text-white hover:bg-black/40"
+            onClick={prevSlide}
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+        </div>
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 z-30">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="rounded-full bg-black/20 text-white hover:bg-black/40"
+            onClick={nextSlide}
+          >
+            <ChevronRight className="h-5 w-5" />
+          </Button>
+        </div>
+        
+        {/* Indicator Dots */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex space-x-2">
+          {heroSlides.map((_, index) => (
+            <button
+              key={index}
+              className={`w-2 h-2 rounded-full transition-colors ${
+                index === activeHeroSlide ? "bg-white" : "bg-white/30"
+              }`}
+              onClick={() => setActiveHeroSlide(index)}
+            />
+          ))}
+        </div>
+
+        {/* Carousel Slides */}
+        {heroSlides.map((slide, index) => (
+          <div 
+            key={index} 
+            className={`hero-carousel-slide bg-gradient-to-r from-primary/80 to-primary ${index === activeHeroSlide ? 'active' : ''}`}
+          >
+            <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-10"></div>
+            <div className="relative z-10 px-8 py-10 md:p-12 flex flex-col md:flex-row items-center justify-between">
+              <div className="mb-6 md:mb-0 md:max-w-[60%]">
+                <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">{slide.title}</h1>
+                <p className="text-white/80 mb-5">{slide.description}</p>
+                <div className="flex flex-wrap gap-3">
                   <Button 
-                    variant="ghost" 
-                    size="sm"
-                    className="h-7 text-xs text-white bg-white/10 hover:bg-white/20"
-                    onClick={() => featuredTests && featuredTests[0] && handleTestClick(featuredTests[0].id)}
+                    onClick={() => navigate(slide.primaryAction.url)}
+                    className="bg-white text-primary hover:bg-white/90 font-medium"
                   >
-                    Oyna
+                    {slide.primaryAction.icon}
+                    {slide.primaryAction.text}
                   </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      if (slide.secondaryAction.url.startsWith('#')) {
+                        setActiveTab(slide.secondaryAction.url.substring(1));
+                      } else {
+                        navigate(slide.secondaryAction.url);
+                      }
+                    }}
+                    className="bg-transparent border-white text-white hover:bg-white/10"
+                  >
+                    {slide.secondaryAction.icon}
+                    {slide.secondaryAction.text}
+                  </Button>
+                </div>
+              </div>
+              <div className="flex-shrink-0 w-full md:w-[280px] rounded-xl overflow-hidden custom-hero-overlay backdrop-blur-sm">
+                <div className="p-4">
+                  <h3 className="text-white font-semibold flex items-center">
+                    {slide.icon} {slide.cardTitle}
+                  </h3>
+                  <div className="mt-3 aspect-video rounded-lg overflow-hidden custom-frame">
+                    {featuredTests && featuredTests[0] && (
+                      <img 
+                        src={featuredTests[0].thumbnail || '/default-test-thumb.jpg'} 
+                        alt={featuredTests[0].title}
+                        className="w-full h-full object-cover" 
+                      />
+                    )}
+                  </div>
+                  <div className="mt-3">
+                    <h4 className="text-white text-sm font-medium">
+                      {featuredTests && featuredTests[0] ? featuredTests[0].title : "Test Yükleniyor..."}
+                    </h4>
+                    <div className="flex justify-between items-center mt-2">
+                      <div className="flex items-center text-xs text-white/60">
+                        <Users className="h-3 w-3 mr-1" /> 
+                        <span>{featuredTests && featuredTests[0] ? (featuredTests[0].playCount || 0) : "0"} oyuncu</span>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className="h-7 text-xs text-white bg-white/10 hover:bg-white/20"
+                        onClick={() => featuredTests && featuredTests[0] && handleTestClick(featuredTests[0].id)}
+                      >
+                        Oyna
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        ))}
       </section>
 
       {/* Main Content */}
       <section>
         <Tabs defaultValue="featured" onValueChange={setActiveTab} className="w-full">
           <div className="flex items-center justify-between mb-6">
-            <TabsList className="bg-zinc-800/50">
+            <TabsList className="custom-tab-bg">
               <TabsTrigger value="featured" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 <Sparkles className="w-4 h-4 mr-2" />
                 Öne Çıkanlar
@@ -178,7 +224,7 @@ export default function Home() {
               </TabsTrigger>
             </TabsList>
             
-            <Button variant="outline" size="sm" className="flex items-center gap-2 bg-zinc-800 border-none hover:bg-zinc-700">
+            <Button variant="outline" size="sm" className="flex items-center gap-2 custom-frame border-none hover:custom-frame">
               <Filter className="w-4 h-4" />
               <span>Filtrele</span>
             </Button>
@@ -265,7 +311,7 @@ export default function Home() {
         
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
           {/* Category cards - hardcoded for now */}
-          <div className="bg-zinc-800 hover:bg-zinc-700 transition-colors rounded-xl p-4 text-center cursor-pointer">
+          <div className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-4 text-center cursor-pointer">
             <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
               <BookOpen className="w-6 h-6 text-white" />
             </div>
@@ -273,7 +319,7 @@ export default function Home() {
             <p className="text-xs text-muted-foreground mt-1">120+ test</p>
           </div>
           
-          <div className="bg-zinc-800 hover:bg-zinc-700 transition-colors rounded-xl p-4 text-center cursor-pointer">
+          <div className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-4 text-center cursor-pointer">
             <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
               <span className="text-xl text-white">🌎</span>
             </div>
@@ -281,7 +327,7 @@ export default function Home() {
             <p className="text-xs text-muted-foreground mt-1">86 test</p>
           </div>
           
-          <div className="bg-zinc-800 hover:bg-zinc-700 transition-colors rounded-xl p-4 text-center cursor-pointer">
+          <div className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-4 text-center cursor-pointer">
             <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
               <span className="text-xl text-white">🎬</span>
             </div>
@@ -289,7 +335,7 @@ export default function Home() {
             <p className="text-xs text-muted-foreground mt-1">214 test</p>
           </div>
           
-          <div className="bg-zinc-800 hover:bg-zinc-700 transition-colors rounded-xl p-4 text-center cursor-pointer">
+          <div className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-4 text-center cursor-pointer">
             <div className="w-12 h-12 bg-yellow-600 rounded-full flex items-center justify-center mx-auto mb-3">
               <span className="text-xl text-white">🎨</span>
             </div>
@@ -297,7 +343,7 @@ export default function Home() {
             <p className="text-xs text-muted-foreground mt-1">73 test</p>
           </div>
           
-          <div className="bg-zinc-800 hover:bg-zinc-700 transition-colors rounded-xl p-4 text-center cursor-pointer">
+          <div className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-4 text-center cursor-pointer">
             <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-3">
               <span className="text-xl text-white">🎮</span>
             </div>
@@ -305,7 +351,7 @@ export default function Home() {
             <p className="text-xs text-muted-foreground mt-1">95 test</p>
           </div>
           
-          <div className="bg-zinc-800 hover:bg-zinc-700 transition-colors rounded-xl p-4 text-center cursor-pointer">
+          <div className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-4 text-center cursor-pointer">
             <div className="w-12 h-12 bg-orange-600 rounded-full flex items-center justify-center mx-auto mb-3">
               <span className="text-xl text-white">+</span>
             </div>

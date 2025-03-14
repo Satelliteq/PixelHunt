@@ -60,15 +60,27 @@
 @layer components {
   /* Hero Carousel */
   .hero-carousel {
-    @apply relative overflow-hidden;
+    position: relative;
+    overflow: hidden;
+    height: 380px;
   }
 
   .hero-carousel-slide {
-    @apply opacity-0 pointer-events-none absolute inset-0 transition-opacity duration-500 ease-in-out;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: transform 0.5s ease, opacity 0.5s ease;
+    z-index: 1;
   }
 
   .hero-carousel-slide.active {
-    @apply opacity-100 pointer-events-auto static;
+    opacity: 1;
+    transform: translateX(0);
+    z-index: 10;
   }
 
   /* Light & Dark Mode Styling */
@@ -101,5 +113,18 @@
   
   .custom-hero-overlay {
     background-color: hsl(var(--hero-overlay));
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .hero-carousel {
+      height: auto;
+      min-height: 500px;
+    }
+    
+    .hero-carousel-slide {
+      position: relative;
+      height: auto;
+    }
   }
 }
