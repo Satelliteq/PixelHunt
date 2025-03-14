@@ -12,17 +12,17 @@ export default function HowToPlay() {
       </p>
 
       <Tabs defaultValue="classic" className="mb-12">
-        <TabsList className="mb-6">
-          <TabsTrigger value="classic" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+        <TabsList className="mb-6 custom-tab-bg rounded-xl p-1 flex bg-opacity-50">
+          <TabsTrigger value="classic" className="data-[state=active]:bg-background rounded-lg text-sm px-4">
             Klasik Mod
           </TabsTrigger>
-          <TabsTrigger value="speed" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+          <TabsTrigger value="speed" className="data-[state=active]:bg-background rounded-lg text-sm px-4">
             Hız Modu
           </TabsTrigger>
-          <TabsTrigger value="time" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+          <TabsTrigger value="time" className="data-[state=active]:bg-background rounded-lg text-sm px-4">
             Zamanlı Mod
           </TabsTrigger>
-          <TabsTrigger value="test" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+          <TabsTrigger value="test" className="data-[state=active]:bg-background rounded-lg text-sm px-4">
             Test Modu
           </TabsTrigger>
         </TabsList>

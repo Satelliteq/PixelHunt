@@ -87,77 +87,54 @@ export default function Categories() {
 
   // Category card component
   const CategoryCard = ({ category }: { category: Category }) => (
-    <Link href={`/categories/${category.id}`} key={category.id}>
-      <a className="block h-full">
-        <Card className="overflow-hidden hover:shadow-md transition-all cursor-pointer h-full flex flex-col">
-          <CardHeader 
-            className={`p-0 h-40 bg-gradient-to-r ${getCategoryGradient(category.name)} flex items-center justify-center`}
-          >
-            <div className="w-20 h-20 flex items-center justify-center bg-primary/20 rounded-full">
-              {category.iconUrl ? (
-                <img 
-                  src={category.iconUrl} 
-                  alt={category.name} 
-                  className="w-12 h-12 object-contain"
-                />
-              ) : (
-                getCategoryIcon(category.name)
-              )}
-            </div>
-          </CardHeader>
-          <CardContent className="p-4 flex-grow">
-            <CardTitle className="text-lg mb-2">{category.name}</CardTitle>
-            <CardDescription className="line-clamp-2">
-              {category.description || `${category.name} kategorisindeki içerikleri keşfedin.`}
-            </CardDescription>
-          </CardContent>
-          <CardFooter className="px-4 py-3 border-t flex justify-between items-center bg-muted/30">
-            <Badge variant="outline" className="flex items-center gap-1">
-              <Eye className="h-3 w-3" />
-              <span>{0} Test</span>
-            </Badge>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </CardFooter>
-        </Card>
-      </a>
+    <Link href={`/categories/${category.id}`}>
+      <div className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-4 text-center cursor-pointer">
+        <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center mx-auto mb-3">
+          {category.iconUrl ? (
+            <img 
+              src={category.iconUrl} 
+              alt={category.name} 
+              className="w-6 h-6 object-contain"
+            />
+          ) : (
+            React.cloneElement(getCategoryIcon(category.name) as React.ReactElement, { className: "h-6 w-6 text-white" })
+          )}
+        </div>
+        <h3 className="font-medium">{category.name}</h3>
+        <p className="text-xs text-muted-foreground mt-1">{category.testCount || 0}+ test</p>
+      </div>
     </Link>
   );
 
   // Category list item component
   const CategoryListItem = ({ category }: { category: Category }) => (
-    <Link href={`/categories/${category.id}`} key={category.id}>
-      <a className="block">
-        <Card className="overflow-hidden hover:bg-muted/20 transition-all">
-          <div className="flex items-center p-4">
-            <div className={`w-12 h-12 flex items-center justify-center rounded-full bg-gradient-to-r ${getCategoryGradient(category.name)} mr-4`}>
-              {category.iconUrl ? (
-                <img 
-                  src={category.iconUrl} 
-                  alt={category.name} 
-                  className="w-6 h-6 object-contain"
-                />
-              ) : (
-                React.cloneElement(getCategoryIcon(category.name) as React.ReactElement, { className: "h-6 w-6" })
-              )}
-            </div>
-            <div className="flex-grow">
-              <h3 className="font-medium">{category.name}</h3>
-              <p className="text-sm text-muted-foreground line-clamp-1">
-                {category.description || `${category.name} kategorisindeki içerikleri keşfedin.`}
-              </p>
-            </div>
-            <div className="ml-4 flex items-center gap-3">
-              <Badge variant="outline" className="flex items-center gap-1">
-                <Eye className="h-3 w-3" />
-                <span>{0} Test</span>
-              </Badge>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            </div>
-          </div>
-        </Card>
-      </a>
+    <Link href={`/categories/${category.id}`}>
+      <div className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-4 flex items-center cursor-pointer">
+        <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center mr-4">
+          {category.iconUrl ? (
+            <img 
+              src={category.iconUrl} 
+              alt={category.name} 
+              className="w-6 h-6 object-contain"
+            />
+          ) : (
+            React.cloneElement(getCategoryIcon(category.name) as React.ReactElement, { className: "h-6 w-6 text-white" })
+          )}
+        </div>
+        <div className="flex-grow">
+          <h3 className="font-medium">{category.name}</h3>
+          <p className="text-sm text-muted-foreground line-clamp-1">
+            {category.description || `${category.name} kategorisindeki içerikleri keşfedin.`}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="flex items-center gap-1">
+            <Eye className="h-3 w-3" />
+            <span>{category.testCount || 0} Test</span>
+          </Badge>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        </div>
+      </div>
     </Link>
   );
 
@@ -171,10 +148,10 @@ export default function Categories() {
       </div>
       
       <Tabs defaultValue="all" className="mb-6">
-        <TabsList className="mb-6">
-          <TabsTrigger value="all">Tüm Kategoriler</TabsTrigger>
-          <TabsTrigger value="popular">Popüler</TabsTrigger>
-          <TabsTrigger value="newest">Yeni Eklenenler</TabsTrigger>
+        <TabsList className="mb-6 custom-tab-bg rounded-xl p-1 flex bg-opacity-50">
+          <TabsTrigger value="all" className="data-[state=active]:bg-background rounded-lg text-sm px-4">Tüm Kategoriler</TabsTrigger>
+          <TabsTrigger value="popular" className="data-[state=active]:bg-background rounded-lg text-sm px-4">Popüler</TabsTrigger>
+          <TabsTrigger value="newest" className="data-[state=active]:bg-background rounded-lg text-sm px-4">Yeni Eklenenler</TabsTrigger>
         </TabsList>
         
         <TabsContent value="all">

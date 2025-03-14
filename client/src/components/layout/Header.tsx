@@ -66,7 +66,7 @@ export default function Header() {
               variant="ghost"
               icon={<Grid2X2 className="w-4 h-4" />}
               label="Kategoriler"
-              className="text-foreground hover:text-primary text-sm px-3 font-medium"
+              className="text-foreground hover-text-accent text-sm px-3 font-medium"
               onClick={() => handleNavigation("/categories")}
             />
             
@@ -74,7 +74,7 @@ export default function Header() {
               variant="ghost"
               icon={<BookOpen className="w-4 h-4" />}
               label="Testler"
-              className="text-foreground hover:text-primary text-sm px-3 font-medium"
+              className="text-foreground hover-text-accent text-sm px-3 font-medium"
               onClick={() => handleNavigation("/tests")}
             />
             
@@ -82,7 +82,7 @@ export default function Header() {
               variant="ghost"
               icon={<PlayCircle className="w-4 h-4" />}
               label="Nasıl Oynanır?"
-              className="text-foreground hover:text-primary text-sm px-3 font-medium"
+              className="text-foreground hover-text-accent text-sm px-3 font-medium"
               onClick={() => handleNavigation("/how-to-play")}
             />
             
@@ -90,7 +90,7 @@ export default function Header() {
               variant="ghost"
               icon={<HelpCircle className="w-4 h-4" />}
               label="Destek Ol"
-              className="text-foreground hover:text-primary text-sm px-3 font-medium"
+              className="text-foreground hover-text-accent text-sm px-3 font-medium"
               onClick={() => handleNavigation("/support")}
             />
             
@@ -98,7 +98,7 @@ export default function Header() {
               variant="ghost"
               icon={<Mail className="w-4 h-4" />}
               label="İletişim"
-              className="text-foreground hover:text-primary text-sm px-3 font-medium"
+              className="text-foreground hover-text-accent text-sm px-3 font-medium" 
               onClick={() => handleNavigation("/contact")}
             />
           </nav>
