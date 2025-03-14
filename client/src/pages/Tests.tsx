@@ -89,96 +89,88 @@ export default function Tests() {
 
   // Test card component
   const TestCard = ({ test }: { test: Test }) => (
-    <Link href={`/tests/${test.id}`} key={test.id}>
-      <a className="block h-full">
-        <Card className="overflow-hidden hover:shadow-md transition-all cursor-pointer h-full flex flex-col">
-          <CardHeader 
-            className="p-0 h-40 bg-gradient-to-r from-primary/30 to-primary/10 flex items-center justify-center relative"
-          >
-            <div className="absolute top-2 right-2">
-              <Badge variant="secondary" className="flex items-center gap-1">
-                <Star className="h-3 w-3 text-yellow-500" fill="currentColor" />
-                {getDifficultyText(test.difficulty || 1)}
-              </Badge>
-            </div>
-            <div className="w-20 h-20 flex items-center justify-center bg-primary/20 rounded-full">
-              <span className="text-2xl font-bold text-primary-foreground">
+    <Link href={`/tests/${test.id}`}>
+      <div className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-5 cursor-pointer">
+        <div className="mb-4 flex justify-between items-start">
+          <div className="flex gap-3 items-center">
+            <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white">
+              <span className="text-lg font-bold">
                 {test.title.split(' ').map(word => word[0]).join('').substring(0, 2)}
               </span>
             </div>
-          </CardHeader>
-          <CardContent className="p-4 flex-grow">
-            <CardTitle className="text-lg mb-2">{test.title}</CardTitle>
-            <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-              {test.description}
-            </p>
+            <div>
+              <h3 className="font-medium">{test.title}</h3>
+              <p className="text-xs text-muted-foreground">
+                {formatDate(test.createdAt)}
+              </p>
+            </div>
+          </div>
+          <Badge variant="secondary" className="text-xs">
+            {getDifficultyText(test.difficulty || 1)}
+          </Badge>
+        </div>
+        
+        <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+          {test.description}
+        </p>
+        
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
             <div className="flex items-center text-xs text-muted-foreground">
-              <Calendar className="h-3 w-3 mr-1" />
-              <span>{formatDate(test.createdAt)}</span>
+              <TrendingUp className="h-3 w-3 mr-1" />
+              <span>{test.playCount || 0} Oynanma</span>
             </div>
-          </CardContent>
-          <CardFooter className="px-4 py-3 border-t flex justify-between items-center bg-muted/30">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center text-xs text-muted-foreground">
-                <TrendingUp className="h-3 w-3 mr-1" />
-                <span>{test.playCount || 0}</span>
-              </div>
-              <div className="flex items-center text-xs text-muted-foreground">
-                <Star className="h-3 w-3 mr-1" />
-                <span>{test.likeCount || 0}</span>
-              </div>
+            <div className="flex items-center text-xs text-muted-foreground">
+              <Star className="h-3 w-3 mr-1" />
+              <span>{test.likeCount || 0} Beğeni</span>
             </div>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </CardFooter>
-        </Card>
-      </a>
+          </div>
+          <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
     </Link>
   );
 
   // Test list item component
   const TestListItem = ({ test }: { test: Test }) => (
-    <Link href={`/tests/${test.id}`} key={test.id}>
-      <a className="block">
-        <Card className="overflow-hidden hover:bg-muted/20 transition-all">
-          <div className="flex items-center p-4">
-            <div className="w-12 h-12 flex items-center justify-center bg-primary/10 rounded-full mr-4">
-              <span className="text-lg font-bold text-primary-foreground">
-                {test.title.split(' ').map(word => word[0]).join('').substring(0, 2)}
-              </span>
-            </div>
-            <div className="flex-grow mr-4">
-              <div className="flex items-center gap-2 mb-1">
-                <h3 className="font-medium">{test.title}</h3>
-                <Badge variant="secondary" className="text-xs">
-                  {getDifficultyText(test.difficulty || 1)}
-                </Badge>
-              </div>
-              <p className="text-sm text-muted-foreground line-clamp-1">
-                {test.description}
-              </p>
-            </div>
-            <div className="flex flex-col items-end gap-2">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center text-xs text-muted-foreground">
-                  <TrendingUp className="h-3 w-3 mr-1" />
-                  <span>{test.playCount || 0}</span>
-                </div>
-                <div className="flex items-center text-xs text-muted-foreground">
-                  <Star className="h-3 w-3 mr-1" />
-                  <span>{test.likeCount || 0}</span>
-                </div>
-              </div>
-              <div className="flex items-center text-xs text-muted-foreground">
-                <Calendar className="h-3 w-3 mr-1" />
-                <span>{formatDate(test.createdAt)}</span>
-              </div>
-            </div>
-            <ChevronRight className="h-4 w-4 text-muted-foreground ml-2" />
+    <Link href={`/tests/${test.id}`}>
+      <div className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-4 flex items-center cursor-pointer">
+        <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center mr-4 text-white">
+          <span className="text-lg font-bold">
+            {test.title.split(' ').map(word => word[0]).join('').substring(0, 2)}
+          </span>
+        </div>
+        <div className="flex-grow mr-4">
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className="font-medium">{test.title}</h3>
+            <Badge variant="secondary" className="text-xs">
+              {getDifficultyText(test.difficulty || 1)}
+            </Badge>
           </div>
-        </Card>
-      </a>
+          <p className="text-sm text-muted-foreground line-clamp-1">
+            {test.description}
+          </p>
+        </div>
+        <div className="flex flex-col items-end gap-2">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center text-xs text-muted-foreground">
+              <TrendingUp className="h-3 w-3 mr-1" />
+              <span>{test.playCount || 0} Oynanma</span>
+            </div>
+            <div className="flex items-center text-xs text-muted-foreground">
+              <Star className="h-3 w-3 mr-1" />
+              <span>{test.likeCount || 0} Beğeni</span>
+            </div>
+          </div>
+          <div className="flex items-center text-xs text-muted-foreground">
+            <Calendar className="h-3 w-3 mr-1" />
+            <span>{formatDate(test.createdAt)}</span>
+          </div>
+        </div>
+        <ChevronRight className="h-4 w-4 text-muted-foreground ml-2" />
+      </div>
     </Link>
   );
 
@@ -212,11 +204,11 @@ export default function Tests() {
       </div>
       
       <Tabs defaultValue="all" className="mb-6">
-        <TabsList className="mb-6">
-          <TabsTrigger value="all">Tüm Testler</TabsTrigger>
-          <TabsTrigger value="popular">Popüler</TabsTrigger>
-          <TabsTrigger value="newest">Yeni Eklenenler</TabsTrigger>
-          <TabsTrigger value="featured">Öne Çıkanlar</TabsTrigger>
+        <TabsList className="mb-6 custom-tab-bg rounded-xl p-1 flex bg-opacity-50">
+          <TabsTrigger value="all" className="data-[state=active]:bg-background rounded-lg text-sm px-4">Tüm Testler</TabsTrigger>
+          <TabsTrigger value="popular" className="data-[state=active]:bg-background rounded-lg text-sm px-4">Popüler</TabsTrigger>
+          <TabsTrigger value="newest" className="data-[state=active]:bg-background rounded-lg text-sm px-4">Yeni Eklenenler</TabsTrigger>
+          <TabsTrigger value="featured" className="data-[state=active]:bg-background rounded-lg text-sm px-4">Öne Çıkanlar</TabsTrigger>
         </TabsList>
         
         <TabsContent value="all">

@@ -101,7 +101,7 @@ export default function Categories() {
           )}
         </div>
         <h3 className="font-medium">{category.name}</h3>
-        <p className="text-xs text-muted-foreground mt-1">{category.testCount || 0}+ test</p>
+        <p className="text-xs text-muted-foreground mt-1">0+ test</p>
       </div>
     </Link>
   );
@@ -130,7 +130,7 @@ export default function Categories() {
         <div className="flex items-center gap-2">
           <Badge variant="secondary" className="flex items-center gap-1">
             <Eye className="h-3 w-3" />
-            <span>{category.testCount || 0} Test</span>
+            <span>0 Test</span>
           </Badge>
           <ChevronRight className="h-4 w-4 text-muted-foreground" />
         </div>
