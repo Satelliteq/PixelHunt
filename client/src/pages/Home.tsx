@@ -411,7 +411,7 @@ export default function Home() {
             <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
               <BookOpen className="w-6 h-6 text-white" />
             </div>
-            <h3 className="font-medium">Literature</h3>
+            <h3 className="font-medium">{t('catLiterature')}</h3>
             <p className="text-xs text-muted-foreground mt-1">120+ {t('tests').toLowerCase()}</p>
           </div>
           
@@ -422,7 +422,7 @@ export default function Home() {
             <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
               <span className="text-xl text-white">🌎</span>
             </div>
-            <h3 className="font-medium">Geography</h3>
+            <h3 className="font-medium">{t('catGeography')}</h3>
             <p className="text-xs text-muted-foreground mt-1">86 {t('tests').toLowerCase()}</p>
           </div>
           
@@ -433,7 +433,7 @@ export default function Home() {
             <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
               <span className="text-xl text-white">🎬</span>
             </div>
-            <h3 className="font-medium">Film & TV</h3>
+            <h3 className="font-medium">{t('catFilmTV')}</h3>
             <p className="text-xs text-muted-foreground mt-1">214 {t('tests').toLowerCase()}</p>
           </div>
           
@@ -444,7 +444,7 @@ export default function Home() {
             <div className="w-12 h-12 bg-yellow-600 rounded-full flex items-center justify-center mx-auto mb-3">
               <span className="text-xl text-white">🎨</span>
             </div>
-            <h3 className="font-medium">Art</h3>
+            <h3 className="font-medium">{t('catArt')}</h3>
             <p className="text-xs text-muted-foreground mt-1">73 {t('tests').toLowerCase()}</p>
           </div>
           
@@ -455,7 +455,7 @@ export default function Home() {
             <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-3">
               <span className="text-xl text-white">🎮</span>
             </div>
-            <h3 className="font-medium">Games</h3>
+            <h3 className="font-medium">{t('catGames')}</h3>
             <p className="text-xs text-muted-foreground mt-1">95 {t('tests').toLowerCase()}</p>
           </div>
           
@@ -466,7 +466,7 @@ export default function Home() {
             <div className="w-12 h-12 bg-orange-600 rounded-full flex items-center justify-center mx-auto mb-3">
               <span className="text-xl text-white">+</span>
             </div>
-            <h3 className="font-medium">More</h3>
+            <h3 className="font-medium">{t('catMore')}</h3>
             <p className="text-xs text-muted-foreground mt-1">300+ {t('tests').toLowerCase()}</p>
           </div>
         </div>
