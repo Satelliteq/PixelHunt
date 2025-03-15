@@ -76,9 +76,10 @@ function AdminAccess() {
         // Admin rolü kontrolü (metadata veya doğrudan Supabase üzerinden)
         // user.app_metadata.role'ü kontrol et (yönetici arayüzünden ayarlanması durumunda)
         // user.user_metadata.isAdmin'i kontrol et (SQL ile eklenmiş admin durumunda)
-        // user_metadata'da RLS üzerinden yetkilendirme kontrolü de eklenmektedir
+        // user.user_metadata.role kontrolü de ekledik SQL admin durumu için
         const isAdmin = user.app_metadata?.role === "admin" || 
-                      user.user_metadata?.isAdmin === true;
+                      user.user_metadata?.isAdmin === true ||
+                      user.user_metadata?.role === "admin";
                       
         console.log("Admin check:", { 
           userId: user.id,
@@ -110,8 +111,12 @@ function AdminAccess() {
     );
   }
   
-  // Kullanıcı yüklendi ve admin ise göster
-  if (user && (user.app_metadata?.role === "admin" || user.user_metadata?.isAdmin)) {
+  // Kullanıcı yüklendi ve admin yetkisi varsa göster
+  if (user && (
+    user.app_metadata?.role === "admin" || 
+    user.user_metadata?.isAdmin === true || 
+    user.user_metadata?.role === "admin"
+  )) {
     return <AdminPanel />;
   }
   

@@ -242,26 +242,72 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Kullanıcının admin yetkilerini kontrol eden fonksiyon
   const checkUserAdminStatus = async (userId: string) => {
     try {
-      // Supabase'den kullanıcının RLS rollerini alıyoruz
-      const { data: roleData, error: roleError } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('user_id', userId)
+      console.log("Checking admin status for user ID:", userId);
+      
+      // İlk kontrol: Kullanıcının app_metadata'sında doğrudan "role": "admin" var mı?
+      const { data: userData } = await supabase.auth.getUser();
+      const appMetadataRole = userData?.user?.app_metadata?.role;
+      
+      if (appMetadataRole === "admin") {
+        console.log("User is admin via app_metadata");
+        return true;
+      }
+      
+      // İkinci kontrol: users tablosunda admin rolü var mı?
+      const { data: dbUserData, error: userError } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', userId)
         .single();
       
-      // Eğer kullanıcı admin_users tablosunda varsa, admin rolünü user_metadata'ya ekliyoruz
-      if (roleData && !roleError) {
-        // Supabase user_metadata'yı güncelleyerek isAdmin bayrağını ekliyoruz
+      console.log("DB user data:", dbUserData, "Error:", userError);
+      
+      if (dbUserData?.role === "admin" && !userError) {
+        console.log("User is admin via users table");
+        
+        // Metadata'ya admin bilgisini kaydet
         const { data, error } = await supabase.auth.updateUser({
           data: { isAdmin: true }
         });
         
         if (!error && data.user) {
-          // Güncellenmiş kullanıcı bilgisini state'e set ediyoruz
+          console.log("Updated user metadata with isAdmin flag");
           setUser(data.user);
           return true;
         }
       }
+      
+      // Üçüncü kontrol: admin_users tablosunda kullanıcı var mı?
+      const { data: adminUserData, error: adminError } = await supabase
+        .from('admin_users')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+      
+      console.log("Admin user data:", adminUserData, "Error:", adminError);
+      
+      if (adminUserData && !adminError) {
+        console.log("User is admin via admin_users table");
+        
+        // Metadata'ya admin bilgisini kaydet
+        const { data, error } = await supabase.auth.updateUser({
+          data: { isAdmin: true }
+        });
+        
+        if (!error && data.user) {
+          console.log("Updated user metadata with isAdmin flag");
+          setUser(data.user);
+          return true;
+        }
+      }
+      
+      // Son kontrol: User metadata'da isAdmin true mu?
+      if (userData?.user?.user_metadata?.isAdmin === true) {
+        console.log("User is admin via user_metadata");
+        return true;
+      }
+      
+      console.log("User is not admin");
       return false;
     } catch (error) {
       console.error('Admin status check error:', error);
