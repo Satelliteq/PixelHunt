@@ -251,7 +251,7 @@ export default function Home() {
                         className="h-7 text-xs text-white bg-white/10 hover:bg-white/20"
                         onClick={() => featuredTests && featuredTests[0] && handleTestClick(featuredTests[0].id)}
                       >
-                        Oyna
+                        {t('play')}
                       </Button>
                     </div>
                   </div>
@@ -364,7 +364,7 @@ export default function Home() {
       <section className="max-w-content mx-auto">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
           <h2 className="text-xl font-bold flex items-center">
-            <Filter className="w-5 h-5 text-primary mr-2" /> Kategorilere Göre Keşfet
+            <Filter className="w-5 h-5 text-primary mr-2" /> {t('discoverByCategory')}
           </h2>
           <Button 
             variant="outline" 
@@ -372,7 +372,7 @@ export default function Home() {
             className="text-xs self-end sm:self-auto"
             onClick={() => navigate("/categories")}
           >
-            Tüm Kategoriler
+            {t('allCategories')}
           </Button>
         </div>
         
@@ -385,8 +385,8 @@ export default function Home() {
             <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
               <BookOpen className="w-6 h-6 text-white" />
             </div>
-            <h3 className="font-medium">Edebiyat</h3>
-            <p className="text-xs text-muted-foreground mt-1">120+ test</p>
+            <h3 className="font-medium">Literature</h3>
+            <p className="text-xs text-muted-foreground mt-1">120+ {t('tests').toLowerCase()}</p>
           </div>
           
           <div 
@@ -396,8 +396,8 @@ export default function Home() {
             <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
               <span className="text-xl text-white">🌎</span>
             </div>
-            <h3 className="font-medium">Coğrafya</h3>
-            <p className="text-xs text-muted-foreground mt-1">86 test</p>
+            <h3 className="font-medium">Geography</h3>
+            <p className="text-xs text-muted-foreground mt-1">86 {t('tests').toLowerCase()}</p>
           </div>
           
           <div 
@@ -408,7 +408,7 @@ export default function Home() {
               <span className="text-xl text-white">🎬</span>
             </div>
             <h3 className="font-medium">Film & TV</h3>
-            <p className="text-xs text-muted-foreground mt-1">214 test</p>
+            <p className="text-xs text-muted-foreground mt-1">214 {t('tests').toLowerCase()}</p>
           </div>
           
           <div 
@@ -418,8 +418,8 @@ export default function Home() {
             <div className="w-12 h-12 bg-yellow-600 rounded-full flex items-center justify-center mx-auto mb-3">
               <span className="text-xl text-white">🎨</span>
             </div>
-            <h3 className="font-medium">Sanat</h3>
-            <p className="text-xs text-muted-foreground mt-1">73 test</p>
+            <h3 className="font-medium">Art</h3>
+            <p className="text-xs text-muted-foreground mt-1">73 {t('tests').toLowerCase()}</p>
           </div>
           
           <div 
@@ -429,8 +429,8 @@ export default function Home() {
             <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-3">
               <span className="text-xl text-white">🎮</span>
             </div>
-            <h3 className="font-medium">Oyunlar</h3>
-            <p className="text-xs text-muted-foreground mt-1">95 test</p>
+            <h3 className="font-medium">Games</h3>
+            <p className="text-xs text-muted-foreground mt-1">95 {t('tests').toLowerCase()}</p>
           </div>
           
           <div 
@@ -440,8 +440,8 @@ export default function Home() {
             <div className="w-12 h-12 bg-orange-600 rounded-full flex items-center justify-center mx-auto mb-3">
               <span className="text-xl text-white">+</span>
             </div>
-            <h3 className="font-medium">Daha Fazla</h3>
-            <p className="text-xs text-muted-foreground mt-1">300+ test</p>
+            <h3 className="font-medium">More</h3>
+            <p className="text-xs text-muted-foreground mt-1">300+ {t('tests').toLowerCase()}</p>
           </div>
         </div>
       </section>
