@@ -16,11 +16,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 // Form şeması tanımları
 const loginSchema = z.object({
   email: z.string().email('Geçerli bir e-posta adresi giriniz'),
   password: z.string().min(6, 'Şifre en az 6 karakter olmalıdır'),
+});
+
+const resetPasswordSchema = z.object({
+  email: z.string().email('Geçerli bir e-posta adresi giriniz'),
 });
 
 const registerSchema = z.object({
@@ -35,15 +40,17 @@ const registerSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 type RegisterFormValues = z.infer<typeof registerSchema>;
+type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
 export default function Login() {
   const [_, setLocation] = useLocation();
-  const { user, loading, initialized, signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
+  const { user, loading, initialized, signInWithGoogle, signInWithEmail, signUpWithEmail, sendPasswordResetEmail } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<string>("login");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState<boolean>(false);
 
   useEffect(() => {
     // Kullanıcı zaten giriş yapmışsa profile yönlendir
@@ -52,6 +59,35 @@ export default function Login() {
     }
   }, [user, loading, setLocation]);
 
+  // Login formu
+  const loginForm = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+  
+  // Şifre sıfırlama formu
+  const resetPasswordForm = useForm<ResetPasswordFormValues>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
+
+  // Register formu
+  const registerForm = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
+
+  // Google ile giriş fonksiyonu
   const handleGoogleLogin = async () => {
     try {
       await signInWithGoogle();
@@ -62,6 +98,55 @@ export default function Login() {
         description: 'Google ile giriş yapılırken bir hata oluştu. Lütfen tekrar deneyin.',
         variant: 'destructive',
       });
+    }
+  };
+  
+  // E-posta ile giriş fonksiyonu
+  const handleEmailLogin = async (values: LoginFormValues) => {
+    setIsSubmitting(true);
+    try {
+      await signInWithEmail(values.email, values.password);
+      setLocation('/profile');
+    } catch (error) {
+      console.error('Email login error:', error);
+      // Hata mesajı toast ile gösterildi (AuthContext içinde)
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  // Kayıt ol fonksiyonu
+  const handleRegister = async (values: RegisterFormValues) => {
+    setIsSubmitting(true);
+    try {
+      await signUpWithEmail(values.email, values.password, {
+        username: values.username,
+      });
+      
+      // Başarılı kayıt sonrası giriş tabına geç
+      setActiveTab("login");
+      registerForm.reset();
+      
+    } catch (error) {
+      console.error('Registration error:', error);
+      // Hata mesajı toast ile gösterildi (AuthContext içinde)
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  // Şifre sıfırlama fonksiyonu
+  const handleResetPassword = async (values: ResetPasswordFormValues) => {
+    setIsSubmitting(true);
+    try {
+      await sendPasswordResetEmail(values.email);
+      setIsResetDialogOpen(false);
+      resetPasswordForm.reset();
+    } catch (error) {
+      console.error('Password reset error:', error);
+      // Hata mesajı toast ile gösterildi (AuthContext içinde)
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -105,18 +190,24 @@ export default function Login() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-[80vh]">
+    <div className="flex items-center justify-center min-h-[80vh] p-4">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-2 text-center">
           <div className="flex justify-center mb-4">
             <LogoWithText className="h-12" />
           </div>
-          <CardTitle className="text-2xl">Hesabınıza giriş yapın</CardTitle>
+          <CardTitle className="text-2xl">
+            {activeTab === "login" ? "Hesabınıza giriş yapın" : "Yeni hesap oluşturun"}
+          </CardTitle>
           <CardDescription>
-            Test çözmeye devam etmek veya yeni testler oluşturmak için giriş yapın
+            {activeTab === "login" 
+              ? "Test çözmeye devam etmek veya yeni testler oluşturmak için giriş yapın" 
+              : "Ücretsiz hesap oluşturarak test çözün ve kendi testlerinizi oluşturun"}
           </CardDescription>
         </CardHeader>
+        
         <CardContent className="space-y-4">
+          {/* Google ile giriş butonu */}
           <div className="space-y-4">
             <Button 
               variant="outline" 
@@ -124,10 +215,11 @@ export default function Login() {
               onClick={handleGoogleLogin}
             >
               <FcGoogle className="h-5 w-5" />
-              Google ile devam et
+              Google ile {activeTab === "login" ? "giriş yap" : "kayıt ol"}
             </Button>
           </div>
           
+          {/* Ayraç */}
           <div className="relative my-4">
             <div className="absolute inset-0 flex items-center">
               <Separator />
@@ -139,13 +231,207 @@ export default function Login() {
             </div>
           </div>
           
-          <div className="text-center text-muted-foreground mt-6">
-            <p>E-posta ile giriş özelliği çok yakında aktif olacak</p>
-          </div>
+          {/* Giriş / Kayıt Tabları */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="login">Giriş Yap</TabsTrigger>
+              <TabsTrigger value="register">Kayıt Ol</TabsTrigger>
+            </TabsList>
+            
+            {/* Giriş Tabı İçeriği */}
+            <TabsContent value="login" className="space-y-4 mt-2">
+              <Form {...loginForm}>
+                <form onSubmit={loginForm.handleSubmit(handleEmailLogin)} className="space-y-4">
+                  <FormField
+                    control={loginForm.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <FormControl>
+                            <Input 
+                              placeholder="E-posta adresi" 
+                              className="pl-10" 
+                              {...field} 
+                            />
+                          </FormControl>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={loginForm.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <FormControl>
+                            <Input 
+                              type={showPassword ? "text" : "password"} 
+                              placeholder="Şifre" 
+                              className="pl-10 pr-10" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <button 
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
+                          >
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <div className="text-right">
+                    <Button 
+                      type="button" 
+                      variant="link" 
+                      className="h-auto p-0 text-sm"
+                      onClick={() => setIsResetDialogOpen(true)}
+                    >
+                      Şifrenizi mi unuttunuz?
+                    </Button>
+                  </div>
+                  
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Giriş yapılıyor...' : 'Giriş Yap'}
+                  </Button>
+                </form>
+              </Form>
+            </TabsContent>
+            
+            {/* Kayıt Tabı İçeriği */}
+            <TabsContent value="register" className="space-y-4 mt-2">
+              <Form {...registerForm}>
+                <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
+                  <FormField
+                    control={registerForm.control}
+                    name="username"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="relative">
+                          <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <FormControl>
+                            <Input 
+                              placeholder="Kullanıcı adı" 
+                              className="pl-10" 
+                              {...field} 
+                            />
+                          </FormControl>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={registerForm.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <FormControl>
+                            <Input 
+                              placeholder="E-posta adresi" 
+                              className="pl-10" 
+                              {...field} 
+                            />
+                          </FormControl>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={registerForm.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <FormControl>
+                            <Input 
+                              type={showPassword ? "text" : "password"} 
+                              placeholder="Şifre" 
+                              className="pl-10 pr-10" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <button 
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
+                          >
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={registerForm.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <FormControl>
+                            <Input 
+                              type={showPassword ? "text" : "password"} 
+                              placeholder="Şifreyi onaylayın" 
+                              className="pl-10 pr-10" 
+                              {...field} 
+                            />
+                          </FormControl>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Kayıt yapılıyor...' : 'Hesap Oluştur'}
+                  </Button>
+                </form>
+              </Form>
+            </TabsContent>
+          </Tabs>
         </CardContent>
+        
         <CardFooter className="flex flex-col items-center justify-center gap-4 text-sm text-muted-foreground">
           <p>
-            Giriş yaparak 
+            {activeTab === "login" ? "Hesabınız yok mu? " : "Zaten hesabınız var mı? "}
+            <Button 
+              type="button" 
+              variant="link" 
+              className="h-auto p-0"
+              onClick={() => setActiveTab(activeTab === "login" ? "register" : "login")}
+            >
+              {activeTab === "login" ? "Kaydolun" : "Giriş yapın"}
+            </Button>
+          </p>
+          <p>
+            Devam ederek
             <a href="/terms" className="underline mx-1">Kullanım Şartlarını</a>
             ve
             <a href="/privacy" className="underline mx-1">Gizlilik Politikasını</a>
