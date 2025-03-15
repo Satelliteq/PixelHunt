@@ -22,6 +22,16 @@ export type TranslationKey =
   | 'login'
   | 'signup'
   | 'logout'
+  | 'players'
+  | 'loading'
+  
+  // Category names
+  | 'catLiterature'
+  | 'catGeography'
+  | 'catFilmTV'
+  | 'catArt'
+  | 'catGames'
+  | 'catMore'
   
   // Home page
   | 'heroTitle'
@@ -118,6 +128,16 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     login: 'Giriş Yap',
     signup: 'Kayıt Ol',
     logout: 'Çıkış Yap',
+    players: 'oyuncu',
+    loading: 'Test Yükleniyor...',
+    
+    // Category names
+    catLiterature: 'Edebiyat',
+    catGeography: 'Coğrafya',
+    catFilmTV: 'Film ve TV',
+    catArt: 'Sanat',
+    catGames: 'Oyunlar',
+    catMore: 'Daha Fazla',
     
     // Home page
     heroTitle: 'Görsel tanıma yeteneklerinizi test edin',
@@ -214,6 +234,16 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     login: 'Login',
     signup: 'Sign Up',
     logout: 'Logout',
+    players: 'players',
+    loading: 'Loading Test...',
+    
+    // Category names
+    catLiterature: 'Literature',
+    catGeography: 'Geography',
+    catFilmTV: 'Film & TV',
+    catArt: 'Art',
+    catGames: 'Games',
+    catMore: 'More',
     
     // Home page
     heroTitle: 'Test your visual recognition skills',

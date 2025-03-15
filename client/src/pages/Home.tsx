@@ -18,30 +18,56 @@ export default function Home() {
   
   // Hero carousel state
   const [activeHeroSlide, setActiveHeroSlide] = useState(0);
+  
+  // Define hero slides using translation function
   const heroSlides = [
     {
-      title: "Görsel Hafıza Testlerine Hoş Geldiniz",
-      description: "Binlerce ilginç görsel testini keşfedin veya kendi testlerinizi oluşturun. Arkadaşlarınızla paylaşın ve sıralamada yerinizi alın.",
+      title: t('heroTitle'),
+      description: t('heroDescription'),
       icon: <Award className="h-4 w-4 mr-2" />,
-      cardTitle: "Haftanın En İyi Testi",
-      primaryAction: { text: "Test Oluştur", icon: <BookOpen className="mr-2 h-4 w-4" />, url: "/create-test" },
-      secondaryAction: { text: "Popüler Testler", icon: <Trophy className="mr-2 h-4 w-4" />, url: "#popular" },
+      cardTitle: t('featured'),
+      primaryAction: { 
+        text: t('createTest'), 
+        icon: <BookOpen className="mr-2 h-4 w-4" />, 
+        url: "/create-test" 
+      },
+      secondaryAction: { 
+        text: t('popular'), 
+        icon: <Trophy className="mr-2 h-4 w-4" />, 
+        url: "#popular" 
+      },
     },
     {
-      title: "Popüler Testlerle Başlayın",
-      description: "En popüler testlerle becerinizi test edin. Yüksek puan alın ve sıralamada yerinizi alın.",
+      title: t('heroTitle'),
+      description: t('heroDescription'),
       icon: <Trophy className="h-4 w-4 mr-2" />,
-      cardTitle: "En Popüler Test",
-      primaryAction: { text: "Popüler Testler", icon: <Trophy className="mr-2 h-4 w-4" />, url: "#popular" },
-      secondaryAction: { text: "Test Oluştur", icon: <Plus className="mr-2 h-4 w-4" />, url: "/create-test" },
+      cardTitle: t('popular'),
+      primaryAction: { 
+        text: t('popular'), 
+        icon: <Trophy className="mr-2 h-4 w-4" />, 
+        url: "#popular" 
+      },
+      secondaryAction: { 
+        text: t('createTest'), 
+        icon: <Plus className="mr-2 h-4 w-4" />, 
+        url: "/create-test" 
+      },
     },
     {
-      title: "Kendi Testlerinizi Oluşturun",
-      description: "Kendi görsel testlerinizi oluşturun ve arkadaşlarınızla paylaşın. Yaratıcılığınızı gösterin!",
+      title: t('heroTitle'),
+      description: t('heroDescription'),
       icon: <Plus className="h-4 w-4 mr-2" />,
-      cardTitle: "Test Oluştur",
-      primaryAction: { text: "Test Oluştur", icon: <Plus className="mr-2 h-4 w-4" />, url: "/create-test" },
-      secondaryAction: { text: "Diğer Testler", icon: <BookOpen className="mr-2 h-4 w-4" />, url: "#featured" },
+      cardTitle: t('createTest'),
+      primaryAction: { 
+        text: t('createTest'), 
+        icon: <Plus className="mr-2 h-4 w-4" />, 
+        url: "/create-test" 
+      },
+      secondaryAction: { 
+        text: t('featured'), 
+        icon: <BookOpen className="mr-2 h-4 w-4" />, 
+        url: "#featured" 
+      },
     }
   ];
 
@@ -238,12 +264,12 @@ export default function Home() {
                   </div>
                   <div className="mt-3">
                     <h4 className="text-white text-sm font-medium">
-                      {featuredTests && featuredTests[0] ? featuredTests[0].title : "Test Yükleniyor..."}
+                      {featuredTests && featuredTests[0] ? featuredTests[0].title : t('loading')}
                     </h4>
                     <div className="flex justify-between items-center mt-2">
                       <div className="flex items-center text-xs text-white/60">
                         <Users className="h-3 w-3 mr-1" /> 
-                        <span>{featuredTests && featuredTests[0] ? (featuredTests[0].playCount || 0) : "0"} oyuncu</span>
+                        <span>{featuredTests && featuredTests[0] ? (featuredTests[0].playCount || 0) : "0"} {t('players')}</span>
                       </div>
                       <Button 
                         variant="ghost" 
