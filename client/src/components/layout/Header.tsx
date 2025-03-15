@@ -36,7 +36,7 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isMobile = useIsMobile();
   const { t } = useLanguage();
-  const { user, loading, signOut } = useAuth();
+  const { user, loading, initialized, signOut } = useAuth();
 
   // Close mobile menu when resizing to desktop
   useEffect(() => {

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { FcGoogle } from 'react-icons/fc';
+import { AlertTriangle } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { useLanguage } from '@/lib/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
@@ -11,7 +12,7 @@ import { LogoWithText } from '@/components/icons/Logo';
 
 export default function Login() {
   const [_, setLocation] = useLocation();
-  const { user, loading, signInWithGoogle } = useAuth();
+  const { user, loading, initialized, signInWithGoogle } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
 
@@ -37,6 +38,41 @@ export default function Login() {
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Yükleniyor...</div>;
+  }
+  
+  if (!initialized) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[80vh] px-4">
+        <Card className="w-full max-w-md shadow-lg">
+          <CardHeader className="space-y-2 text-center">
+            <div className="flex justify-center mb-4">
+              <LogoWithText className="h-12" />
+            </div>
+            <CardTitle className="text-2xl">Bağlantı Hatası</CardTitle>
+            <CardDescription>
+              Kimlik doğrulama servisi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="p-4 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-md text-amber-800 dark:text-amber-200">
+              <div className="flex items-center">
+                <AlertTriangle className="h-5 w-5 mr-2" />
+                <p>Kimlik doğrulama servisi bağlantı hatası</p>
+              </div>
+              <p className="text-sm mt-2">
+                Sunucu yapılandırması eksik olabilir. Yine de uygulamayı anonim olarak kullanabilirsiniz.
+              </p>
+            </div>
+            <Button 
+              className="w-full"
+              onClick={() => setLocation('/')}
+            >
+              Ana Sayfaya Dön
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
