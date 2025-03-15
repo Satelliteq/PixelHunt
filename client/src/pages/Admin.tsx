@@ -73,8 +73,21 @@ function AdminAccess() {
         });
         setLocation("/login");
       } else {
-        // Admin rolü kontrolü
-        const isAdmin = user.app_metadata?.role === "admin" || user.user_metadata?.isAdmin;
+        // Admin rolü kontrolü (metadata veya doğrudan Supabase üzerinden)
+        // user.app_metadata.role'ü kontrol et (yönetici arayüzünden ayarlanması durumunda)
+        // user.user_metadata.isAdmin'i kontrol et (SQL ile eklenmiş admin durumunda)
+        // user_metadata'da RLS üzerinden yetkilendirme kontrolü de eklenmektedir
+        const isAdmin = user.app_metadata?.role === "admin" || 
+                      user.user_metadata?.isAdmin === true;
+                      
+        console.log("Admin check:", { 
+          userId: user.id,
+          email: user.email,
+          app_metadata: user.app_metadata,
+          user_metadata: user.user_metadata,
+          isAdmin: isAdmin
+        });
+        
         if (!isAdmin) {
           toast({
             title: "Erişim reddedildi",

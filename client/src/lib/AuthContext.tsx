@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from './supabase';
 import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from './queryClient';
 
 type AuthContextType = {
   user: User | null;
@@ -238,6 +239,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Kullanıcının admin yetkilerini kontrol eden fonksiyon
+  const checkUserAdminStatus = async (userId: string) => {
+    try {
+      // Supabase'den kullanıcının RLS rollerini alıyoruz
+      const { data: roleData, error: roleError } = await supabase
+        .from('admin_users')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+      
+      // Eğer kullanıcı admin_users tablosunda varsa, admin rolünü user_metadata'ya ekliyoruz
+      if (roleData && !roleError) {
+        // Supabase user_metadata'yı güncelleyerek isAdmin bayrağını ekliyoruz
+        const { data, error } = await supabase.auth.updateUser({
+          data: { isAdmin: true }
+        });
+        
+        if (!error && data.user) {
+          // Güncellenmiş kullanıcı bilgisini state'e set ediyoruz
+          setUser(data.user);
+          return true;
+        }
+      }
+      return false;
+    } catch (error) {
+      console.error('Admin status check error:', error);
+      return false;
+    }
+  };
+
   // Initialize auth state
   useEffect(() => {
     const initializeAuth = async () => {
@@ -271,10 +302,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { data } = await supabase.auth.getSession();
         if (data.session?.user) {
           setUser(data.session.user);
+          
+          // Kullanıcı giriş yaptıysa admin durumunu kontrol et
+          await checkUserAdminStatus(data.session.user.id);
         }
         
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-          setUser(session?.user || null);
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+          if (session?.user) {
+            setUser(session.user);
+            // Auth değiştiğinde admin durumunu tekrar kontrol et
+            await checkUserAdminStatus(session.user.id);
+          } else {
+            setUser(null);
+          }
           setLoading(false);
         });
         
