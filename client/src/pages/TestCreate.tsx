@@ -57,7 +57,7 @@ export default function TestCreate() {
   ]);
 
   // Fetch categories
-  const { data: categories, isLoading: categoriesLoading } = useQuery({
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery<any[]>({
     queryKey: ['/api/categories'],
   });
 
@@ -134,19 +134,29 @@ export default function TestCreate() {
 
   const onSubmit = async (values: TestFormValues) => {
     try {
+      if (!user) {
+        toast({
+          title: "Giriş yapmanız gerekiyor",
+          description: "Test oluşturmak için lütfen giriş yapın.",
+          variant: "destructive",
+        });
+        navigate("/login");
+        return;
+      }
+      
       // Transform the image inputs into the correct format for the API
       const transformedValues = {
         ...values,
+        creatorId: user.id,
         images: imageInputs.map((img) => ({
           imageUrl: img.imageUrl,
           answers: img.answers,
         })),
       };
 
-      const response = await apiRequest({
-        url: "/api/tests",
+      const response = await apiRequest("/api/tests", {
         method: "POST",
-        body: JSON.stringify(transformedValues),
+        data: transformedValues,
       });
 
       toast({
@@ -158,6 +168,7 @@ export default function TestCreate() {
       // Navigate to the test page
       navigate(`/play/${response.id}`);
     } catch (error) {
+      console.error("Test oluşturma hatası:", error);
       toast({
         title: "Hata",
         description: "Test oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.",
@@ -320,7 +331,7 @@ export default function TestCreate() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {categories?.map((category) => (
+                        {categories.map((category: any) => (
                           <SelectItem key={category.id} value={category.id.toString()}>
                             {category.name}
                           </SelectItem>
