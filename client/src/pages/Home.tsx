@@ -131,7 +131,7 @@ export default function Home() {
   });
 
   const handleTestClick = (testId: number) => {
-    navigate(`/test/${testId}`);
+    navigate(`/tests/${testId}`);
   };
 
   // Helper function to get the number of questions from imageIds
@@ -279,9 +279,14 @@ export default function Home() {
               </TabsTrigger>
             </TabsList>
             
-            <Button variant="outline" size="sm" className="flex items-center gap-2 custom-frame border-none hover:custom-frame self-end sm:self-auto">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex items-center gap-2 custom-frame border-none hover:custom-frame self-end sm:self-auto"
+              onClick={() => navigate("/tests")}
+            >
               <Filter className="w-4 h-4" />
-              <span>Filtrele</span>
+              <span>Tüm Testler</span>
             </Button>
           </div>
           
@@ -359,14 +364,22 @@ export default function Home() {
           <h2 className="text-xl font-bold flex items-center">
             <Filter className="w-5 h-5 text-primary mr-2" /> Kategorilere Göre Keşfet
           </h2>
-          <Button variant="outline" size="sm" className="text-xs self-end sm:self-auto">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="text-xs self-end sm:self-auto"
+            onClick={() => navigate("/categories")}
+          >
             Tüm Kategoriler
           </Button>
         </div>
         
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
           {/* Category cards - hardcoded for now */}
-          <div className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-4 text-center cursor-pointer">
+          <div 
+            className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-4 text-center cursor-pointer"
+            onClick={() => navigate("/categories")}
+          >
             <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
               <BookOpen className="w-6 h-6 text-white" />
             </div>
@@ -374,7 +387,10 @@ export default function Home() {
             <p className="text-xs text-muted-foreground mt-1">120+ test</p>
           </div>
           
-          <div className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-4 text-center cursor-pointer">
+          <div 
+            className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-4 text-center cursor-pointer"
+            onClick={() => navigate("/categories")}
+          >
             <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
               <span className="text-xl text-white">🌎</span>
             </div>
@@ -382,7 +398,10 @@ export default function Home() {
             <p className="text-xs text-muted-foreground mt-1">86 test</p>
           </div>
           
-          <div className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-4 text-center cursor-pointer">
+          <div 
+            className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-4 text-center cursor-pointer"
+            onClick={() => navigate("/categories")}
+          >
             <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
               <span className="text-xl text-white">🎬</span>
             </div>
@@ -390,7 +409,10 @@ export default function Home() {
             <p className="text-xs text-muted-foreground mt-1">214 test</p>
           </div>
           
-          <div className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-4 text-center cursor-pointer">
+          <div 
+            className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-4 text-center cursor-pointer"
+            onClick={() => navigate("/categories")}
+          >
             <div className="w-12 h-12 bg-yellow-600 rounded-full flex items-center justify-center mx-auto mb-3">
               <span className="text-xl text-white">🎨</span>
             </div>
@@ -398,7 +420,10 @@ export default function Home() {
             <p className="text-xs text-muted-foreground mt-1">73 test</p>
           </div>
           
-          <div className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-4 text-center cursor-pointer">
+          <div 
+            className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-4 text-center cursor-pointer"
+            onClick={() => navigate("/categories")}
+          >
             <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-3">
               <span className="text-xl text-white">🎮</span>
             </div>
@@ -406,7 +431,10 @@ export default function Home() {
             <p className="text-xs text-muted-foreground mt-1">95 test</p>
           </div>
           
-          <div className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-4 text-center cursor-pointer">
+          <div 
+            className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-4 text-center cursor-pointer"
+            onClick={() => navigate("/categories")}
+          >
             <div className="w-12 h-12 bg-orange-600 rounded-full flex items-center justify-center mx-auto mb-3">
               <span className="text-xl text-white">+</span>
             </div>

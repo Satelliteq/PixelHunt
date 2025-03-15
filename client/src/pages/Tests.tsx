@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "wouter";
-import { Filter, Search, Grid, ChevronRight, Star, Clock, TrendingUp, Calendar } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { Filter, Search, Grid, ChevronRight, Star, Clock, TrendingUp, Calendar, Sparkles, Trophy, Users, Heart, Layers } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Test } from "@shared/schema";
 import { getDifficultyText } from "@/lib/gameHelpers";
+import ContentCard from "@/components/game/ContentCard";
 
 export default function Tests() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -205,77 +206,118 @@ export default function Tests() {
     </div>
   );
 
+  // Helper function to get the number of questions from imageIds
+  const getQuestionCount = (imageIds: unknown): number => {
+    if (Array.isArray(imageIds)) {
+      return imageIds.length;
+    }
+    return 0;
+  };
+
+  // Handle test click
+  const [_, navigate] = useLocation();
+  const handleTestClick = (testId: number) => {
+    navigate(`/tests/${testId}`);
+  };
+
   return (
-    <main className="max-w-content py-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight mb-2">Testler</h1>
-        <p className="text-muted-foreground">
-          Oluşturulan testlere göz atın, zekânızı ve görsel hafızanızı test edin.
-        </p>
-      </div>
+    <div className="space-y-12">
+      {/* Header section */}
+      <section className="max-w-content mx-auto">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold tracking-tight mb-2">Testler</h1>
+          <p className="text-muted-foreground">
+            Oluşturulan testlere göz atın, zekânızı ve görsel hafızanızı test edin.
+          </p>
+        </div>
+      </section>
       
-      <Tabs defaultValue="all" className="mb-6">
-        <TabsList className="mb-6 custom-tab-bg rounded-xl p-1 flex bg-opacity-50">
-          <TabsTrigger value="all" className="data-[state=active]:bg-background rounded-lg text-sm px-4">Tüm Testler</TabsTrigger>
-          <TabsTrigger value="popular" className="data-[state=active]:bg-background rounded-lg text-sm px-4">Popüler</TabsTrigger>
-          <TabsTrigger value="newest" className="data-[state=active]:bg-background rounded-lg text-sm px-4">Yeni Eklenenler</TabsTrigger>
-          <TabsTrigger value="featured" className="data-[state=active]:bg-background rounded-lg text-sm px-4">Öne Çıkanlar</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="all">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 flex-wrap">
-            <div className="relative w-full sm:w-72">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="Test ara..."
-                className="pl-9"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
+      {/* Main content */}
+      <section className="max-w-content mx-auto">
+        <Tabs defaultValue="all" onValueChange={(value) => {}} className="w-full">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+            <TabsList className="custom-tab-bg">
+              <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <Layers className="w-4 h-4 mr-2" />
+                Tüm Testler
+              </TabsTrigger>
+              <TabsTrigger value="popular" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <Trophy className="w-4 h-4 mr-2" />
+                Popüler
+              </TabsTrigger>
+              <TabsTrigger value="newest" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <Clock className="w-4 h-4 mr-2" />
+                Yeni Eklenenler
+              </TabsTrigger>
+              <TabsTrigger value="featured" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <Sparkles className="w-4 h-4 mr-2" />
+                Öne Çıkanlar
+              </TabsTrigger>
+            </TabsList>
             
             <div className="flex flex-wrap items-center gap-3">
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Kategori" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tüm Kategoriler</SelectItem>
-                  {categories.length > 0 ? categories.map((category: any) => (
-                    <SelectItem key={category.id} value={category.id.toString()}>
-                      {category.name}
-                    </SelectItem>
-                  )) : null}
-                </SelectContent>
-              </Select>
+              <div className="relative w-full sm:w-72">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Test ara..."
+                  className="pl-9"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
               
-              <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Zorluk" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tüm Zorluklar</SelectItem>
-                  {[1, 2, 3, 4, 5].map((level) => (
-                    <SelectItem key={level} value={level.toString()}>
-                      {getDifficultyText(level)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              
-              <Select value={sortOrder} onValueChange={setSortOrder}>
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Sıralama" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newest">En Yeni</SelectItem>
-                  <SelectItem value="oldest">En Eski</SelectItem>
-                  <SelectItem value="popular">En Popüler</SelectItem>
-                  <SelectItem value="difficulty-asc">Zorluk (Kolay-Zor)</SelectItem>
-                  <SelectItem value="difficulty-desc">Zorluk (Zor-Kolay)</SelectItem>
-                </SelectContent>
-              </Select>
+              <Button variant="outline" size="sm" className="flex items-center gap-2 custom-frame border-none hover:custom-frame">
+                <Filter className="w-4 h-4" />
+                <span>Filtrele</span>
+              </Button>
+            </div>
+          </div>
+          
+          <TabsContent value="all" className="mt-0">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 flex-wrap">
+              <div className="flex flex-wrap items-center gap-3">
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger className="w-[150px]">
+                    <SelectValue placeholder="Kategori" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tüm Kategoriler</SelectItem>
+                    {categories.length > 0 ? categories.map((category: any) => (
+                      <SelectItem key={category.id} value={category.id.toString()}>
+                        {category.name}
+                      </SelectItem>
+                    )) : null}
+                  </SelectContent>
+                </Select>
+                
+                <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
+                  <SelectTrigger className="w-[150px]">
+                    <SelectValue placeholder="Zorluk" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tüm Zorluklar</SelectItem>
+                    {[1, 2, 3, 4, 5].map((level) => (
+                      <SelectItem key={level} value={level.toString()}>
+                        {getDifficultyText(level)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                <Select value={sortOrder} onValueChange={setSortOrder}>
+                  <SelectTrigger className="w-[150px]">
+                    <SelectValue placeholder="Sıralama" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">En Yeni</SelectItem>
+                    <SelectItem value="oldest">En Eski</SelectItem>
+                    <SelectItem value="popular">En Popüler</SelectItem>
+                    <SelectItem value="difficulty-asc">Zorluk (Kolay-Zor)</SelectItem>
+                    <SelectItem value="difficulty-desc">Zorluk (Zor-Kolay)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               
               <div className="inline-flex items-center rounded-md border border-border p-1">
                 <Button
@@ -296,100 +338,132 @@ export default function Tests() {
                 </Button>
               </div>
             </div>
-          </div>
+            
+            {testsLoading ? (
+              <LoadingCards />
+            ) : sortedTests.length === 0 ? (
+              <div className="text-center p-12 bg-muted/30 rounded-lg">
+                <h3 className="text-xl font-medium mb-2">Arama kriterinizle eşleşen test bulunamadı</h3>
+                <p className="text-muted-foreground mb-4">Lütfen farklı filtreler veya anahtar kelimelerle tekrar deneyin</p>
+                <Button 
+                  onClick={() => {
+                    setSearchTerm("");
+                    setCategoryFilter("all");
+                    setDifficultyFilter("all");
+                    setSortOrder("newest");
+                  }}
+                >
+                  Filtreleri Temizle
+                </Button>
+              </div>
+            ) : activeView === "grid" ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {sortedTests.map((test: Test) => (
+                  <ContentCard
+                    key={test.id}
+                    title={test.title}
+                    imageUrl={test.thumbnail || '/default-test-thumb.jpg'}
+                    playCount={test.playCount}
+                    likeCount={test.likeCount}
+                    duration={`${getQuestionCount(test.imageIds)} soru`}
+                    onClick={() => handleTestClick(test.id)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {sortedTests.map((test: Test) => (
+                  <TestListItem key={test.id} test={test} />
+                ))}
+              </div>
+            )}
+          </TabsContent>
           
-          {testsLoading ? (
-            <LoadingCards />
-          ) : sortedTests.length === 0 ? (
-            <div className="text-center p-12 bg-muted/30 rounded-lg">
-              <h3 className="text-xl font-medium mb-2">Arama kriterinizle eşleşen test bulunamadı</h3>
-              <p className="text-muted-foreground mb-4">Lütfen farklı filtreler veya anahtar kelimelerle tekrar deneyin</p>
-              <Button 
-                onClick={() => {
-                  setSearchTerm("");
-                  setCategoryFilter("all");
-                  setDifficultyFilter("all");
-                  setSortOrder("newest");
-                }}
-              >
-                Filtreleri Temizle
-              </Button>
-            </div>
-          ) : activeView === "grid" ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {sortedTests.map((test: Test) => (
-                <TestCard key={test.id} test={test} />
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {sortedTests.map((test: Test) => (
-                <TestListItem key={test.id} test={test} />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="popular">
-          {popularLoading ? (
-            <LoadingCards />
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {popularTests.length > 0 
-                ? popularTests.map((test: Test) => (
-                    <TestCard key={test.id} test={test} />
-                  ))
-                : (
-                  <div className="col-span-3 text-center p-12 bg-muted/30 rounded-lg">
-                    <h3 className="text-xl font-medium mb-2">Henüz test bulunmuyor</h3>
-                    <p className="text-muted-foreground">Daha sonra tekrar kontrol edin</p>
-                  </div>
-                )
-              }
-            </div>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="newest">
-          {newestLoading ? (
-            <LoadingCards />
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {newestTests.length > 0 
-                ? newestTests.map((test: Test) => (
-                    <TestCard key={test.id} test={test} />
-                  ))
-                : (
-                  <div className="col-span-3 text-center p-12 bg-muted/30 rounded-lg">
-                    <h3 className="text-xl font-medium mb-2">Henüz test bulunmuyor</h3>
-                    <p className="text-muted-foreground">Daha sonra tekrar kontrol edin</p>
-                  </div>
-                )
-              }
-            </div>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="featured">
-          {featuredLoading ? (
-            <LoadingCards />
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {featuredTests.length > 0 
-                ? featuredTests.map((test: Test) => (
-                    <TestCard key={test.id} test={test} />
-                  ))
-                : (
-                  <div className="col-span-3 text-center p-12 bg-muted/30 rounded-lg">
-                    <h3 className="text-xl font-medium mb-2">Henüz öne çıkan test bulunmuyor</h3>
-                    <p className="text-muted-foreground">Daha sonra tekrar kontrol edin</p>
-                  </div>
-                )
-              }
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
-    </main>
+          <TabsContent value="popular" className="mt-0">
+            {popularLoading ? (
+              <LoadingCards />
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {popularTests.length > 0 
+                  ? popularTests.map((test: Test) => (
+                      <ContentCard
+                        key={test.id}
+                        title={test.title}
+                        imageUrl={test.thumbnail || '/default-test-thumb.jpg'}
+                        playCount={test.playCount}
+                        likeCount={test.likeCount}
+                        duration={`${getQuestionCount(test.imageIds)} soru`}
+                        onClick={() => handleTestClick(test.id)}
+                      />
+                    ))
+                  : (
+                    <div className="col-span-5 text-center p-12 bg-muted/30 rounded-lg">
+                      <h3 className="text-xl font-medium mb-2">Henüz test bulunmuyor</h3>
+                      <p className="text-muted-foreground">Daha sonra tekrar kontrol edin</p>
+                    </div>
+                  )
+                }
+              </div>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="newest" className="mt-0">
+            {newestLoading ? (
+              <LoadingCards />
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {newestTests.length > 0 
+                  ? newestTests.map((test: Test) => (
+                      <ContentCard
+                        key={test.id}
+                        title={test.title}
+                        imageUrl={test.thumbnail || '/default-test-thumb.jpg'}
+                        playCount={test.playCount}
+                        likeCount={test.likeCount}
+                        duration={`${getQuestionCount(test.imageIds)} soru`}
+                        onClick={() => handleTestClick(test.id)}
+                      />
+                    ))
+                  : (
+                    <div className="col-span-5 text-center p-12 bg-muted/30 rounded-lg">
+                      <h3 className="text-xl font-medium mb-2">Henüz test bulunmuyor</h3>
+                      <p className="text-muted-foreground">Daha sonra tekrar kontrol edin</p>
+                    </div>
+                  )
+                }
+              </div>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="featured" className="mt-0">
+            {featuredLoading ? (
+              <LoadingCards />
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {featuredTests.length > 0 
+                  ? featuredTests.map((test: Test) => (
+                      <ContentCard
+                        key={test.id}
+                        title={test.title}
+                        imageUrl={test.thumbnail || '/default-test-thumb.jpg'}
+                        playCount={test.playCount}
+                        likeCount={test.likeCount}
+                        duration={`${getQuestionCount(test.imageIds)} soru`}
+                        onClick={() => handleTestClick(test.id)}
+                      />
+                    ))
+                  : (
+                    <div className="col-span-5 text-center p-12 bg-muted/30 rounded-lg">
+                      <h3 className="text-xl font-medium mb-2">Henüz öne çıkan test bulunmuyor</h3>
+                      <p className="text-muted-foreground">Daha sonra tekrar kontrol edin</p>
+                    </div>
+                  )
+                }
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </section>
+    </div>
   );
 }

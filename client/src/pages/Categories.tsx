@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "wouter";
-import { Search, Grid3X3, Layers, BookOpen, ChevronRight, Eye } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { Search, Grid3X3, Layers, BookOpen, ChevronRight, Eye, Trophy, Clock } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -132,117 +132,134 @@ export default function Categories() {
   );
 
   return (
-    <main className="max-w-content py-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight mb-2">Kategoriler</h1>
-        <p className="text-muted-foreground">
-          Farklı kategorilerde binlerce görsel ve testi keşfedin.
-        </p>
-      </div>
+    <div className="space-y-12">
+      {/* Header section */}
+      <section className="max-w-content mx-auto">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold tracking-tight mb-2">Kategoriler</h1>
+          <p className="text-muted-foreground">
+            Farklı kategorilerde binlerce görsel ve testi keşfedin.
+          </p>
+        </div>
+      </section>
       
-      <Tabs defaultValue="all" className="mb-6">
-        <TabsList className="mb-6 custom-tab-bg rounded-xl p-1 flex bg-opacity-50">
-          <TabsTrigger value="all" className="data-[state=active]:bg-background rounded-lg text-sm px-4">Tüm Kategoriler</TabsTrigger>
-          <TabsTrigger value="popular" className="data-[state=active]:bg-background rounded-lg text-sm px-4">Popüler</TabsTrigger>
-          <TabsTrigger value="newest" className="data-[state=active]:bg-background rounded-lg text-sm px-4">Yeni Eklenenler</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="all">
-          <div className="flex items-center justify-between gap-4 mb-6">
-            <div className="relative w-full sm:w-72">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="Kategori ara..."
-                className="pl-9"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            
-            <div className="inline-flex items-center rounded-md border border-border p-1">
-              <Button
-                variant={activeView === "grid" ? "default" : "ghost"}
-                size="sm"
-                className="h-8 w-8 p-0"
-                onClick={() => setActiveView("grid")}
-              >
-                <Grid3X3 className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={activeView === "list" ? "default" : "ghost"}
-                size="sm"
-                className="h-8 w-8 p-0"
-                onClick={() => setActiveView("list")}
-              >
-                <Layers className="h-4 w-4" />
-              </Button>
+      {/* Main content */}
+      <section className="max-w-content mx-auto">
+        <Tabs defaultValue="all" onValueChange={(value) => {}} className="w-full">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+            <TabsList className="custom-tab-bg">
+              <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <Layers className="w-4 h-4 mr-2" />
+                Tüm Kategoriler
+              </TabsTrigger>
+              <TabsTrigger value="popular" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <Trophy className="w-4 h-4 mr-2" />
+                Popüler
+              </TabsTrigger>
+              <TabsTrigger value="newest" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <Clock className="w-4 h-4 mr-2" />
+                Yeni Eklenenler
+              </TabsTrigger>
+            </TabsList>
+
+            <div className="flex items-center gap-3">
+              <div className="relative w-full sm:w-72">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Kategori ara..."
+                  className="pl-9"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              
+              <div className="inline-flex items-center rounded-md border border-border p-1">
+                <Button
+                  variant={activeView === "grid" ? "default" : "ghost"}
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => setActiveView("grid")}
+                >
+                  <Grid3X3 className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={activeView === "list" ? "default" : "ghost"}
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => setActiveView("list")}
+                >
+                  <Layers className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
           
-          {isLoading ? (
-            <LoadingCards />
-          ) : filteredCategories.length === 0 ? (
-            <div className="text-center p-12 bg-muted/30 rounded-lg">
-              <h3 className="text-xl font-medium mb-2">Arama kriterinizle eşleşen kategori bulunamadı</h3>
-              <p className="text-muted-foreground mb-4">Lütfen farklı anahtar kelimelerle tekrar deneyin</p>
-              <Button onClick={() => setSearchTerm("")}>Aramayı Temizle</Button>
-            </div>
-          ) : activeView === "grid" ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredCategories.map((category: Category) => (
-                <CategoryCard key={category.id} category={category} />
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {filteredCategories.map((category: Category) => (
-                <CategoryListItem key={category.id} category={category} />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="popular">
-          {isLoading ? (
-            <LoadingCards />
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {categories.length > 0 
-                ? categories.slice(0, 5).map((category: Category) => (
-                    <CategoryCard key={category.id} category={category} />
-                  ))
-                : (
-                  <div className="col-span-3 text-center p-12 bg-muted/30 rounded-lg">
-                    <h3 className="text-xl font-medium mb-2">Henüz kategori bulunmuyor</h3>
-                    <p className="text-muted-foreground">Daha sonra tekrar kontrol edin</p>
-                  </div>
-                )
-              }
-            </div>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="newest">
-          {isLoading ? (
-            <LoadingCards />
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {categories.length > 0 
-                ? [...categories].slice(-5).reverse().map((category: Category) => (
-                    <CategoryCard key={category.id} category={category} />
-                  ))
-                : (
-                  <div className="col-span-3 text-center p-12 bg-muted/30 rounded-lg">
-                    <h3 className="text-xl font-medium mb-2">Henüz kategori bulunmuyor</h3>
-                    <p className="text-muted-foreground">Daha sonra tekrar kontrol edin</p>
-                  </div>
-                )
-              }
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
-    </main>
+          <TabsContent value="all" className="mt-0">
+            {isLoading ? (
+              <LoadingCards />
+            ) : filteredCategories.length === 0 ? (
+              <div className="text-center p-12 bg-muted/30 rounded-lg">
+                <h3 className="text-xl font-medium mb-2">Arama kriterinizle eşleşen kategori bulunamadı</h3>
+                <p className="text-muted-foreground mb-4">Lütfen farklı anahtar kelimelerle tekrar deneyin</p>
+                <Button onClick={() => setSearchTerm("")}>Aramayı Temizle</Button>
+              </div>
+            ) : activeView === "grid" ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                {filteredCategories.map((category: Category) => (
+                  <CategoryCard key={category.id} category={category} />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredCategories.map((category: Category) => (
+                  <CategoryListItem key={category.id} category={category} />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="popular" className="mt-0">
+            {isLoading ? (
+              <LoadingCards />
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                {categories.length > 0 
+                  ? categories.slice(0, 5).map((category: Category) => (
+                      <CategoryCard key={category.id} category={category} />
+                    ))
+                  : (
+                    <div className="col-span-6 text-center p-12 bg-muted/30 rounded-lg">
+                      <h3 className="text-xl font-medium mb-2">Henüz kategori bulunmuyor</h3>
+                      <p className="text-muted-foreground">Daha sonra tekrar kontrol edin</p>
+                    </div>
+                  )
+                }
+              </div>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="newest" className="mt-0">
+            {isLoading ? (
+              <LoadingCards />
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                {categories.length > 0 
+                  ? [...categories].slice(-5).reverse().map((category: Category) => (
+                      <CategoryCard key={category.id} category={category} />
+                    ))
+                  : (
+                    <div className="col-span-6 text-center p-12 bg-muted/30 rounded-lg">
+                      <h3 className="text-xl font-medium mb-2">Henüz kategori bulunmuyor</h3>
+                      <p className="text-muted-foreground">Daha sonra tekrar kontrol edin</p>
+                    </div>
+                  )
+                }
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </section>
+    </div>
   );
 }
