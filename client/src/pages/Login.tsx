@@ -1,20 +1,49 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
 import { FcGoogle } from 'react-icons/fc';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { useLanguage } from '@/lib/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { LogoWithText } from '@/components/icons/Logo';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+// Form şeması tanımları
+const loginSchema = z.object({
+  email: z.string().email('Geçerli bir e-posta adresi giriniz'),
+  password: z.string().min(6, 'Şifre en az 6 karakter olmalıdır'),
+});
+
+const registerSchema = z.object({
+  username: z.string().min(3, 'Kullanıcı adı en az 3 karakter olmalıdır'),
+  email: z.string().email('Geçerli bir e-posta adresi giriniz'),
+  password: z.string().min(6, 'Şifre en az 6 karakter olmalıdır'),
+  confirmPassword: z.string().min(6, 'Şifre en az 6 karakter olmalıdır'),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Şifreler eşleşmiyor",
+  path: ["confirmPassword"], 
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
+type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function Login() {
   const [_, setLocation] = useLocation();
-  const { user, loading, initialized, signInWithGoogle } = useAuth();
+  const { user, loading, initialized, signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState<string>("login");
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   useEffect(() => {
     // Kullanıcı zaten giriş yapmışsa profile yönlendir

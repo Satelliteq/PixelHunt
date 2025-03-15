@@ -336,7 +336,7 @@ export default function Profile() {
                     </Badge>
                   </div>
                   
-                  <Alert variant="outline" className="border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                  <Alert className="border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300">
                     <AlertTriangle className="h-4 w-4" />
                     <AlertTitle>Dikkat</AlertTitle>
                     <AlertDescription>

@@ -8,6 +8,9 @@ type AuthContextType = {
   loading: boolean;
   initialized: boolean;
   signInWithGoogle: () => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<any>;
+  signUpWithEmail: (email: string, password: string, userData?: Record<string, any>) => Promise<any>;
+  sendPasswordResetEmail: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -30,6 +33,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     
     try {
+      // Şu an için Google OAuth'ı devre dışı bıraktık, 
+      // Supabase projesinde etkinleştirilmesi gerekiyor
+      toast({
+        title: "Bilgi",
+        description: "Google ile giriş özelliği şu anda bakım modundadır. Lütfen e-posta ve şifre ile giriş yapınız.",
+        variant: "default"
+      });
+      
+      // Gerçek implementasyon aşağıdaki gibi olacak
+      // Not: Supabase projenizde Google Auth'ı etkinleştirdikten sonra bu kodu açabilirsiniz
+      /*
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -38,6 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) throw error;
+      */
       // User state will be updated via the auth state change listener
     } catch (error) {
       console.error('Error signing in with Google:', error);
@@ -50,6 +65,123 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signInWithEmail = async (email: string, password: string) => {
+    if (!isSupabaseConfigured()) {
+      toast({
+        title: "Bağlantı Hatası",
+        description: "Kimlik doğrulama servisi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.",
+        variant: "destructive"
+      });
+      throw new Error('Supabase is not configured');
+    }
+    
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) throw error;
+      // User state will be updated via the auth state change listener
+      return data;
+    } catch (error) {
+      console.error('Error signing in with email:', error);
+      let errorMessage = "E-posta veya şifre hatalı. Lütfen tekrar deneyin.";
+      
+      // @ts-ignore
+      if (error.message && error.message.includes("Invalid login credentials")) {
+        errorMessage = "E-posta veya şifre hatalı. Lütfen tekrar deneyin.";
+      }
+      
+      toast({
+        title: "Giriş Hatası",
+        description: errorMessage,
+        variant: "destructive"
+      });
+      throw error;
+    }
+  };
+  
+  const signUpWithEmail = async (email: string, password: string, userData?: Record<string, any>) => {
+    if (!isSupabaseConfigured()) {
+      toast({
+        title: "Bağlantı Hatası",
+        description: "Kimlik doğrulama servisi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.",
+        variant: "destructive"
+      });
+      throw new Error('Supabase is not configured');
+    }
+    
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: userData || {},
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+
+      if (error) throw error;
+      
+      toast({
+        title: "Kayıt Başarılı",
+        description: "Hesabınız oluşturuldu. Lütfen e-posta adresinizi kontrol edin ve hesabınızı doğrulayın.",
+        variant: "default"
+      });
+      
+      return data;
+    } catch (error) {
+      console.error('Error signing up with email:', error);
+      let errorMessage = "Kayıt oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.";
+      
+      // @ts-ignore
+      if (error.message && error.message.includes("User already registered")) {
+        errorMessage = "Bu e-posta adresi zaten kullanılıyor. Lütfen giriş yapın veya farklı bir e-posta adresi kullanın.";
+      }
+      
+      toast({
+        title: "Kayıt Hatası",
+        description: errorMessage,
+        variant: "destructive"
+      });
+      throw error;
+    }
+  };
+  
+  const sendPasswordResetEmail = async (email: string) => {
+    if (!isSupabaseConfigured()) {
+      toast({
+        title: "Bağlantı Hatası",
+        description: "Kimlik doğrulama servisi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.",
+        variant: "destructive"
+      });
+      throw new Error('Supabase is not configured');
+    }
+    
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`
+      });
+
+      if (error) throw error;
+      
+      toast({
+        title: "Şifre Sıfırlama E-postası Gönderildi",
+        description: "Şifre sıfırlama bağlantısı e-posta adresinize gönderildi. Lütfen e-postanızı kontrol edin.",
+        variant: "default"
+      });
+    } catch (error) {
+      console.error('Error sending password reset email:', error);
+      toast({
+        title: "Şifre Sıfırlama Hatası",
+        description: "Şifre sıfırlama e-postası gönderilirken bir hata oluştu. Lütfen tekrar deneyin.",
+        variant: "destructive"
+      });
+      throw error;
+    }
+  };
+  
   const signOut = async () => {
     if (!isSupabaseConfigured()) {
       toast({
@@ -131,7 +263,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, initialized, signInWithGoogle, signOut }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      initialized, 
+      signInWithGoogle, 
+      signInWithEmail,
+      signUpWithEmail,
+      sendPasswordResetEmail,
+      signOut 
+    }}>
       {children}
     </AuthContext.Provider>
   );
