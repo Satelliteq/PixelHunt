@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
-import { useLocation } from 'wouter';
+import { useLocation, Link } from 'wouter';
 import {
   Tabs,
   TabsContent,
@@ -500,10 +500,12 @@ function AdminPanel() {
                   <CardTitle>Test Yönetimi</CardTitle>
                   <CardDescription>Testleri görüntüleyin ve silin.</CardDescription>
                 </div>
-                <Button onClick={() => navigate('/create-test')}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Yeni Test Oluştur
-                </Button>
+                <Link href="/create-test">
+                  <Button>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Yeni Test Oluştur
+                  </Button>
+                </Link>
               </div>
             </CardHeader>
             <CardContent>
@@ -547,14 +549,15 @@ function AdminPanel() {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => navigate(`/test-edit/${test.id}`)}
-                            title="Düzenle"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
+                          <Link href={`/test-edit/${test.id}`}>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title="Düzenle"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </Link>
                           <Button
                             variant="ghost"
                             size="icon"
@@ -613,9 +616,11 @@ function AdminPanel() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={user.banned ? "destructive" : "success"}>
-                            {user.banned ? 'Banlı' : 'Aktif'}
-                          </Badge>
+                          {user.banned ? (
+                            <Badge variant="destructive">Banlı</Badge>
+                          ) : (
+                            <Badge variant="success">Aktif</Badge>
+                          )}
                         </TableCell>
                         <TableCell className="text-right">
                           <Button
