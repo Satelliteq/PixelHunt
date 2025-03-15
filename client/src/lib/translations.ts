@@ -260,6 +260,18 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     logout: 'Logout',
     players: 'players',
     loading: 'Loading Test...',
+    language: 'en',
+    
+    // Footer sections
+    quickLinks: 'Quick Links',
+    legal: 'Legal',
+    contactUs: 'Contact Us',
+    termsOfService: 'Terms of Service',
+    privacyPolicy: 'Privacy Policy',
+    cookiePolicy: 'Cookie Policy',
+    announcements: 'Announcements',
+    allRightsReserved: 'All rights reserved',
+    supportUs: 'Support Us',
     
     // Category names
     catLiterature: 'Literature',

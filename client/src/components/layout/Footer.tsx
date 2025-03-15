@@ -35,26 +35,26 @@ export default function Footer() {
           
           {/* Quick links section */}
           <div className="col-span-1">
-            <h3 className="font-semibold mb-4 text-theme-primary">Hızlı Bağlantılar</h3>
+            <h3 className="font-semibold mb-4 text-theme-primary">{t('quickLinks')}</h3>
             <ul className="space-y-2">
               <li>
                 <Link href="/categories" className="text-sm text-muted-foreground hover:text-theme-primary flex items-center">
-                  <ChevronRight className="w-3 h-3 mr-1" /> Kategoriler
+                  <ChevronRight className="w-3 h-3 mr-1" /> {t('categories')}
                 </Link>
               </li>
               <li>
                 <Link href="/tests" className="text-sm text-muted-foreground hover:text-theme-primary flex items-center">
-                  <ChevronRight className="w-3 h-3 mr-1" /> Testler
+                  <ChevronRight className="w-3 h-3 mr-1" /> {t('tests')}
                 </Link>
               </li>
               <li>
                 <Link href="/support" className="text-sm text-muted-foreground hover:text-theme-primary flex items-center">
-                  <ChevronRight className="w-3 h-3 mr-1" /> Destek Ol
+                  <ChevronRight className="w-3 h-3 mr-1" /> {t('supportUs')}
                 </Link>
               </li>
               <li>
                 <Link href="/contact" className="text-sm text-muted-foreground hover:text-theme-primary flex items-center">
-                  <ChevronRight className="w-3 h-3 mr-1" /> İletişim
+                  <ChevronRight className="w-3 h-3 mr-1" /> {t('contact')}
                 </Link>
               </li>
             </ul>
@@ -62,26 +62,26 @@ export default function Footer() {
           
           {/* Legal section */}
           <div className="col-span-1">
-            <h3 className="font-semibold mb-4 text-theme-primary">Yasal</h3>
+            <h3 className="font-semibold mb-4 text-theme-primary">{t('legal')}</h3>
             <ul className="space-y-2">
               <li>
                 <Link href="/terms" className="text-sm text-muted-foreground hover:text-theme-primary flex items-center">
-                  <ChevronRight className="w-3 h-3 mr-1" /> Kullanım Koşulları
+                  <ChevronRight className="w-3 h-3 mr-1" /> {t('termsOfService')}
                 </Link>
               </li>
               <li>
                 <Link href="/privacy" className="text-sm text-muted-foreground hover:text-theme-primary flex items-center">
-                  <ChevronRight className="w-3 h-3 mr-1" /> Gizlilik Politikası
+                  <ChevronRight className="w-3 h-3 mr-1" /> {t('privacyPolicy')}
                 </Link>
               </li>
               <li>
                 <Link href="/cookies" className="text-sm text-muted-foreground hover:text-theme-primary flex items-center">
-                  <ChevronRight className="w-3 h-3 mr-1" /> Çerez Politikası
+                  <ChevronRight className="w-3 h-3 mr-1" /> {t('cookiePolicy')}
                 </Link>
               </li>
               <li>
                 <Link href="/announcements" className="text-sm text-muted-foreground hover:text-theme-primary flex items-center">
-                  <ChevronRight className="w-3 h-3 mr-1" /> Duyurular
+                  <ChevronRight className="w-3 h-3 mr-1" /> {t('announcements')}
                 </Link>
               </li>
             </ul>
@@ -89,7 +89,7 @@ export default function Footer() {
           
           {/* Contact section */}
           <div className="col-span-1">
-            <h3 className="font-semibold mb-4 text-theme-primary">İletişim</h3>
+            <h3 className="font-semibold mb-4 text-theme-primary">{t('contactUs')}</h3>
             <ul className="space-y-3">
               <li>
                 <Link href="/contact" className="text-sm text-muted-foreground hover:text-theme-primary flex items-center">
@@ -113,7 +113,7 @@ export default function Footer() {
         {/* Bottom section with copyright and language */}
         <div className="flex flex-col sm:flex-row justify-between items-center mt-10 pt-5 border-t border-border">
           <div className="text-xs text-muted-foreground mb-3 sm:mb-0">
-            &copy; {new Date().getFullYear()} Pixelhunt. Tüm hakları saklıdır.
+            &copy; {new Date().getFullYear()} Pixelhunt. {t('allRightsReserved')}.
           </div>
           
           <div className="flex items-center space-x-4">
