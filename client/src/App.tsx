@@ -4,6 +4,11 @@ import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import { useEffect, useState } from "react";
 import { LanguageProvider } from "./lib/LanguageContext";
+import { AuthProvider } from "./lib/AuthContext";
+
+// Auth pages
+import Login from "@/pages/Login";
+import Profile from "@/pages/Profile";
 
 import Home from "@/pages/Home";
 import ClassicGame from "@/pages/ClassicGame";
@@ -43,6 +48,8 @@ function Router() {
       } />
       <Route path="/contact" component={Contact} />
       <Route path="/how-to-play" component={HowToPlay} />
+      <Route path="/login" component={Login} />
+      <Route path="/profile" component={Profile} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -60,14 +67,16 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
-        <div className="min-h-screen flex flex-col bg-background text-foreground">
-          {!isGameScreen && <Header />}
-          <main className={`flex-grow ${!isGameScreen ? 'container mx-auto px-4 py-6' : 'w-full'}`}>
-            <Router />
-          </main>
-          {!isGameScreen && <Footer />}
-        </div>
-        <Toaster />
+        <AuthProvider>
+          <div className="min-h-screen flex flex-col bg-background text-foreground">
+            {!isGameScreen && <Header />}
+            <main className={`flex-grow ${!isGameScreen ? 'container mx-auto px-4 py-6' : 'w-full'}`}>
+              <Router />
+            </main>
+            {!isGameScreen && <Footer />}
+          </div>
+          <Toaster />
+        </AuthProvider>
       </LanguageProvider>
     </QueryClientProvider>
   );

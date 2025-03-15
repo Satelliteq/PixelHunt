@@ -72,6 +72,21 @@
     </noscript>
     
     <div id="root"></div>
+    <!-- Environment variables loader -->
+    <script>
+      window.__ENV__ = window.__ENV__ || {};
+      
+      // Fetch environment variables from server before loading app
+      fetch('/api/env')
+        .then(response => response.json())
+        .then(data => {
+          window.__ENV__ = data;
+          console.log('Environment variables loaded successfully');
+        })
+        .catch(err => {
+          console.error('Failed to load environment variables:', err);
+        });
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

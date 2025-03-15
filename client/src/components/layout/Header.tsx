@@ -4,10 +4,20 @@ import { Logo, LogoWithText } from "@/components/icons/Logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { IconButton } from "@/components/ui/icon-button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 import ThemeToggle from "@/components/ThemeToggle";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLanguage } from "@/lib/LanguageContext";
+import { useAuth } from "@/lib/AuthContext";
 import { 
   Grid2X2,
   Search,
@@ -26,6 +36,7 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isMobile = useIsMobile();
   const { t } = useLanguage();
+  const { user, loading, signOut } = useAuth();
 
   // Close mobile menu when resizing to desktop
   useEffect(() => {
@@ -54,6 +65,15 @@ export default function Header() {
   const handleNavigation = (path: string) => {
     navigate(path);
     setMobileMenuOpen(false);
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/');
+    } catch (error) {
+      console.error('Çıkış yapılırken hata oluştu:', error);
+    }
   };
 
   return (
@@ -140,13 +160,41 @@ export default function Header() {
             <PlusCircle className="w-4 h-4 mr-1" /> {t('createTest')}
           </Button>
           
-          <Button
-            variant="outline"
-            className="border-border px-4 py-2 rounded-full text-sm hover:bg-accent hidden md:flex"
-            onClick={() => handleNavigation("/login")}
-          >
-            <User className="w-4 h-4 mr-1" /> {t('login')}
-          </Button>
+          {!loading && !user ? (
+            <Button
+              variant="outline"
+              className="border-border px-4 py-2 rounded-full text-sm hover:bg-accent hidden md:flex"
+              onClick={() => handleNavigation("/login")}
+            >
+              <User className="w-4 h-4 mr-1" /> {t('login')}
+            </Button>
+          ) : !loading && user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user.user_metadata.avatar_url} alt={user.user_metadata.full_name || user.email} />
+                    <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{user.user_metadata.full_name || 'Kullanıcı'}</p>
+                    <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => handleNavigation("/profile")}>
+                  Profilim
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSignOut}>
+                  Çıkış Yap
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : null}
           
           <ThemeToggle />
         </div>
@@ -238,13 +286,32 @@ export default function Header() {
             <PlusCircle className="w-5 h-5 mr-2" /> {t('createTest')}
           </Button>
           
-          <Button 
-            variant="outline" 
-            className="w-full"
-            onClick={() => handleNavigation("/login")}
-          >
-            <User className="w-5 h-5 mr-2" /> {t('login')}
-          </Button>
+          {!loading && !user ? (
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => handleNavigation("/login")}
+            >
+              <User className="w-5 h-5 mr-2" /> {t('login')}
+            </Button>
+          ) : !loading && user ? (
+            <>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => handleNavigation("/profile")}
+              >
+                <User className="w-5 h-5 mr-2" /> Profilim
+              </Button>
+              <Button 
+                variant="destructive" 
+                className="w-full"
+                onClick={handleSignOut}
+              >
+                Çıkış Yap
+              </Button>
+            </>
+          ) : null}
         </div>
       </div>
     </header>

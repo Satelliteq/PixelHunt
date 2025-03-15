@@ -13,6 +13,16 @@ import {
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Route to safely expose environment variables to the client
+  app.get("/api/env", (_req: Request, res: Response) => {
+    // Only expose specific environment variables needed for client-side
+    const clientEnv = {
+      SUPABASE_URL: process.env.SUPABASE_URL,
+      SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
+    };
+    
+    res.json(clientEnv);
+  });
   // API routes
   
   // User routes
