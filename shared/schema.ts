@@ -8,6 +8,8 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   score: integer("score").default(0),
   avatar: text("avatar"),
+  role: text("role").default("user"),
+  banned: boolean("banned").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -68,6 +70,8 @@ export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
   avatar: true,
+  role: true,
+  banned: true,
 });
 
 export const insertCategorySchema = createInsertSchema(categories).pick({

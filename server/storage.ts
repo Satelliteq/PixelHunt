@@ -15,10 +15,16 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUserScore(id: number, scoreToAdd: number): Promise<User | undefined>;
   
+  // Admin user operations
+  getAllUsers(): Promise<User[]>;
+  updateUserRole(id: number, role: string): Promise<User | undefined>;
+  updateUserBanStatus(id: number, banned: boolean): Promise<User | undefined>;
+  
   // Category operations
   getAllCategories(): Promise<Category[]>;
   getCategory(id: number): Promise<Category | undefined>;
   createCategory(category: InsertCategory): Promise<Category>;
+  updateCategory(id: number, category: InsertCategory): Promise<Category | undefined>;
   
   // Image operations
   getAllImages(): Promise<Image[]>;
@@ -35,6 +41,8 @@ export interface IStorage {
   getTest(id: number): Promise<Test | undefined>;
   getTestsByCategory(categoryId: number): Promise<Test[]>;
   createTest(test: InsertTest): Promise<Test>;
+  updateTest(id: number, test: Partial<InsertTest>): Promise<Test | undefined>;
+  deleteTest(id: number): Promise<boolean>;
   incrementTestPlayCount(id: number): Promise<void>;
   incrementTestLikeCount(id: number): Promise<void>;
   getPopularTests(limit: number): Promise<Test[]>;
@@ -223,6 +231,37 @@ export class MemStorage implements IStorage {
     this.usersMap.set(id, updatedUser);
     return updatedUser;
   }
+  
+  // Admin user operations
+  async getAllUsers(): Promise<User[]> {
+    return Array.from(this.usersMap.values());
+  }
+
+  async updateUserRole(id: number, role: string): Promise<User | undefined> {
+    const user = await this.getUser(id);
+    if (!user) return undefined;
+    
+    const updatedUser = {
+      ...user,
+      role
+    };
+    
+    this.usersMap.set(id, updatedUser);
+    return updatedUser;
+  }
+
+  async updateUserBanStatus(id: number, banned: boolean): Promise<User | undefined> {
+    const user = await this.getUser(id);
+    if (!user) return undefined;
+    
+    const updatedUser = {
+      ...user,
+      banned
+    };
+    
+    this.usersMap.set(id, updatedUser);
+    return updatedUser;
+  }
 
   // Category operations
   async getAllCategories(): Promise<Category[]> {
@@ -238,6 +277,20 @@ export class MemStorage implements IStorage {
     const newCategory = { ...category, id };
     this.categoriesMap.set(id, newCategory);
     return newCategory;
+  }
+
+  async updateCategory(id: number, category: InsertCategory): Promise<Category | undefined> {
+    const existing = await this.getCategory(id);
+    if (!existing) return undefined;
+    
+    const updatedCategory = {
+      ...existing,
+      ...category,
+      id
+    };
+    
+    this.categoriesMap.set(id, updatedCategory);
+    return updatedCategory;
   }
 
   // Image operations
@@ -327,6 +380,36 @@ export class MemStorage implements IStorage {
     };
     this.testsMap.set(id, newTest);
     return newTest;
+  }
+  
+  async updateTest(id: number, test: Partial<InsertTest>): Promise<Test | undefined> {
+    const existing = await this.getTest(id);
+    if (!existing) return undefined;
+    
+    const updatedTest = {
+      ...existing,
+      ...test,
+      id
+    };
+    
+    this.testsMap.set(id, updatedTest);
+    return updatedTest;
+  }
+  
+  async deleteTest(id: number): Promise<boolean> {
+    const test = await this.getTest(id);
+    if (!test) return false;
+    
+    // Remove the test
+    this.testsMap.delete(id);
+    
+    // Also remove all comments associated with this test
+    const comments = await this.getTestComments(id);
+    for (const comment of comments) {
+      this.testCommentsMap.delete(comment.id);
+    }
+    
+    return true;
   }
 
   async incrementTestPlayCount(id: number): Promise<void> {
