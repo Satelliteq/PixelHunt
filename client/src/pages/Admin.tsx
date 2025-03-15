@@ -336,7 +336,7 @@ function AdminPanel() {
   };
 
   // Sayfa açıldığında ilgili verileri yükle
-  useState(() => {
+  useEffect(() => {
     // Active tab değiştiğinde ilgili verileri yükle
     if (activeTab === 'categories') {
       fetchCategories();
@@ -345,7 +345,7 @@ function AdminPanel() {
     } else if (activeTab === 'users') {
       fetchUsers();
     }
-  });
+  }, [activeTab]);
 
   return (
     <div className="container py-8">
