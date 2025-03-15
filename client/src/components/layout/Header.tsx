@@ -25,6 +25,7 @@ export default function Header() {
   const [_location, navigate] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isMobile = useIsMobile();
+  const { t } = useLanguage();
 
   // Close mobile menu when resizing to desktop
   useEffect(() => {
@@ -67,7 +68,7 @@ export default function Header() {
             <IconButton
               variant="ghost"
               icon={<Grid2X2 className="w-4 h-4" />}
-              label="Kategoriler"
+              label={t('categories')}
               className="text-foreground hover-text-accent text-sm px-3 font-medium"
               onClick={() => handleNavigation("/categories")}
             />
@@ -75,7 +76,7 @@ export default function Header() {
             <IconButton
               variant="ghost"
               icon={<BookOpen className="w-4 h-4" />}
-              label="Testler"
+              label={t('tests')}
               className="text-foreground hover-text-accent text-sm px-3 font-medium"
               onClick={() => handleNavigation("/tests")}
             />
@@ -83,7 +84,7 @@ export default function Header() {
             <IconButton
               variant="ghost"
               icon={<PlayCircle className="w-4 h-4" />}
-              label="Nasıl Oynanır?"
+              label={t('howToPlay')}
               className="text-foreground hover-text-accent text-sm px-3 font-medium"
               onClick={() => handleNavigation("/how-to-play")}
             />
@@ -99,7 +100,7 @@ export default function Header() {
             <IconButton
               variant="ghost"
               icon={<Mail className="w-4 h-4" />}
-              label="İletişim"
+              label={t('contact')}
               className="text-foreground hover-text-accent text-sm px-3 font-medium" 
               onClick={() => handleNavigation("/contact")}
             />
@@ -120,7 +121,7 @@ export default function Header() {
           <div className="relative hidden md:block w-64">
             <Input
               type="text"
-              placeholder="Ara..."
+              placeholder={t('search')}
               className="bg-muted w-full rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
             />
             <Button
@@ -136,7 +137,7 @@ export default function Header() {
             className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded-full text-sm hidden md:flex"
             onClick={() => handleNavigation("/create")}
           >
-            <PlusCircle className="w-4 h-4 mr-1" /> Test Oluştur
+            <PlusCircle className="w-4 h-4 mr-1" /> {t('createTest')}
           </Button>
           
           <Button
@@ -144,8 +145,10 @@ export default function Header() {
             className="border-border px-4 py-2 rounded-full text-sm hover:bg-accent hidden md:flex"
             onClick={() => handleNavigation("/login")}
           >
-            <User className="w-4 h-4 mr-1" /> Giriş Yap
+            <User className="w-4 h-4 mr-1" /> {t('login')}
           </Button>
+          
+          <LanguageSwitcher />
           
           <ThemeToggle />
         </div>
@@ -175,7 +178,7 @@ export default function Header() {
         <div className="relative mb-6">
           <Input
             type="text"
-            placeholder="Ara..."
+            placeholder={t('search')}
             className="bg-muted w-full rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
           />
           <Button
@@ -193,7 +196,7 @@ export default function Header() {
             className="justify-start text-foreground" 
             onClick={() => handleNavigation("/categories")}
           >
-            <Grid2X2 className="w-5 h-5 mr-3" /> Kategoriler
+            <Grid2X2 className="w-5 h-5 mr-3" /> {t('categories')}
           </Button>
           
           <Button 
@@ -201,7 +204,7 @@ export default function Header() {
             className="justify-start text-foreground" 
             onClick={() => handleNavigation("/tests")}
           >
-            <BookOpen className="w-5 h-5 mr-3" /> Testler
+            <BookOpen className="w-5 h-5 mr-3" /> {t('tests')}
           </Button>
           
           <Button 
@@ -209,7 +212,7 @@ export default function Header() {
             className="justify-start text-foreground" 
             onClick={() => handleNavigation("/how-to-play")}
           >
-            <PlayCircle className="w-5 h-5 mr-3" /> Nasıl Oynanır?
+            <PlayCircle className="w-5 h-5 mr-3" /> {t('howToPlay')}
           </Button>
           
           <Button 
@@ -225,8 +228,12 @@ export default function Header() {
             className="justify-start text-foreground" 
             onClick={() => handleNavigation("/contact")}
           >
-            <Mail className="w-5 h-5 mr-3" /> İletişim
+            <Mail className="w-5 h-5 mr-3" /> {t('contact')}
           </Button>
+          
+          <div className="py-2">
+            <LanguageSwitcher />
+          </div>
         </div>
         
         <div className="mt-auto pt-8 flex flex-col space-y-4">
@@ -234,7 +241,7 @@ export default function Header() {
             className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold w-full" 
             onClick={() => handleNavigation("/create")}
           >
-            <PlusCircle className="w-5 h-5 mr-2" /> Test Oluştur
+            <PlusCircle className="w-5 h-5 mr-2" /> {t('createTest')}
           </Button>
           
           <Button 
@@ -242,7 +249,7 @@ export default function Header() {
             className="w-full"
             onClick={() => handleNavigation("/login")}
           >
-            <User className="w-5 h-5 mr-2" /> Giriş Yap
+            <User className="w-5 h-5 mr-2" /> {t('login')}
           </Button>
         </div>
       </div>

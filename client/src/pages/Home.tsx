@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Heart, Trophy, BookOpen, Filter, Clock, Users, Sparkles, Award, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Test } from "@shared/schema";
+import { useLanguage } from "@/lib/LanguageContext";
 
 import ContentCard from "@/components/game/ContentCard";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Home() {
   const [_, navigate] = useLocation();
+  const { t } = useLanguage();
 
   // Active tab state
   const [activeTab, setActiveTab] = useState("featured");
@@ -267,15 +269,15 @@ export default function Home() {
             <TabsList className="custom-tab-bg">
               <TabsTrigger value="featured" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 <Sparkles className="w-4 h-4 mr-2" />
-                Öne Çıkanlar
+                {t('featured')}
               </TabsTrigger>
               <TabsTrigger value="popular" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 <Trophy className="w-4 h-4 mr-2" />
-                Popüler
+                {t('popular')}
               </TabsTrigger>
               <TabsTrigger value="newest" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 <Clock className="w-4 h-4 mr-2" />
-                Yeni Eklenenler
+                {t('newest')}
               </TabsTrigger>
             </TabsList>
             
@@ -286,7 +288,7 @@ export default function Home() {
               onClick={() => navigate("/tests")}
             >
               <Filter className="w-4 h-4" />
-              <span>Tüm Testler</span>
+              <span>{t('allTests')}</span>
             </Button>
           </div>
           
@@ -304,7 +306,7 @@ export default function Home() {
                     imageUrl={test.thumbnail || '/default-test-thumb.jpg'}
                     playCount={test.playCount}
                     likeCount={test.likeCount}
-                    duration={`${getQuestionCount(test.imageIds)} soru`}
+                    duration={`${getQuestionCount(test.imageIds)} ${t('question')}`}
                     onClick={() => handleTestClick(test.id)}
                   />
                 ))
@@ -326,7 +328,7 @@ export default function Home() {
                     imageUrl={test.thumbnail || '/default-test-thumb.jpg'}
                     playCount={test.playCount}
                     likeCount={test.likeCount}
-                    duration={`${getQuestionCount(test.imageIds)} soru`}
+                    duration={`${getQuestionCount(test.imageIds)} ${t('question')}`}
                     onClick={() => handleTestClick(test.id)}
                   />
                 ))
@@ -348,7 +350,7 @@ export default function Home() {
                     imageUrl={test.thumbnail || '/default-test-thumb.jpg'}
                     playCount={test.playCount}
                     likeCount={test.likeCount}
-                    duration={`${getQuestionCount(test.imageIds)} soru`}
+                    duration={`${getQuestionCount(test.imageIds)} ${t('question')}`}
                     onClick={() => handleTestClick(test.id)}
                   />
                 ))
