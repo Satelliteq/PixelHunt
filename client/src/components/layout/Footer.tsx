@@ -2,6 +2,8 @@ import React from "react";
 import { Logo, LogoWithText } from "@/components/icons/Logo";
 import { IconButton } from "@/components/ui/icon-button";
 import { Link } from "wouter";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useLanguage } from "@/lib/LanguageContext";
 import { 
   Globe, 
   HelpCircle, 
@@ -15,6 +17,8 @@ import {
 } from "lucide-react";
 
 export default function Footer() {
+  const { t } = useLanguage();
+  
   return (
     <footer className="bg-muted/30 dark:bg-background border-t border-border pt-10 pb-6 mt-10">
       <div className="max-w-content mx-auto px-4">
@@ -23,7 +27,9 @@ export default function Footer() {
           <div className="col-span-1 md:col-span-1">
             <LogoWithText className="h-8" textClassName="text-lg" />
             <p className="text-sm text-muted-foreground mt-3">
-              Görsel tespit ve hafıza geliştirme oyunları platformu. Testler oluşturun, arkadaşlarınızla paylaşın ve eğlenin!
+              {t('language') === 'tr' 
+                ? 'Görsel tespit ve hafıza geliştirme oyunları platformu. Testler oluşturun, arkadaşlarınızla paylaşın ve eğlenin!' 
+                : 'Visual recognition and memory improvement games platform. Create tests, share with friends and have fun!'}
             </p>
           </div>
           
@@ -111,9 +117,9 @@ export default function Footer() {
           </div>
           
           <div className="flex items-center space-x-4">
-            <button className="text-xs text-muted-foreground hover:text-theme-primary flex items-center">
-              <Globe className="w-3 h-3 mr-1" /> Türkçe
-            </button>
+            <div className="flex items-center px-2">
+              <LanguageSwitcher />
+            </div>
             <div className="flex space-x-2">
               <IconButton
                 variant="ghost"

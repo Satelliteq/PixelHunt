@@ -24,6 +24,18 @@ export type TranslationKey =
   | 'logout'
   | 'players'
   | 'loading'
+  | 'language'
+  
+  // Footer sections
+  | 'quickLinks'
+  | 'legal'
+  | 'contactUs'
+  | 'termsOfService'
+  | 'privacyPolicy'
+  | 'cookiePolicy'
+  | 'announcements'
+  | 'allRightsReserved'
+  | 'supportUs'
   
   // Category names
   | 'catLiterature'
@@ -130,6 +142,18 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     logout: 'Çıkış Yap',
     players: 'oyuncu',
     loading: 'Test Yükleniyor...',
+    language: 'tr',
+    
+    // Footer sections
+    quickLinks: 'Hızlı Bağlantılar',
+    legal: 'Yasal',
+    contactUs: 'İletişim',
+    termsOfService: 'Kullanım Koşulları',
+    privacyPolicy: 'Gizlilik Politikası',
+    cookiePolicy: 'Çerez Politikası',
+    announcements: 'Duyurular',
+    allRightsReserved: 'Tüm hakları saklıdır',
+    supportUs: 'Destek Ol',
     
     // Category names
     catLiterature: 'Edebiyat',
