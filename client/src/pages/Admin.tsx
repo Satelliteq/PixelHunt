@@ -77,9 +77,12 @@ function AdminAccess() {
         // user.app_metadata.role'ü kontrol et (yönetici arayüzünden ayarlanması durumunda)
         // user.user_metadata.isAdmin'i kontrol et (SQL ile eklenmiş admin durumunda)
         // user.user_metadata.role kontrolü de ekledik SQL admin durumu için
+        // Belirli email veya ID'ye sahip kullanıcılar için direkt yetkilendirme ekledik
         const isAdmin = user.app_metadata?.role === "admin" || 
                       user.user_metadata?.isAdmin === true ||
-                      user.user_metadata?.role === "admin";
+                      user.user_metadata?.role === "admin" ||
+                      user.id === '5d946ebe-c6b0-4488-801a-f4b1e67138bb' ||
+                      user.email === 'pixelhuntfun@gmail.com';
                       
         console.log("Admin check:", { 
           userId: user.id,
@@ -115,8 +118,11 @@ function AdminAccess() {
   if (user && (
     user.app_metadata?.role === "admin" || 
     user.user_metadata?.isAdmin === true || 
-    user.user_metadata?.role === "admin"
+    user.user_metadata?.role === "admin" ||
+    user.id === '5d946ebe-c6b0-4488-801a-f4b1e67138bb' ||
+    user.email === 'pixelhuntfun@gmail.com'
   )) {
+    // Admin ID veya email ile kesin eşleşme varsa admin panelini göster
     return <AdminPanel />;
   }
   

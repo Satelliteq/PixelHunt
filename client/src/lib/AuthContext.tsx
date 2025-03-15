@@ -249,62 +249,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const appMetadataRole = userData?.user?.app_metadata?.role;
       
       if (appMetadataRole === "admin") {
-        console.log("User is admin via app_metadata");
+        console.log("User is admin via app_metadata role");
         return true;
       }
       
-      // İkinci kontrol: users tablosunda admin rolü var mı?
-      const { data: dbUserData, error: userError } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', userId)
-        .single();
-      
-      console.log("DB user data:", dbUserData, "Error:", userError);
-      
-      if (dbUserData?.role === "admin" && !userError) {
-        console.log("User is admin via users table");
-        
-        // Metadata'ya admin bilgisini kaydet
-        const { data, error } = await supabase.auth.updateUser({
-          data: { isAdmin: true }
-        });
-        
-        if (!error && data.user) {
-          console.log("Updated user metadata with isAdmin flag");
-          setUser(data.user);
-          return true;
-        }
+      // İkinci kontrol: SQL ile eklenen bilgilere göre user_metadata'da role veya isAdmin var mı?
+      // Not: Bu bilgiler SQL ile doğrudan auth.users tablosuna eklenmiş olabilir
+      if (userData?.user?.user_metadata?.role === "admin") {
+        console.log("User is admin via user_metadata role");
+        return true;
       }
       
-      // Üçüncü kontrol: admin_users tablosunda kullanıcı var mı?
-      const { data: adminUserData, error: adminError } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-      
-      console.log("Admin user data:", adminUserData, "Error:", adminError);
-      
-      if (adminUserData && !adminError) {
-        console.log("User is admin via admin_users table");
-        
-        // Metadata'ya admin bilgisini kaydet
-        const { data, error } = await supabase.auth.updateUser({
-          data: { isAdmin: true }
-        });
-        
-        if (!error && data.user) {
-          console.log("Updated user metadata with isAdmin flag");
-          setUser(data.user);
-          return true;
-        }
-      }
-      
-      // Son kontrol: User metadata'da isAdmin true mu?
       if (userData?.user?.user_metadata?.isAdmin === true) {
-        console.log("User is admin via user_metadata");
+        console.log("User is admin via user_metadata isAdmin flag");
         return true;
+      }
+      
+      // API key hatası veya tablo hatası alındığı için doğrudan Supabase Auth API'sini kullanıyoruz
+      // Burada ek tablo kontrolleri yapıyorsan, tablo adlarını Supabase'de oluşturduğunuz tablolar ile değiştirin
+      
+      // Eğer Supabase üzerinde kullanıcı ID'sine göre admin durumunu manuel olarak ayarladıysanız
+      // bu bilgiyi metadata'ya kaydedelim
+      if (userId === '108973046762004266106' || // Google provider_id örneği
+          userId === '5d946ebe-c6b0-4488-801a-f4b1e67138bb' || // UUID örneği
+          userData?.user?.email === 'pixelhuntfun@gmail.com') {
+        console.log("User is admin via hardcoded admin list");
+        
+        // Metadata'ya admin bilgisini kaydet
+        const { data, error } = await supabase.auth.updateUser({
+          data: { isAdmin: true }
+        });
+        
+        if (!error && data.user) {
+          console.log("Updated user metadata with isAdmin flag");
+          setUser(data.user);
+          return true;
+        }
       }
       
       console.log("User is not admin");
