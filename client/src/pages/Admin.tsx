@@ -1,22 +1,26 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/lib/AuthContext';
-import { useLocation, Link } from 'wouter';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
+import { useState, useEffect } from "react";
+import { useAuth } from "@/lib/AuthContext";
+import { useLocation, Link } from "wouter";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
-import { Loader2, UserX, Shield, Edit, Trash, Plus, Check, X } from 'lucide-react';
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Loader2,
+  UserX,
+  Shield,
+  Edit,
+  Trash,
+  Plus,
+  Check,
+  X,
+} from "lucide-react";
 import {
   Table,
   TableBody,
@@ -24,7 +28,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -33,7 +37,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -42,29 +46,20 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { apiRequest } from '@/lib/queryClient';
-import { insertCategorySchema, insertTestSchema } from '@/../../shared/schema';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { apiRequest } from "@/lib/queryClient";
+import { insertCategorySchema, insertTestSchema } from "@/../../shared/schema";
+import { Badge } from "@/components/ui/badge";
 // Admin Sayfasına Giriş Kontrolü
 function AdminAccess() {
   const { user, loading } = useAuth();
-  const [, navigate] = useLocation();
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
-
   // Kullanıcı yükleniyor
   if (loading) {
     return (
@@ -74,31 +69,28 @@ function AdminAccess() {
       </div>
     );
   }
-
   // Kullanıcı giriş yapmamış
   if (!user) {
     toast({
       title: "Erişim reddedildi",
       description: "Bu sayfaya erişmek için giriş yapmalısınız.",
-      variant: "destructive"
+      variant: "destructive",
     });
-    navigate('/login');
+    setLocation("/login");
     return null;
   }
-
-  // Admin rolü kontrolü (Supabase user.user_metadata'dan kontrol ederiz)
-  const isAdmin = user.app_metadata?.role === 'admin' || user.user_metadata?.isAdmin;
-  
+  // Admin rolü kontrolü
+  const isAdmin =
+    user.app_metadata?.role === "admin" || user.user_metadata?.isAdmin;
   if (!isAdmin) {
     toast({
       title: "Erişim reddedildi",
       description: "Bu sayfaya erişmek için admin yetkisine sahip olmalısınız.",
-      variant: "destructive"
+      variant: "destructive",
     });
-    navigate('/');
+    setLocation("/");
     return null;
   }
-
   // Admin sayfasını göster
   return <AdminPanel />;
 }
@@ -118,7 +110,7 @@ type CategoryFormValues = z.infer<typeof categoryFormSchema>;
 // Admin Paneli Ana Bileşeni
 function AdminPanel() {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('categories');
+  const [activeTab, setActiveTab] = useState("categories");
   const [isLoading, setIsLoading] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
   const [tests, setTests] = useState<any[]>([]);
@@ -130,8 +122,8 @@ function AdminPanel() {
   const categoryForm = useForm<CategoryFormValues>({
     resolver: zodResolver(categoryFormSchema),
     defaultValues: {
-      name: '',
-      description: '',
+      name: "",
+      description: "",
     },
   });
 
@@ -141,19 +133,19 @@ function AdminPanel() {
     try {
       // Yeni kategori ekleme
       if (!selectedCategory) {
-        await apiRequest('/api/categories', {
-          method: 'POST',
+        await apiRequest("/api/categories", {
+          method: "POST",
           data: values,
         });
         toast({
           title: "Başarılı",
           description: "Kategori başarıyla eklendi.",
         });
-      } 
+      }
       // Kategori güncelleme
       else {
         await apiRequest(`/api/categories/${selectedCategory.id}`, {
-          method: 'PUT',
+          method: "PUT",
           data: values,
         });
         toast({
@@ -161,20 +153,20 @@ function AdminPanel() {
           description: "Kategori başarıyla güncellendi.",
         });
       }
-      
+
       // Form ve dialog'u sıfırla
       categoryForm.reset();
       setIsCategoryDialogOpen(false);
       setSelectedCategory(null);
-      
+
       // Kategorileri yeniden yükle
       fetchCategories();
     } catch (error) {
-      console.error('Kategori işlemi sırasında hata:', error);
+      console.error("Kategori işlemi sırasında hata:", error);
       toast({
         title: "Hata",
         description: "Kategori işlemi sırasında bir hata oluştu.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -185,14 +177,14 @@ function AdminPanel() {
   const fetchCategories = async () => {
     setIsLoading(true);
     try {
-      const data = await apiRequest('/api/categories');
+      const data = await apiRequest("/api/categories");
       setCategories(data);
     } catch (error) {
-      console.error('Kategoriler yüklenirken hata:', error);
+      console.error("Kategoriler yüklenirken hata:", error);
       toast({
         title: "Hata",
         description: "Kategoriler yüklenirken bir hata oluştu.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -203,14 +195,14 @@ function AdminPanel() {
   const fetchTests = async () => {
     setIsLoading(true);
     try {
-      const data = await apiRequest('/api/tests');
+      const data = await apiRequest("/api/tests");
       setTests(data);
     } catch (error) {
-      console.error('Testler yüklenirken hata:', error);
+      console.error("Testler yüklenirken hata:", error);
       toast({
         title: "Hata",
         description: "Testler yüklenirken bir hata oluştu.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -222,14 +214,14 @@ function AdminPanel() {
     setIsLoading(true);
     try {
       // Bu endpoint'i backend'de oluşturmanız gerekecek
-      const data = await apiRequest('/api/admin/users');
+      const data = await apiRequest("/api/admin/users");
       setUsers(data);
     } catch (error) {
-      console.error('Kullanıcılar yüklenirken hata:', error);
+      console.error("Kullanıcılar yüklenirken hata:", error);
       toast({
         title: "Hata",
         description: "Kullanıcılar yüklenirken bir hata oluştu.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -248,11 +240,11 @@ function AdminPanel() {
 
   // Test silme
   const handleDeleteTest = async (testId: number) => {
-    if (window.confirm('Bu testi silmek istediğinize emin misiniz?')) {
+    if (window.confirm("Bu testi silmek istediğinize emin misiniz?")) {
       setIsLoading(true);
       try {
         await apiRequest(`/api/tests/${testId}`, {
-          method: 'DELETE',
+          method: "DELETE",
         });
         toast({
           title: "Başarılı",
@@ -261,11 +253,11 @@ function AdminPanel() {
         // Testleri yeniden yükle
         fetchTests();
       } catch (error) {
-        console.error('Test silinirken hata:', error);
+        console.error("Test silinirken hata:", error);
         toast({
           title: "Hata",
           description: "Test silinirken bir hata oluştu.",
-          variant: "destructive"
+          variant: "destructive",
         });
       } finally {
         setIsLoading(false);
@@ -275,12 +267,12 @@ function AdminPanel() {
 
   // Kullanıcı banlama
   const handleBanUser = async (userId: number) => {
-    if (window.confirm('Bu kullanıcıyı banlamak istediğinize emin misiniz?')) {
+    if (window.confirm("Bu kullanıcıyı banlamak istediğinize emin misiniz?")) {
       setIsLoading(true);
       try {
         // Bu endpoint'i backend'de oluşturmanız gerekecek
         await apiRequest(`/api/admin/users/${userId}/ban`, {
-          method: 'POST',
+          method: "POST",
         });
         toast({
           title: "Başarılı",
@@ -289,11 +281,11 @@ function AdminPanel() {
         // Kullanıcıları yeniden yükle
         fetchUsers();
       } catch (error) {
-        console.error('Kullanıcı banlanırken hata:', error);
+        console.error("Kullanıcı banlanırken hata:", error);
         toast({
           title: "Hata",
-          description: "Kullanıcı banlanırken bir hata oluştu.",
-          variant: "destructive"
+          description: "Kullanıcı banlan4�rken bir hata oluştu.",
+          variant: "destructive",
         });
       } finally {
         setIsLoading(false);
@@ -303,31 +295,32 @@ function AdminPanel() {
 
   // Admin rolü atama
   const handleToggleAdminRole = async (userId: number, currentRole: string) => {
-    const newRole = currentRole === 'admin' ? 'user' : 'admin';
-    const confirmMessage = currentRole === 'admin' 
-      ? 'Bu kullanıcının admin yetkisini kaldırmak istediğinize emin misiniz?' 
-      : 'Bu kullanıcıya admin yetkisi vermek istediğinize emin misiniz?';
-    
+    const newRole = currentRole === "admin" ? "user" : "admin";
+    const confirmMessage =
+      currentRole === "admin"
+        ? "Bu kullanıcının admin yetkisini kaldırmak istediğinize emin misiniz?"
+        : "Bu kullanıcıya admin yetkisi vermek istediğinize emin misiniz?";
+
     if (window.confirm(confirmMessage)) {
       setIsLoading(true);
       try {
         // Bu endpoint'i backend'de oluşturmanız gerekecek
         await apiRequest(`/api/admin/users/${userId}/role`, {
-          method: 'POST',
+          method: "POST",
           data: { role: newRole },
         });
         toast({
           title: "Başarılı",
-          description: `Kullanıcı rolü ${newRole === 'admin' ? 'admin' : 'kullanıcı'} olarak güncellendi.`,
+          description: `Kullanıcı rolü ${newRole === "admin" ? "admin" : "kullanıcı"} olarak güncellendi.`,
         });
         // Kullanıcıları yeniden yükle
         fetchUsers();
       } catch (error) {
-        console.error('Kullanıcı rolü güncellenirken hata:', error);
+        console.error("Kullanıcı rolü güncellenirken hata:", error);
         toast({
           title: "Hata",
           description: "Kullanıcı rolü güncellenirken bir hata oluştu.",
-          variant: "destructive"
+          variant: "destructive",
         });
       } finally {
         setIsLoading(false);
@@ -338,11 +331,11 @@ function AdminPanel() {
   // Sayfa açıldığında ilgili verileri yükle
   useEffect(() => {
     // Active tab değiştiğinde ilgili verileri yükle
-    if (activeTab === 'categories') {
+    if (activeTab === "categories") {
       fetchCategories();
-    } else if (activeTab === 'tests') {
+    } else if (activeTab === "tests") {
       fetchTests();
-    } else if (activeTab === 'users') {
+    } else if (activeTab === "users") {
       fetchUsers();
     }
   }, [activeTab]);
@@ -350,14 +343,14 @@ function AdminPanel() {
   return (
     <div className="container py-8">
       <h1 className="text-3xl font-bold mb-6">Admin Paneli</h1>
-      
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid grid-cols-3 mb-8">
           <TabsTrigger value="categories">Kategoriler</TabsTrigger>
           <TabsTrigger value="tests">Testler</TabsTrigger>
           <TabsTrigger value="users">Kullanıcılar</TabsTrigger>
         </TabsList>
-        
+
         {/* Kategoriler Tab */}
         <TabsContent value="categories">
           <Card>
@@ -365,17 +358,24 @@ function AdminPanel() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle>Kategori Yönetimi</CardTitle>
-                  <CardDescription>Kategori ekleyin, düzenleyin ve yönetin.</CardDescription>
+                  <CardDescription>
+                    Kategori ekleyin, düzenleyin ve yönetin.
+                  </CardDescription>
                 </div>
-                <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
+                <Dialog
+                  open={isCategoryDialogOpen}
+                  onOpenChange={setIsCategoryDialogOpen}
+                >
                   <DialogTrigger asChild>
-                    <Button onClick={() => {
-                      setSelectedCategory(null);
-                      categoryForm.reset({
-                        name: '',
-                        description: '',
-                      });
-                    }}>
+                    <Button
+                      onClick={() => {
+                        setSelectedCategory(null);
+                        categoryForm.reset({
+                          name: "",
+                          description: "",
+                        });
+                      }}
+                    >
                       <Plus className="w-4 h-4 mr-2" />
                       Yeni Kategori
                     </Button>
@@ -383,15 +383,22 @@ function AdminPanel() {
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>
-                        {selectedCategory ? 'Kategori Düzenle' : 'Yeni Kategori Ekle'}
+                        {selectedCategory
+                          ? "Kategori Düzenle"
+                          : "Yeni Kategori Ekle"}
                       </DialogTitle>
                       <DialogDescription>
                         Kategori detaylarını giriniz.
                       </DialogDescription>
                     </DialogHeader>
-                    
+
                     <Form {...categoryForm}>
-                      <form onSubmit={categoryForm.handleSubmit(handleCategorySubmit)} className="space-y-4">
+                      <form
+                        onSubmit={categoryForm.handleSubmit(
+                          handleCategorySubmit,
+                        )}
+                        className="space-y-4"
+                      >
                         <FormField
                           control={categoryForm.control}
                           name="name"
@@ -399,13 +406,16 @@ function AdminPanel() {
                             <FormItem>
                               <FormLabel>Kategori Adı</FormLabel>
                               <FormControl>
-                                <Input {...field} placeholder="Örn: Sanat, Bilim, Tarih..." />
+                                <Input
+                                  {...field}
+                                  placeholder="Örn: Sanat, Bilim, Tarih..."
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
-                        
+
                         <FormField
                           control={categoryForm.control}
                           name="description"
@@ -413,8 +423,8 @@ function AdminPanel() {
                             <FormItem>
                               <FormLabel>Açıklama</FormLabel>
                               <FormControl>
-                                <Textarea 
-                                  {...field} 
+                                <Textarea
+                                  {...field}
                                   placeholder="Kategori hakkında kısa açıklama..."
                                   rows={3}
                                 />
@@ -423,11 +433,11 @@ function AdminPanel() {
                             </FormItem>
                           )}
                         />
-                        
+
                         <DialogFooter>
-                          <Button 
-                            type="button" 
-                            variant="outline" 
+                          <Button
+                            type="button"
+                            variant="outline"
                             onClick={() => setIsCategoryDialogOpen(false)}
                           >
                             İptal
@@ -438,7 +448,11 @@ function AdminPanel() {
                                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                                 Kaydediliyor...
                               </>
-                            ) : selectedCategory ? 'Güncelle' : 'Ekle'}
+                            ) : selectedCategory ? (
+                              "Güncelle"
+                            ) : (
+                              "Ekle"
+                            )}
                           </Button>
                         </DialogFooter>
                       </form>
@@ -471,7 +485,9 @@ function AdminPanel() {
                       <TableRow key={category.id}>
                         <TableCell>{category.id}</TableCell>
                         <TableCell>{category.name}</TableCell>
-                        <TableCell className="max-w-sm truncate">{category.description}</TableCell>
+                        <TableCell className="max-w-sm truncate">
+                          {category.description}
+                        </TableCell>
                         <TableCell className="text-right">
                           <Button
                             variant="ghost"
@@ -490,7 +506,7 @@ function AdminPanel() {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         {/* Testler Tab */}
         <TabsContent value="tests">
           <Card>
@@ -498,7 +514,9 @@ function AdminPanel() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle>Test Yönetimi</CardTitle>
-                  <CardDescription>Testleri görüntüleyin ve silin.</CardDescription>
+                  <CardDescription>
+                    Testleri görüntüleyin ve silin.
+                  </CardDescription>
                 </div>
                 <Link href="/create-test">
                   <Button>
@@ -534,15 +552,22 @@ function AdminPanel() {
                       <TableRow key={test.id}>
                         <TableCell>{test.id}</TableCell>
                         <TableCell>{test.title}</TableCell>
-                        <TableCell>{test.category?.name || 'Kategori yok'}</TableCell>
-                        <TableCell>{test.createdBy?.username || 'Bilinmeyen'}</TableCell>
                         <TableCell>
-                          <Badge 
+                          {test.category?.name || "Kategori yok"}
+                        </TableCell>
+                        <TableCell>
+                          {test.createdBy?.username || "Bilinmeyen"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
                             variant={
-                              test.difficulty <= 2 ? "outline" : 
-                              test.difficulty <= 3 ? "secondary" : 
-                              test.difficulty <= 4 ? "default" : 
-                              "destructive"
+                              test.difficulty <= 2
+                                ? "outline"
+                                : test.difficulty <= 3
+                                  ? "secondary"
+                                  : test.difficulty <= 4
+                                    ? "default"
+                                    : "destructive"
                             }
                           >
                             {test.difficulty}/5
@@ -550,11 +575,7 @@ function AdminPanel() {
                         </TableCell>
                         <TableCell className="text-right">
                           <Link href={`/test-edit/${test.id}`}>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              title="Düzenle"
-                            >
+                            <Button variant="ghost" size="icon" title="Düzenle">
                               <Edit className="w-4 h-4" />
                             </Button>
                           </Link>
@@ -575,13 +596,15 @@ function AdminPanel() {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         {/* Kullanıcılar Tab */}
         <TabsContent value="users">
           <Card>
             <CardHeader>
               <CardTitle>Kullanıcı Yönetimi</CardTitle>
-              <CardDescription>Kullanıcıları yönetin, banlayın ve admin atayın.</CardDescription>
+              <CardDescription>
+                Kullanıcıları yönetin, banlayın ve admin atayın.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {isLoading ? (
@@ -611,8 +634,12 @@ function AdminPanel() {
                         <TableCell>{user.username}</TableCell>
                         <TableCell>{user.email}</TableCell>
                         <TableCell>
-                          <Badge variant={user.role === 'admin' ? "default" : "outline"}>
-                            {user.role === 'admin' ? 'Admin' : 'Kullanıcı'}
+                          <Badge
+                            variant={
+                              user.role === "admin" ? "default" : "outline"
+                            }
+                          >
+                            {user.role === "admin" ? "Admin" : "Kullanıcı"}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -626,10 +653,18 @@ function AdminPanel() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleToggleAdminRole(user.id, user.role)}
-                            title={user.role === 'admin' ? 'Admin Yetkisini Kaldır' : 'Admin Yap'}
+                            onClick={() =>
+                              handleToggleAdminRole(user.id, user.role)
+                            }
+                            title={
+                              user.role === "admin"
+                                ? "Admin Yetkisini Kaldır"
+                                : "Admin Yap"
+                            }
                           >
-                            <Shield className={`w-4 h-4 ${user.role === 'admin' ? 'text-primary' : ''}`} />
+                            <Shield
+                              className={`w-4 h-4 ${user.role === "admin" ? "text-primary" : ""}`}
+                            />
                           </Button>
                           {!user.banned ? (
                             <Button
