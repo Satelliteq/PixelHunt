@@ -62,7 +62,7 @@ import {
 // Admin Sayfasına Giriş Kontrolü
 function AdminAccess() {
   const { user, loading } = useAuth();
-  const navigate = useNavigate();
+  const [, navigate] = useLocation();
   const { toast } = useToast();
 
   // Kullanıcı yükleniyor

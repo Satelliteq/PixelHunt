@@ -28,7 +28,8 @@ import {
   Mail,
   Menu,
   X,
-  PlayCircle
+  PlayCircle,
+  Settings
 } from "lucide-react";
 
 export default function Header() {
@@ -189,6 +190,11 @@ export default function Header() {
                 <DropdownMenuItem onClick={() => handleNavigation("/profile")}>
                   Profilim
                 </DropdownMenuItem>
+                {user.app_metadata?.role === 'admin' || user.user_metadata?.isAdmin ? (
+                  <DropdownMenuItem onClick={() => handleNavigation("/admin")}>
+                    <Settings className="w-4 h-4 mr-2" /> Admin Paneli
+                  </DropdownMenuItem>
+                ) : null}
                 <DropdownMenuItem onClick={handleSignOut}>
                   Çıkış Yap
                 </DropdownMenuItem>
@@ -303,6 +309,15 @@ export default function Header() {
               >
                 <User className="w-5 h-5 mr-2" /> Profilim
               </Button>
+              {user.app_metadata?.role === 'admin' || user.user_metadata?.isAdmin ? (
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => handleNavigation("/admin")}
+                >
+                  <Settings className="w-5 h-5 mr-2" /> Admin Paneli
+                </Button>
+              ) : null}
               <Button 
                 variant="destructive" 
                 className="w-full"
