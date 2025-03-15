@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { IconButton } from "@/components/ui/icon-button";
 import ThemeToggle from "@/components/ThemeToggle";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useLanguage } from "@/lib/LanguageContext";
 import { 
   Grid2X2,
   Search,
