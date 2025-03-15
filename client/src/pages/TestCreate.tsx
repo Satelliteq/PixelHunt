@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useAuth } from "@/lib/AuthContext";
+import { supabase } from "@/lib/supabase";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +24,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "@/hooks/use-toast";
-import { AlertTriangle, Trash, Upload, Plus, Image } from "lucide-react";
+import { AlertTriangle, Trash, Upload, Plus, Image, Loader2 } from "lucide-react";
 
 const testFormSchema = z.object({
   title: z.string().min(5, "Başlık en az 5 karakter olmalıdır").max(100, "Başlık en fazla 100 karakter olabilir"),
@@ -30,6 +32,7 @@ const testFormSchema = z.object({
   categoryId: z.number().min(1, "Lütfen bir kategori seçin"),
   difficulty: z.number().min(1).max(5),
   isPublic: z.boolean().default(true),
+  thumbnail: z.string().optional(),
   images: z.array(
     z.object({
       imageUrl: z.string().url("Geçerli bir URL girmelisiniz"),
@@ -42,6 +45,9 @@ type TestFormValues = z.infer<typeof testFormSchema>;
 
 export default function TestCreate() {
   const [, navigate] = useLocation();
+  const { user } = useAuth();
+  const [thumbnail, setThumbnail] = useState<string>("");
+  const [uploading, setUploading] = useState<boolean>(false);
   const [imageInputs, setImageInputs] = useState<{
     imageUrl: string;
     answers: string[];
@@ -55,6 +61,64 @@ export default function TestCreate() {
     queryKey: ['/api/categories'],
   });
 
+  // Kullanıcı girişi kontrolü
+  useEffect(() => {
+    if (!user) {
+      toast({
+        title: "Giriş yapmanız gerekiyor",
+        description: "Test oluşturmak için lütfen giriş yapın.",
+        variant: "destructive",
+      });
+      navigate("/login");
+    }
+  }, [user, navigate]);
+
+  // Thumbnail yükleme işlevi
+  const handleThumbnailUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Hata",
+        description: "Lütfen bir görsel dosyası yükleyin.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Dosya boyutu kontrolü (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Hata",
+        description: "Görsel boyutu 5MB'dan küçük olmalıdır.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      setUploading(true);
+      
+      // Dosyayı Base64'e çevirme işlemi
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setThumbnail(base64String);
+        form.setValue("thumbnail", base64String);
+        setUploading(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      setUploading(false);
+      toast({
+        title: "Hata",
+        description: "Kapak fotoğrafı yüklenirken bir hata oluştu.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const form = useForm<TestFormValues>({
     resolver: zodResolver(testFormSchema),
     defaultValues: {
@@ -63,6 +127,7 @@ export default function TestCreate() {
       categoryId: 0,
       difficulty: 3,
       isPublic: true,
+      thumbnail: "",
       images: [],
     },
   });
@@ -294,6 +359,56 @@ export default function TestCreate() {
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="thumbnail"
+              render={({ field }) => (
+                <FormItem className="mt-4">
+                  <FormLabel>Kapak Fotoğrafı</FormLabel>
+                  <div className="flex flex-col md:flex-row gap-4 items-start">
+                    <div className="flex-1">
+                      <FormControl>
+                        <div className="flex items-center gap-2">
+                          <label className="flex items-center justify-center cursor-pointer w-full py-2 px-3 border border-dashed rounded text-sm text-muted-foreground hover:bg-muted/50 transition-colors">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={handleThumbnailUpload}
+                              disabled={uploading}
+                            />
+                            <Upload className="h-4 w-4 mr-2" />
+                            {uploading ? 'Yükleniyor...' : 'Kapak Fotoğrafı Yükle'}
+                          </label>
+                        </div>
+                      </FormControl>
+                      <FormDescription className="mt-2">
+                        Testiniz için öne çıkan bir görsel yükleyin (opsiyonel).
+                      </FormDescription>
+                      <FormMessage />
+                    </div>
+                    
+                    {thumbnail && (
+                      <div className="w-32 h-32 flex items-center justify-center border rounded overflow-hidden">
+                        <img
+                          src={thumbnail}
+                          alt="Kapak Fotoğrafı"
+                          className="max-w-full max-h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    
+                    {!thumbnail && (
+                      <div className="w-32 h-32 flex flex-col items-center justify-center border rounded bg-muted/30">
+                        <Image className="h-10 w-10 text-muted-foreground/50 mb-2" />
+                        <span className="text-xs text-muted-foreground text-center px-2">Kapak Fotoğrafı Yok</span>
+                      </div>
+                    )}
+                  </div>
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}

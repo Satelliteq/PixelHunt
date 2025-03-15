@@ -60,6 +60,33 @@ function AdminAccess() {
   const { user, loading } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  
+  useEffect(() => {
+    // Kullanıcı yüklendikten sonra kontrolleri yap
+    if (!loading) {
+      // Kullanıcı giriş yapmamış
+      if (!user) {
+        toast({
+          title: "Erişim reddedildi",
+          description: "Bu sayfaya erişmek için giriş yapmalısınız.",
+          variant: "destructive",
+        });
+        setLocation("/login");
+      } else {
+        // Admin rolü kontrolü
+        const isAdmin = user.app_metadata?.role === "admin" || user.user_metadata?.isAdmin;
+        if (!isAdmin) {
+          toast({
+            title: "Erişim reddedildi",
+            description: "Bu sayfaya erişmek için admin yetkisine sahip olmalısınız.",
+            variant: "destructive",
+          });
+          setLocation("/");
+        }
+      }
+    }
+  }, [user, loading, toast, setLocation]);
+  
   // Kullanıcı yükleniyor
   if (loading) {
     return (
@@ -69,30 +96,14 @@ function AdminAccess() {
       </div>
     );
   }
-  // Kullanıcı giriş yapmamış
-  if (!user) {
-    toast({
-      title: "Erişim reddedildi",
-      description: "Bu sayfaya erişmek için giriş yapmalısınız.",
-      variant: "destructive",
-    });
-    setLocation("/login");
-    return null;
+  
+  // Kullanıcı yüklendi ve admin ise göster
+  if (user && (user.app_metadata?.role === "admin" || user.user_metadata?.isAdmin)) {
+    return <AdminPanel />;
   }
-  // Admin rolü kontrolü
-  const isAdmin =
-    user.app_metadata?.role === "admin" || user.user_metadata?.isAdmin;
-  if (!isAdmin) {
-    toast({
-      title: "Erişim reddedildi",
-      description: "Bu sayfaya erişmek için admin yetkisine sahip olmalısınız.",
-      variant: "destructive",
-    });
-    setLocation("/");
-    return null;
-  }
-  // Admin sayfasını göster
-  return <AdminPanel />;
+  
+  // Yetkilendirme kontrolleri useEffect ile yapılıyor, boş bir div döndür
+  return <div className="flex flex-col items-center justify-center min-h-[60vh]"></div>;
 }
 
 // Kategori yönetimi için form şeması
@@ -518,7 +529,7 @@ function AdminPanel() {
                     Testleri görüntüleyin ve silin.
                   </CardDescription>
                 </div>
-                <Link href="/create-test">
+                <Link to="/test-create">
                   <Button>
                     <Plus className="w-4 h-4 mr-2" />
                     Yeni Test Oluştur
@@ -574,7 +585,7 @@ function AdminPanel() {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Link href={`/test-edit/${test.id}`}>
+                          <Link to={`/test-edit/${test.id}`}>
                             <Button variant="ghost" size="icon" title="Düzenle">
                               <Edit className="w-4 h-4" />
                             </Button>
