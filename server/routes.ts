@@ -438,6 +438,187 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin routes
+  // Middleware function to check if user is admin
+  const isAdmin = (req: Request, res: Response, next: Function) => {
+    // In a real app, this would verify the authenticated user has admin role
+    // For our demo, we'll use a simple approach
+    const isAdminUser = req.headers['x-admin-token'] === 'admin-secret-token';
+    
+    if (!isAdminUser) {
+      return res.status(403).json({ message: "Access denied: Admin privileges required" });
+    }
+    
+    next();
+  };
+  
+  // Get all users (admin only)
+  app.get("/api/admin/users", isAdmin, async (_req: Request, res: Response) => {
+    try {
+      const users = await storage.getAllUsers();
+      // Remove passwords from the response
+      const safeUsers = users.map(user => {
+        const { password, ...userWithoutPassword } = user;
+        return userWithoutPassword;
+      });
+      
+      res.json(safeUsers);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  // Update user role (admin only)
+  app.post("/api/admin/users/:id/role", isAdmin, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { role } = req.body;
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      if (!role || (role !== 'admin' && role !== 'user')) {
+        return res.status(400).json({ message: "Valid role (admin or user) is required" });
+      }
+      
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const updatedUser = await storage.updateUserRole(userId, role);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const { password, ...userWithoutPassword } = updatedUser;
+      
+      res.json(userWithoutPassword);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  // Ban/unban user (admin only)
+  app.post("/api/admin/users/:id/ban", isAdmin, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { banned } = req.body;
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      if (typeof banned !== 'boolean') {
+        return res.status(400).json({ message: "Banned status (true/false) is required" });
+      }
+      
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const updatedUser = await storage.updateUserBanStatus(userId, banned);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const { password, ...userWithoutPassword } = updatedUser;
+      
+      res.json(userWithoutPassword);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  // CRUD operations for categories (admin only)
+  app.post("/api/categories", isAdmin, async (req: Request, res: Response) => {
+    try {
+      const categoryInput = insertCategorySchema.parse(req.body);
+      const newCategory = await storage.createCategory(categoryInput);
+      res.status(201).json(newCategory);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid category data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  app.put("/api/categories/:id", isAdmin, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid category ID" });
+      }
+      
+      const categoryInput = insertCategorySchema.parse(req.body);
+      const updatedCategory = await storage.updateCategory(id, categoryInput);
+      
+      if (!updatedCategory) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+      
+      res.json(updatedCategory);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid category data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  // CRUD operations for tests (admin only)
+  app.put("/api/tests/:id", isAdmin, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid test ID" });
+      }
+      
+      const testInput = insertTestSchema.parse(req.body);
+      const updatedTest = await storage.updateTest(id, testInput);
+      
+      if (!updatedTest) {
+        return res.status(404).json({ message: "Test not found" });
+      }
+      
+      res.json(updatedTest);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid test data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  app.delete("/api/tests/:id", isAdmin, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid test ID" });
+      }
+      
+      const deleted = await storage.deleteTest(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Test not found" });
+      }
+      
+      res.status(204).end();
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

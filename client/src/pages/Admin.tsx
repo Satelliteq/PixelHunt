@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
-import { useNavigate } from 'wouter';
+import { useLocation } from 'wouter';
 import {
   Tabs,
   TabsContent,

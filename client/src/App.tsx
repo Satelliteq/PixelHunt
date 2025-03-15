@@ -23,6 +23,7 @@ import Tests from "@/pages/Tests";
 import Contact from "@/pages/Contact";
 import HowToPlay from "@/pages/HowToPlay";
 import NotFound from "@/pages/not-found";
+import Admin from "@/pages/Admin";
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -50,6 +51,7 @@ function Router() {
       <Route path="/how-to-play" component={HowToPlay} />
       <Route path="/login" component={Login} />
       <Route path="/profile" component={Profile} />
+      <Route path="/admin" component={Admin} />
       <Route component={NotFound} />
     </Switch>
   );
