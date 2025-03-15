@@ -7,10 +7,11 @@ type AuthContextType = {
   user: User | null;
   loading: boolean;
   initialized: boolean;
-  signInWithGoogle: () => Promise<void>;
+  signInWithGoogle: () => Promise<any>;
   signInWithEmail: (email: string, password: string) => Promise<any>;
   signUpWithEmail: (email: string, password: string, userData?: Record<string, any>) => Promise<any>;
   sendPasswordResetEmail: (email: string) => Promise<void>;
+  resendConfirmationEmail: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -33,31 +34,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     
     try {
-      // Şu an için Google OAuth'ı devre dışı bıraktık, 
-      // Supabase projesinde etkinleştirilmesi gerekiyor
-      toast({
-        title: "Bilgi",
-        description: "Google ile giriş özelliği şu anda bakım modundadır. Lütfen e-posta ve şifre ile giriş yapınız.",
-        variant: "default"
-      });
-      
-      // Gerçek implementasyon aşağıdaki gibi olacak
-      // Not: Supabase projenizde Google Auth'ı etkinleştirdikten sonra bu kodu açabilirsiniz
-      /*
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin
+          redirectTo: `${window.location.origin}/auth/callback`
         }
       });
 
       if (error) throw error;
-      */
-      // User state will be updated via the auth state change listener
+      // Google OAuth, kullanıcıyı yönlendirme URL'sine yönlendirir
     } catch (error) {
       console.error('Error signing in with Google:', error);
       toast({
-        title: "Giriş Hatası",
+        title: "Google ile Giriş Hatası",
         description: "Google ile giriş yapılırken bir hata oluştu. Lütfen tekrar deneyin.",
         variant: "destructive"
       });
@@ -89,7 +78,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       let errorMessage = "E-posta veya şifre hatalı. Lütfen tekrar deneyin.";
       
       // @ts-ignore
-      if (error.message && error.message.includes("Invalid login credentials")) {
+      if (error.code === "email_not_confirmed") {
+        errorMessage = "E-posta adresiniz henüz doğrulanmamış. Lütfen e-posta kutunuzu kontrol ediniz veya yeni bir doğrulama e-postası isteyiniz.";
+      }
+      // @ts-ignore
+      else if (error.message && error.message.includes("Invalid login credentials")) {
         errorMessage = "E-posta veya şifre hatalı. Lütfen tekrar deneyin.";
       }
       
@@ -176,6 +169,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast({
         title: "Şifre Sıfırlama Hatası",
         description: "Şifre sıfırlama e-postası gönderilirken bir hata oluştu. Lütfen tekrar deneyin.",
+        variant: "destructive"
+      });
+      throw error;
+    }
+  };
+  
+  const resendConfirmationEmail = async (email: string) => {
+    if (!isSupabaseConfigured()) {
+      toast({
+        title: "Bağlantı Hatası",
+        description: "Kimlik doğrulama servisi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.",
+        variant: "destructive"
+      });
+      throw new Error('Supabase is not configured');
+    }
+    
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+
+      if (error) throw error;
+      
+      toast({
+        title: "Doğrulama E-postası Gönderildi",
+        description: "Yeni bir doğrulama e-postası adresinize gönderildi. Lütfen e-postanızı kontrol edin.",
+        variant: "default"
+      });
+    } catch (error) {
+      console.error('Error resending confirmation email:', error);
+      toast({
+        title: "E-posta Gönderme Hatası",
+        description: "Doğrulama e-postası gönderilirken bir hata oluştu. Lütfen tekrar deneyin.",
         variant: "destructive"
       });
       throw error;
@@ -271,6 +301,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       signInWithEmail,
       signUpWithEmail,
       sendPasswordResetEmail,
+      resendConfirmationEmail,
       signOut 
     }}>
       {children}
