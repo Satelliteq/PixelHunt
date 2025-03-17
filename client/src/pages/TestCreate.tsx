@@ -30,8 +30,8 @@ const testFormSchema = z.object({
   title: z.string().min(5, "Başlık en az 5 karakter olmalıdır").max(100, "Başlık en fazla 100 karakter olabilir"),
   description: z.string().min(10, "Açıklama en az 10 karakter olmalıdır").nullable(),
   categoryId: z.number().min(1, "Lütfen bir kategori seçin"),
-  difficulty: z.number().min(1).max(5),
   isPublic: z.boolean().default(true),
+  anonymousCreator: z.boolean().default(false),
   thumbnail: z.string().optional(),
   images: z.array(
     z.object({
@@ -125,8 +125,8 @@ export default function TestCreate() {
       title: "",
       description: "",
       categoryId: 0,
-      difficulty: 3,
       isPublic: true,
+      anonymousCreator: false,
       thumbnail: "",
       images: [],
     },
@@ -313,7 +313,7 @@ export default function TestCreate() {
               )}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6">
               <FormField
                 control={form.control}
                 name="categoryId"
@@ -340,30 +340,6 @@ export default function TestCreate() {
                     </Select>
                     <FormDescription>
                       Testinizin en uygun kategorisini seçin.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="difficulty"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Zorluk Seviyesi: {difficultyText(field.value)}</FormLabel>
-                    <FormControl>
-                      <Slider
-                        min={1}
-                        max={5}
-                        step={1}
-                        defaultValue={[field.value]}
-                        onValueChange={(vals) => field.onChange(vals[0])}
-                        className="py-4"
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Testinizin zorluk derecesini 1-5 arasında belirleyin.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -421,26 +397,49 @@ export default function TestCreate() {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="isPublic"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-4">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>Herkese Açık</FormLabel>
-                    <FormDescription>
-                      Testinizin diğer kullanıcılar tarafından görüntülenebilmesini istiyorsanız işaretleyin.
-                    </FormDescription>
-                  </div>
-                </FormItem>
-              )}
-            />
+            <div className="space-y-4 mt-4">
+              <FormField
+                control={form.control}
+                name="isPublic"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Herkese Açık</FormLabel>
+                      <FormDescription>
+                        Testinizin diğer kullanıcılar tarafından görüntülenebilmesini istiyorsanız işaretleyin.
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="anonymousCreator"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Anonim Olarak Paylaş</FormLabel>
+                      <FormDescription>
+                        Bu seçenek işaretlenirse, kullanıcı adınız testi görüntüleyenler tarafından görülmeyecektir.
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
+            </div>
           </div>
 
           <div className="bg-card p-6 rounded-lg border shadow-sm">

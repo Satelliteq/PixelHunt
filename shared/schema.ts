@@ -26,7 +26,6 @@ export const images = pgTable("images", {
   imageUrl: text("image_url").notNull(),
   categoryId: integer("category_id").notNull(),
   answers: jsonb("answers").notNull(), // Array of acceptable answers
-  difficulty: integer("difficulty").default(1),
   playCount: integer("play_count").default(0),
   likeCount: integer("like_count").default(0),
 });
@@ -39,7 +38,6 @@ export const tests = pgTable("tests", {
   creatorId: integer("creator_id"), // null if created by system
   categoryId: integer("category_id"),
   imageIds: jsonb("image_ids").notNull(), // Array of image IDs
-  difficulty: integer("difficulty").default(1),
   playCount: integer("play_count").default(0),
   likeCount: integer("like_count").default(0),
   isPublic: boolean("is_public").default(true),
@@ -89,7 +87,6 @@ export const insertImageSchema = createInsertSchema(images).pick({
   imageUrl: true,
   categoryId: true,
   answers: true,
-  difficulty: true,
 });
 
 export const insertTestSchema = createInsertSchema(tests).pick({
@@ -99,7 +96,6 @@ export const insertTestSchema = createInsertSchema(tests).pick({
   creatorId: true,
   categoryId: true,
   imageIds: true,
-  difficulty: true,
   isPublic: true,
   anonymousCreator: true,
   thumbnail: true,
