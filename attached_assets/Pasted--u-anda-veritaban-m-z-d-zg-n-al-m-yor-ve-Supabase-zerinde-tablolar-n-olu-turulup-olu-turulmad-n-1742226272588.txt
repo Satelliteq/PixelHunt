@@ -1,0 +1,32 @@
+Şu anda veritabanımız düzgün çalışmıyor ve Supabase üzerinde tabloların oluşturulup oluşturulmadığını bile kontrol edemiyoruz. Kategorileri ekleyemiyorum, test oluşturamıyorum ve admin paneli üzerinden yönetim yapamıyorum. Bu yüzden veritabanını sıfırdan, en ideal yöntemle ve sorunsuz çalışacak şekilde kurmamız gerekiyor.
+
+✅ Hedefimiz:
+
+Veritabanımız düzgün çalışsın ve tüm işlemleri Supabase üzerinden yönetebileyim.
+Kategori ekleme ve test oluşturma işlemleri düzgün çalışsın.
+Admin paneli üzerinden kategorileri ve testleri yönetebileyim.
+Proje deploy edildiğinde herhangi bir veritabanı hatasıyla karşılaşmayalım.
+✅ Yapılması Gerekenler:
+1️⃣ Supabase üzerinde tüm veritabanını sıfırdan, en sağlıklı yöntemle oluştur.
+
+Eğer doğrudan SQL sorguları en iyi çözümse, öyle yap.
+Eğer Supabase API kullanmak daha iyi bir yöntemse, API üzerinden yap.
+Hangi yöntemin en sağlıklı olduğunu sen belirle, ancak proje live olduğunda sorun çıkarmamalı.
+2️⃣ Kategori ekleme ve test oluşturma işlemlerinin sorunsuz çalıştığını doğrula.
+
+Kullanıcı kategori ekleyebilmeli ve test oluşturabilmeli.
+Kategori ekleme işlemi hata vermemeli ve eklenen kategoriler kaybolmamalı.
+3️⃣ Admin paneli üzerinden testleri ve kategorileri düzenleyebilmeliyim.
+
+Adminler testleri düzenleyebilmeli, silebilmeli ve yayından kaldırabilmeli.
+Admin yetkisi olan kullanıcılar kategorileri düzenleyebilmeli ve yeni kategori ekleyebilmeli.
+4️⃣ Veritabanı migrasyon sürecini düzgün ayarla, böylece deploy sonrası sorun yaşamayalım.
+
+Eğer proje deploy edildiğinde veritabanı oluşturulması gerekiyorsa, otomatik migrasyon ekle.
+Veritabanı yapısını manuel güncellemeye gerek kalmayacak şekilde tasarla.
+✅ Kontrol & Test Süreci:
+
+Veritabanı tablolarını Supabase Dashboard üzerinden görebilmeliyim.
+Kategori ekleme ve test oluşturma işlemi çalışıyorsa, bana başarılı log çıktıları ver.
+Admin panelinin düzgün çalıştığını ve test yönetiminin sorunsuz olduğunu doğrula.
+Bu süreci tamamladıktan sonra, Supabase üzerinde tüm verilerin göründüğünü ve testlerin sorunsuz kaydedildiğini kontrol edeceğim. Eğer bir hata alırsam, sorunun kaynağını net bir şekilde belirtmelisin."*

@@ -355,6 +355,77 @@ export async function incrementTestLikeCount(id: number): Promise<boolean> {
   }
 }
 
+// Get all categories
+export async function getAllCategories(): Promise<{id: number, name: string, description: string, iconUrl: string | null}[]> {
+  try {
+    // First check if categories table exists
+    const categoriesExist = await sql`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'categories'
+      );
+    `;
+    
+    // If categories table doesn't exist, return empty array
+    if (!categoriesExist[0].exists) {
+      console.log('Categories table does not exist');
+      return [];
+    }
+    
+    // Get all categories
+    const categories = await sql`SELECT * FROM categories ORDER BY id ASC;`;
+    
+    return categories.map(category => ({
+      id: category.id,
+      name: category.name,
+      description: category.description,
+      iconUrl: category.icon_url
+    }));
+  } catch (error) {
+    console.error('Error getting all categories:', error);
+    return [];
+  }
+}
+
+// Get category by ID
+export async function getCategoryById(id: number): Promise<{id: number, name: string, description: string, iconUrl: string | null} | null> {
+  try {
+    // First check if categories table exists
+    const categoriesExist = await sql`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'categories'
+      );
+    `;
+    
+    // If categories table doesn't exist, return null
+    if (!categoriesExist[0].exists) {
+      console.log('Categories table does not exist');
+      return null;
+    }
+    
+    // Get category by ID
+    const categories = await sql`SELECT * FROM categories WHERE id = ${id};`;
+    
+    if (categories.length === 0) {
+      return null;
+    }
+    
+    const category = categories[0];
+    return {
+      id: category.id,
+      name: category.name,
+      description: category.description,
+      iconUrl: category.icon_url
+    };
+  } catch (error) {
+    console.error(`Error getting category ID ${id}:`, error);
+    return null;
+  }
+}
+
 // Create or ensure a category exists
 export async function createOrEnsureCategory(name: string, description: string = ''): Promise<{id: number, name: string, description: string} | null> {
   try {
@@ -417,32 +488,29 @@ export async function createOrEnsureCategory(name: string, description: string =
   }
 }
 
-// Initialize the database on import
-initTables().then(success => {
+// Initialize the database but don't run on import
+// We're now using db-setup-direct.ts for main database initialization
+// This function is kept for compatibility and as a fallback
+export async function initializeDatabase() {
+  const success = await initTables();
   if (success) {
-    console.log('Database initialized successfully.');
+    console.log('Database initialized successfully via direct-db.');
     
-    // Create default categories
-    createOrEnsureCategory('Genel', 'Genel kategorisi').then(() => {
-      console.log('Default "Genel" category created or verified');
-    });
-    
-    createOrEnsureCategory('Sanat', 'Sanat kategorisi').then(() => {
-      console.log('Default "Sanat" category created or verified');
-    });
-    
-    createOrEnsureCategory('Filmler', 'Filmler kategorisi').then(() => {
-      console.log('Default "Filmler" category created or verified');
-    });
-    
-    createOrEnsureCategory('Müzik', 'Müzik kategorisi').then(() => {
-      console.log('Default "Müzik" category created or verified');
-    });
-    
-    createOrEnsureCategory('Spor', 'Spor kategorisi').then(() => {
-      console.log('Default "Spor" category created or verified');
-    });
+    try {
+      // Create default categories
+      await createOrEnsureCategory('Genel', 'Genel kategorisi');
+      await createOrEnsureCategory('Sanat', 'Sanat kategorisi');
+      await createOrEnsureCategory('Filmler', 'Filmler kategorisi');
+      await createOrEnsureCategory('Müzik', 'Müzik kategorisi');
+      await createOrEnsureCategory('Spor', 'Spor kategorisi');
+      console.log('Default categories created or verified');
+      return true;
+    } catch (error) {
+      console.error('Error creating default categories:', error);
+      return false;
+    }
   } else {
-    console.error('Database initialization failed.');
+    console.error('Database initialization failed via direct-db.');
+    return false;
   }
-});
+}

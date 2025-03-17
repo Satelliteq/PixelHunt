@@ -72,12 +72,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Category routes
   app.get("/api/categories", async (_req: Request, res: Response) => {
     try {
-      // Supabase ile kategorileri alalım - direct-supabase.ts modülünü kullan
-      const { getAllCategories } = await import('./direct-supabase');
+      // Önce direct-db den kategorileri getirmeyi dene (en güvenilir yöntem)
+      try {
+        const { getAllCategories: getDirectCategories } = await import('./direct-db');
+        const directCategories = await getDirectCategories();
+        
+        if (directCategories.length > 0) {
+          console.log("Categories fetched from direct-db:", directCategories.length);
+          return res.json(directCategories);
+        }
+      } catch (directError) {
+        console.error("Error getting categories from direct-db:", directError);
+      }
       
-      const categories = await getAllCategories();
-      console.log("Categories fetched from Supabase:", categories.length);
-      return res.json(categories);
+      // Supabase ile kategorileri getirmeyi dene
+      try {
+        const { getAllCategories } = await import('./direct-supabase');
+        const categories = await getAllCategories();
+        
+        if (categories.length > 0) {
+          console.log("Categories fetched from Supabase:", categories.length);
+          return res.json(categories);
+        }
+      } catch (supabaseError) {
+        console.error("Error getting categories from Supabase:", supabaseError);
+      }
+      
+      // Son çare: storage kullan
+      const storageCategories = await storage.getAllCategories();
+      console.log("Categories fetched from storage:", storageCategories.length);
+      return res.json(storageCategories);
     } catch (error) {
       console.error("Error getting all categories:", error);
       res.status(500).json([]);
@@ -775,19 +799,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Received category creation request:", req.body);
       const categoryInput = insertCategorySchema.parse(req.body);
       
-      // Supabase ile kategori oluşturalım - direct-supabase.ts modülünü kullan
+      // İlk olarak direct-db kullanarak kategori oluşturmayı dene (en güvenilir yöntem)
+      const { createOrEnsureCategory } = await import('./direct-db');
+      const directCategory = await createOrEnsureCategory(
+        categoryInput.name, 
+        categoryInput.description || ''
+      );
+      
+      if (directCategory) {
+        console.log("Direct-DB ile kategori oluşturuldu:", directCategory);
+        const formattedCategory = {
+          id: directCategory.id,
+          name: directCategory.name,
+          description: directCategory.description,
+          iconUrl: null // direct oluşturmada icon_url henüz desteklenmiyor
+        };
+        return res.status(201).json(formattedCategory);
+      }
+      
+      // Direct method başarısız olursa Supabase ile deneyelim
+      console.log("Direct-DB kategori oluşturma başarısız, Supabase ile deneniyor...");
       const { createCategory } = await import('./direct-supabase');
       const newCategory = await createCategory(categoryInput);
       
-      if (!newCategory) {
-        console.error("Failed to create category in Supabase");
-        // Fallback: storage kullan
-        const fallbackCategory = await storage.createCategory(categoryInput);
+      if (newCategory) {
+        console.log("Supabase ile kategori oluşturuldu:", newCategory);
+        return res.status(201).json(newCategory);
+      }
+      
+      // En son çare olarak storage'ı kullanalım
+      console.error("Supabase ile kategori oluşturma başarısız, storage ile deneniyor...");
+      const fallbackCategory = await storage.createCategory(categoryInput);
+      
+      if (fallbackCategory) {
+        console.log("Storage ile kategori oluşturuldu:", fallbackCategory);
         return res.status(201).json(fallbackCategory);
       }
       
-      console.log("Yeni kategori oluşturuldu:", newCategory);
-      return res.status(201).json(newCategory);
+      // Hiçbir yöntem başarılı olmadı
+      return res.status(500).json({ message: "Failed to create category with any method" });
     } catch (error) {
       console.error("Kategori işlemi sırasında hata:", error);
       if (error instanceof z.ZodError) {

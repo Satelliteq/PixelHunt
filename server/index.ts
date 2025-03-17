@@ -1,11 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { setupSupabaseTables } from "./supabase-setup";
-import { initializeSupabaseTables } from "./initialize-tables";
-import { setupDatabaseTables, checkIfTablesExist } from "./db-setup";
-import { syncTablesWithSupabase } from "./db-supabase-sync";
-import { initTables } from "./direct-db"; // Import direct-db initTables function
+import { setupDatabase } from "./db-setup-direct"; // Yeni oluşturduğumuz doğrudan kurulum dosyası
 
 const app = express();
 app.use(express.json());
@@ -42,68 +38,18 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Veritabanı tablolarını iki yaklaşımla da oluşturmayı dene
-  let dbInitSuccess = false;
+  console.log('Veritabanı kurulumu başlatılıyor...');
   
-  // İlk olarak direct-db modülünü kullanarak tablo oluşturmayı dene
+  // Doğrudan SQL sorguları ile veritabanını kur
   try {
-    await initTables();
-    console.log('Direct-DB ile test tablosu başarıyla oluşturuldu.');
-    dbInitSuccess = true;
-  } catch (directDbError) {
-    console.error('Direct-DB tabloları oluşturma hatası:', directDbError);
-  }
-  
-  // Alternatif olarak doğrudan PostgreSQL bağlantısı ile tabloları oluştur
-  if (!dbInitSuccess) {
-    try {
-      const tablesExist = await checkIfTablesExist();
-      
-      if (tablesExist) {
-        console.log('Tablolar zaten mevcut, veritabanı kurulumu atlanıyor');
-        dbInitSuccess = true;
-      } else {
-        await setupDatabaseTables();
-        console.log('Doğrudan PostgreSQL bağlantısı ile tablolar oluşturuldu');
-        dbInitSuccess = true;
-      }
-    } catch (dbError) {
-      console.error('PostgreSQL tabloları oluşturma hatası:', dbError);
-      console.log('Supabase yöntemi ile devam ediliyor...');
+    const success = await setupDatabase();
+    if (success) {
+      console.log('Veritabanı başarıyla kuruldu ve yapılandırıldı.');
+    } else {
+      console.warn('Veritabanı kurulumunda bazı sorunlar yaşandı.');
     }
-  }
-  
-  // Alternatif olarak Supabase API ile tabloları oluşturmayı dene
-  if (!dbInitSuccess) {
-    try {
-      await setupSupabaseTables();
-      console.log('Supabase tabloları oluşturuldu veya güncellendi');
-      dbInitSuccess = true;
-    } catch (supaError) {
-      console.error('Supabase tabloları oluşturma hatası:', supaError);
-    }
-  }
-  
-  // Ek olarak, Supabase JavaScript client ile initialize etmeyi dene
-  try {
-    await initializeSupabaseTables();
-    console.log('Supabase tabloları JavaScript client ile initialize edildi');
-  } catch (initError) {
-    console.error('Supabase JavaScript client initialize hatası:', initError);
-  }
-  
-  // PostgreSQL tabloları ile Supabase'i senkronize et
-  // Bu adım, tabloların Supabase tarafından doğru şekilde görülmesini sağlar
-  try {
-    await syncTablesWithSupabase();
-    console.log('Tablolar Supabase ile senkronize edildi');
-  } catch (syncError) {
-    console.error('Supabase senkronizasyon hatası:', syncError);
-  }
-  
-  if (!dbInitSuccess) {
-    console.warn('UYARI: Veritabanı tablolarının tam olarak oluşturulduğu doğrulanamadı');
-    console.warn('Uygulama çalışmaya devam edecek ancak bazı veritabanı işlemleri başarısız olabilir');
+  } catch (error) {
+    console.error('Veritabanı kurulum hatası:', error);
   }
   
   // API rotalarını kaydet
