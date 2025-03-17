@@ -33,6 +33,7 @@ export const images = pgTable("images", {
 
 export const tests = pgTable("tests", {
   id: serial("id").primaryKey(),
+  uuid: text("uuid").notNull().unique(),
   title: text("title").notNull(),
   description: text("description"),
   creatorId: integer("creator_id"), // null if created by system
@@ -42,8 +43,11 @@ export const tests = pgTable("tests", {
   playCount: integer("play_count").default(0),
   likeCount: integer("like_count").default(0),
   isPublic: boolean("is_public").default(true),
+  anonymousCreator: boolean("anonymous_creator").default(false), // Kullanıcının anonim olarak paylaşıp paylaşmadığı
   createdAt: timestamp("created_at").defaultNow(),
   thumbnail: text("thumbnail"), // URL for test thumbnail
+  approved: boolean("approved").default(true), // Admin onayı gerektiğinde kullanılacak
+  published: boolean("published").default(true), // Yayından kaldırma durumu için
 });
 
 export const testComments = pgTable("test_comments", {
@@ -89,6 +93,7 @@ export const insertImageSchema = createInsertSchema(images).pick({
 });
 
 export const insertTestSchema = createInsertSchema(tests).pick({
+  uuid: true,
   title: true,
   description: true,
   creatorId: true,
@@ -96,7 +101,10 @@ export const insertTestSchema = createInsertSchema(tests).pick({
   imageIds: true,
   difficulty: true,
   isPublic: true,
+  anonymousCreator: true,
   thumbnail: true,
+  approved: true,
+  published: true,
 });
 
 export const insertTestCommentSchema = createInsertSchema(testComments).pick({
