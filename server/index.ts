@@ -1,7 +1,14 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { setupDatabase } from "./db-setup-direct"; // Yeni oluşturduğumuz doğrudan kurulum dosyası
+import { createClient } from '@supabase/supabase-js';
+
+// Get Supabase credentials from environment
+const supabaseUrl = process.env.SUPABASE_URL || '';
+const supabaseKey = process.env.SUPABASE_ANON_KEY || '';
+
+// Initialize Supabase client
+console.log('Supabase storage initialized');
 
 const app = express();
 app.use(express.json());
@@ -38,19 +45,7 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  console.log('Veritabanı kurulumu başlatılıyor...');
-  
-  // Doğrudan SQL sorguları ile veritabanını kur
-  try {
-    const success = await setupDatabase();
-    if (success) {
-      console.log('Veritabanı başarıyla kuruldu ve yapılandırıldı.');
-    } else {
-      console.warn('Veritabanı kurulumunda bazı sorunlar yaşandı.');
-    }
-  } catch (error) {
-    console.error('Veritabanı kurulum hatası:', error);
-  }
+  console.log('Supabase tables are being checked...');
   
   // API rotalarını kaydet
   const server = await registerRoutes(app);

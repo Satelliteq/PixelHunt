@@ -6,6 +6,7 @@ import {
   testComments, type TestComment, type InsertTestComment,
   gameScores, type GameScore, type InsertGameScore
 } from "@shared/schema";
+import { createClient } from '@supabase/supabase-js';
 
 // Export types for other modules to use
 export type { 
@@ -166,7 +167,8 @@ export class MemStorage implements IStorage {
         anonymousCreator: false,
         thumbnail: "https://example.com/film-thumbnail.jpg",
         approved: true,
-        published: true
+        published: true,
+        difficulty: 1
       },
       {
         uuid: "car-test-001",
@@ -179,7 +181,8 @@ export class MemStorage implements IStorage {
         anonymousCreator: false,
         thumbnail: "https://example.com/car-thumbnail.jpg",
         approved: true,
-        published: true
+        published: true,
+        difficulty: 2
       },
       {
         uuid: "youtuber-test-001",
@@ -192,7 +195,8 @@ export class MemStorage implements IStorage {
         anonymousCreator: false,
         thumbnail: "https://example.com/youtuber-thumbnail.jpg",
         approved: true,
-        published: true
+        published: true,
+        difficulty: 1
       },
       {
         uuid: "game-test-001",
@@ -205,7 +209,8 @@ export class MemStorage implements IStorage {
         anonymousCreator: false,
         thumbnail: "https://example.com/game-thumbnail.jpg",
         approved: true,
-        published: true
+        published: true,
+        difficulty: 3
       }
     ];
     
@@ -552,12 +557,7 @@ export class MemStorage implements IStorage {
     };
     this.gameScoresMap.set(id, newScore);
     
-    // Update test play count if testId is provided
-    if (score.testId) {
-      await this.incrementTestPlayCount(score.testId);
-    }
-    
-    // Update user score if userId is provided
+    // Also update the user's total score if applicable
     if (score.userId) {
       await this.updateUserScore(score.userId, score.score);
     }
@@ -576,41 +576,22 @@ export class MemStorage implements IStorage {
   async getTopScores(limit: number, gameMode?: string): Promise<GameScore[]> {
     let scores = Array.from(this.gameScoresMap.values());
     
+    if (gameMode) {
+      scores = scores.filter(score => score.gameMode === gameMode);
+    }
+    
     return scores
       .sort((a, b) => b.score - a.score)
       .slice(0, limit);
   }
 }
 
-// PostgreSQL storage
-import { pgStorage } from './db-storage';
+// Şimdilik basit memory storage kullanacağız
+const memStorage = new MemStorage();
+console.log('[database] Memory storage initialized');
 
-// Veritabanı bağlantısını kontrol et ve hata durumunda memory storage'a dön
-import { supabaseStorage } from './supabase-storage';
+let storage: IStorage = memStorage;
 
-let storage: IStorage;
-
-try {
-  // Supabase kullanmayı dene
-  if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
-    storage = supabaseStorage;
-    console.log("Using Supabase storage");
-  } 
-  // PostgreSQL kullan
-  else if (process.env.DATABASE_URL) {
-    storage = pgStorage;
-    console.log("Using PostgreSQL storage");
-  }
-  // Fallback
-  else {
-    storage = new MemStorage();
-    console.log("Using in-memory storage");
-  }
-} catch (error) {
-  // Hata durumunda MemStorage'a geri dön
-  console.error("Error connecting to database, falling back to MemStorage:", error);
-  storage = new MemStorage();
-}
-
+// Default olarak memory storage
 export { storage };
 export default storage;

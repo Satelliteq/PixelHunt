@@ -1,6 +1,6 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import storage from "./storage";
 import { z } from "zod";
 import { 
   insertUserSchema, 
@@ -586,7 +586,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       try {
         // Try using Supabase API first
-        const { createTest } = await import('./supabase-api');
+        //const { createTest } = await import('./supabase-api');
+        // Use storage instead
+        const createTest = storage.createTest.bind(storage);
         const newTest = await createTest(req.body);
         if (newTest) {
           console.log('Using Supabase API for test creation');
