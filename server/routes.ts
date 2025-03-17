@@ -295,9 +295,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/tests/popular", async (req: Request, res: Response) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
-      const popularTests = await storage.getPopularTests(limit);
+      // Supabase API'sini kullan
+      const { getPopularTests } = await import('./supabase-api');
+      const popularTests = await getPopularTests(limit);
       res.json(popularTests);
     } catch (error) {
+      console.error("Error fetching popular tests:", error);
       res.status(500).json({ message: "Server error" });
     }
   });
@@ -305,9 +308,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/tests/newest", async (req: Request, res: Response) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
-      const newestTests = await storage.getNewestTests(limit);
+      // Supabase API'sini kullan
+      const { getNewestTests } = await import('./supabase-api');
+      const newestTests = await getNewestTests(limit);
       res.json(newestTests);
     } catch (error) {
+      console.error("Error fetching newest tests:", error);
       res.status(500).json({ message: "Server error" });
     }
   });
@@ -315,9 +321,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/tests/featured", async (req: Request, res: Response) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
-      const featuredTests = await storage.getFeaturedTests(limit);
+      // Şimdilik öne çıkan testler için popüler testleri kullanıyoruz
+      // Supabase API'sini kullan
+      const { getPopularTests } = await import('./supabase-api');
+      const featuredTests = await getPopularTests(limit);
       res.json(featuredTests);
     } catch (error) {
+      console.error("Error fetching featured tests:", error);
       res.status(500).json({ message: "Server error" });
     }
   });
@@ -359,14 +369,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.post("/api/tests", async (req: Request, res: Response) => {
     try {
-      const testInput = insertTestSchema.parse(req.body);
-      const newTest = await storage.createTest(testInput);
+      console.log("Received test creation request:", req.body);
+      // Supabase API'yi kullan
+      const { createTest } = await import('./supabase-api');
+      const newTest = await createTest(req.body);
       res.status(201).json(newTest);
     } catch (error) {
+      console.error("Test creation error:", error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid test data", errors: error.errors });
       }
-      res.status(500).json({ message: "Server error" });
+      res.status(500).json({ message: "Server error", details: error instanceof Error ? error.message : String(error) });
     }
   });
   

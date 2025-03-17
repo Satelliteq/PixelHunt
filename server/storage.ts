@@ -7,6 +7,16 @@ import {
   gameScores, type GameScore, type InsertGameScore
 } from "@shared/schema";
 
+// Export types for other modules to use
+export type { 
+  User, InsertUser,
+  Category, InsertCategory,
+  Image, InsertImage,
+  Test, InsertTest,
+  TestComment, InsertTestComment,
+  GameScore, InsertGameScore
+};
+
 // Interface for all storage operations
 export interface IStorage {
   // User operations
@@ -576,15 +586,31 @@ export class MemStorage implements IStorage {
 import { pgStorage } from './db-storage';
 
 // Veritabanı bağlantısını kontrol et ve hata durumunda memory storage'a dön
+import { supabaseStorage } from './supabase-storage';
+
 let storage: IStorage;
+
 try {
+  // Supabase kullanmayı dene
+  if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
+    storage = supabaseStorage;
+    console.log("Using Supabase storage");
+  } 
   // PostgreSQL kullan
-  storage = pgStorage;
-  console.log("Using PostgreSQL storage");
+  else if (process.env.DATABASE_URL) {
+    storage = pgStorage;
+    console.log("Using PostgreSQL storage");
+  }
+  // Fallback
+  else {
+    storage = new MemStorage();
+    console.log("Using in-memory storage");
+  }
 } catch (error) {
   // Hata durumunda MemStorage'a geri dön
-  console.error("Error connecting to PostgreSQL, falling back to MemStorage:", error);
+  console.error("Error connecting to database, falling back to MemStorage:", error);
   storage = new MemStorage();
 }
 
 export { storage };
+export default storage;
