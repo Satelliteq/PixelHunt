@@ -1,4 +1,3 @@
-// Directly implement the translations functionality
 export type Language = 'tr' | 'en';
 
 export type TranslationKey = 

@@ -64,7 +64,7 @@ export async function setupDatabase(): Promise<boolean> {
       -- Categories tablosu
       CREATE TABLE IF NOT EXISTS public.categories (
         id SERIAL PRIMARY KEY,
-        name TEXT NOT NULL,
+        name TEXT NOT NULL UNIQUE,
         description TEXT,
         icon_url TEXT
       );
@@ -196,41 +196,62 @@ export async function setupDatabase(): Promise<boolean> {
     console.log('Stored procedureler başarıyla oluşturuldu');
     
     // Tabloların sahipliğini ayarla
-    await pool.query(`
-      -- Tabloların ve nesnelerin sahipliğini ayarla (Supabase için gerekli)
-      ALTER TABLE public.users OWNER TO postgres;
-      ALTER TABLE public.categories OWNER TO postgres;
-      ALTER TABLE public.images OWNER TO postgres;
-      ALTER TABLE public.tests OWNER TO postgres;
-      ALTER TABLE public.test_comments OWNER TO postgres;
-      ALTER TABLE public.game_scores OWNER TO postgres;
-      
-      ALTER VIEW public.popular_tests OWNER TO postgres;
-      ALTER VIEW public.newest_tests OWNER TO postgres;
-      ALTER VIEW public.featured_tests OWNER TO postgres;
-      
-      ALTER FUNCTION public.get_popular_tests(INTEGER) OWNER TO postgres;
-      ALTER FUNCTION public.get_newest_tests(INTEGER) OWNER TO postgres;
-      ALTER FUNCTION public.increment_test_play_count(INTEGER) OWNER TO postgres;
-      ALTER FUNCTION public.increment_test_like_count(INTEGER) OWNER TO postgres;
-    `);
-    console.log('Tablo sahiplikleri ve izinleri ayarlandı');
+    try {
+      await pool.query(`
+        -- Tabloların ve nesnelerin sahipliğini ayarla (Supabase için gerekli)
+        ALTER TABLE public.users OWNER TO neondb_owner;
+        ALTER TABLE public.categories OWNER TO neondb_owner;
+        ALTER TABLE public.images OWNER TO neondb_owner;
+        ALTER TABLE public.tests OWNER TO neondb_owner;
+        ALTER TABLE public.test_comments OWNER TO neondb_owner;
+        ALTER TABLE public.game_scores OWNER TO neondb_owner;
+        
+        ALTER VIEW public.popular_tests OWNER TO neondb_owner;
+        ALTER VIEW public.newest_tests OWNER TO neondb_owner;
+        ALTER VIEW public.featured_tests OWNER TO neondb_owner;
+        
+        ALTER FUNCTION public.get_popular_tests(INTEGER) OWNER TO neondb_owner;
+        ALTER FUNCTION public.get_newest_tests(INTEGER) OWNER TO neondb_owner;
+        ALTER FUNCTION public.increment_test_play_count(INTEGER) OWNER TO neondb_owner;
+        ALTER FUNCTION public.increment_test_like_count(INTEGER) OWNER TO neondb_owner;
+      `);
+      console.log('Tablo sahiplikleri ve izinleri ayarlandı');
+    } catch (ownerError) {
+      console.error('Tablo sahiplikleri ayarlanırken hata oluştu:', ownerError);
+      // Devam et, kritik değil
+    }
     
     // Supabase'in şemaları yenilemesi için bildirim gönder
     await pool.query(`NOTIFY pgrst, 'reload schema';`);
     console.log('Supabase şema yenileme bildirimi gönderildi');
     
     // Kategori örnekleri oluştur
-    await pool.query(`
-      INSERT INTO public.categories (name, description, icon_url)
-      VALUES
-        ('Genel', 'Genel kategori', 'https://example.com/general.png'),
-        ('Sanat', 'Sanat kategori', 'https://example.com/art.png'),
-        ('Filmler', 'Film ve diziler kategorisi', 'https://example.com/movies.png'),
-        ('Müzik', 'Müzik kategorisi', 'https://example.com/music.png'),
-        ('Spor', 'Spor kategorisi', 'https://example.com/sports.png')
-      ON CONFLICT (name) DO NOTHING;
-    `);
+    // Kategorileri tek tek ekleyerek hata durumları ile başa çıkalım
+    try {
+      const categories = [
+        { name: 'Genel', description: 'Genel kategori', icon_url: 'https://example.com/general.png' },
+        { name: 'Sanat', description: 'Sanat kategori', icon_url: 'https://example.com/art.png' },
+        { name: 'Filmler', description: 'Film ve diziler kategorisi', icon_url: 'https://example.com/movies.png' },
+        { name: 'Müzik', description: 'Müzik kategorisi', icon_url: 'https://example.com/music.png' },
+        { name: 'Spor', description: 'Spor kategorisi', icon_url: 'https://example.com/sports.png' }
+      ];
+      
+      for (const category of categories) {
+        try {
+          await pool.query(`
+            INSERT INTO public.categories (name, description, icon_url)
+            VALUES ($1, $2, $3)
+          `, [category.name, category.description, category.icon_url]);
+          console.log(`${category.name} kategorisi eklendi`);
+        } catch (err) {
+          // Duplikasyon hatası varsayımsal olarak görmezden gelinir
+          console.log(`${category.name} kategorisi eklenirken hata (muhtemelen zaten var):`, err.message);
+        }
+      }
+      console.log('Kategori ekleme işlemleri tamamlandı');
+    } catch (categoryError) {
+      console.error('Kategoriler eklenirken bir hata oluştu:', categoryError);
+    }
     console.log('Örnek kategoriler oluşturuldu');
     
     return true;

@@ -1,6 +1,5 @@
-// Re-implement the Language context functionality directly
 import React, { createContext, useState, useContext, ReactNode } from 'react';
-import { Language, TranslationKey, translations } from './translations';
+import { Language, TranslationKey, translations } from '../lib/translations';
 
 type LanguageContextType = {
   language: Language;

@@ -17,7 +17,8 @@ import ThemeToggle from "@/components/ThemeToggle";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLanguage } from "@/lib/LanguageContext";
-import { useAuth } from "@/lib/AuthContext";
+// Temporarily disable Auth context
+// import { useAuth } from "@/lib/AuthContext";
 import { 
   Grid2X2,
   Search,
@@ -37,7 +38,11 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isMobile = useIsMobile();
   const { t } = useLanguage();
-  const { user, loading, initialized, signOut } = useAuth();
+  // Temporarily mock auth data for development
+  const user = null;
+  const loading = false;
+  const initialized = true;
+  const signOut = async () => { console.log('Sign out clicked'); };
 
   // Close mobile menu when resizing to desktop
   useEffect(() => {
