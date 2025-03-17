@@ -295,8 +295,8 @@ async function createGameScoresTable() {
   }
 }
 
-// Doğrudan çalıştırma için (node ile çalıştırıldığında)
-if (require.main === module) {
+// ES modules için doğrudan çalıştırma kontrolü
+if (import.meta.url === (typeof document === 'undefined' ? new URL(process.argv[1], 'file:').href : undefined)) {
   initializeSupabaseTables().then(() => {
     console.log('Tablo başlatma işlemi tamamlandı');
     process.exit(0);

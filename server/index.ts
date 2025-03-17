@@ -40,25 +40,45 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Supabase veritabanı tablolarını başlat
-  try {
-    await setupSupabaseTables();
-    console.log('Supabase tabloları oluşturuldu veya güncellendi');
-  } catch (error) {
-    console.error('Supabase tabloları oluşturma hatası:', error);
-    console.log('Uygulama, Supabase tablolarının manuel olarak oluşturulmasına rağmen çalışacak');
-  }
+  // Veritabanı tablolarını iki yaklaşımla da oluşturmayı dene
+  let dbInitSuccess = false;
   
-  // Doğrudan PostgreSQL bağlantısı kullanarak tabloları oluştur
+  // İlk olarak doğrudan PostgreSQL bağlantısı ile tabloları oluştur
+  // Bu, en temel ve düşük seviyeli yaklaşımdır
   try {
     await setupDatabaseTables();
     console.log('Doğrudan PostgreSQL bağlantısı ile tablolar oluşturuldu');
+    dbInitSuccess = true;
   } catch (dbError) {
     console.error('PostgreSQL tabloları oluşturma hatası:', dbError);
+    console.log('Supabase yöntemi ile devam ediliyor...');
   }
   
-  console.log('Supabase tables are being checked...');
+  // Alternatif olarak Supabase API ile tabloları oluşturmayı dene
+  if (!dbInitSuccess) {
+    try {
+      await setupSupabaseTables();
+      console.log('Supabase tabloları oluşturuldu veya güncellendi');
+      dbInitSuccess = true;
+    } catch (supaError) {
+      console.error('Supabase tabloları oluşturma hatası:', supaError);
+    }
+  }
   
+  // Ek olarak, Supabase JavaScript client ile initialize etmeyi dene
+  try {
+    await initializeSupabaseTables();
+    console.log('Supabase tabloları JavaScript client ile initialize edildi');
+  } catch (initError) {
+    console.error('Supabase JavaScript client initialize hatası:', initError);
+  }
+  
+  if (!dbInitSuccess) {
+    console.warn('UYARI: Veritabanı tablolarının tam olarak oluşturulduğu doğrulanamadı');
+    console.warn('Uygulama çalışmaya devam edecek ancak bazı veritabanı işlemleri başarısız olabilir');
+  }
+  
+  // API rotalarını kaydet
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

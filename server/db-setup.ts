@@ -18,9 +18,12 @@ export async function setupDatabaseTables() {
   console.log('Veritabanı tabloları başlatılıyor...');
   
   try {
+    // Schema bilgisi olmadan doğrudan public schema'da tablo oluştur
+    // Bu şekilde Supabase tarafından erişilebilir olacaklar
+    
     // İlk olarak kategoriler tablosunu oluştur
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS categories (
+      CREATE TABLE IF NOT EXISTS public.categories (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
         description TEXT,
@@ -31,7 +34,7 @@ export async function setupDatabaseTables() {
     
     // Kullanıcılar tablosunu oluştur
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS users (
+      CREATE TABLE IF NOT EXISTS public.users (
         id SERIAL PRIMARY KEY,
         username TEXT NOT NULL UNIQUE,
         password TEXT NOT NULL,
@@ -46,11 +49,11 @@ export async function setupDatabaseTables() {
     
     // Görseller tablosunu oluştur
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS images (
+      CREATE TABLE IF NOT EXISTS public.images (
         id SERIAL PRIMARY KEY,
         url TEXT NOT NULL,
         answers JSONB NOT NULL,
-        category_id INTEGER REFERENCES categories(id),
+        category_id INTEGER REFERENCES public.categories(id),
         play_count INTEGER DEFAULT 0,
         like_count INTEGER DEFAULT 0,
         difficulty INTEGER DEFAULT 1,
@@ -61,13 +64,13 @@ export async function setupDatabaseTables() {
     
     // Testler tablosunu oluştur
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS tests (
+      CREATE TABLE IF NOT EXISTS public.tests (
         id SERIAL PRIMARY KEY,
         uuid TEXT NOT NULL UNIQUE,
         title TEXT NOT NULL,
         description TEXT,
-        category_id INTEGER REFERENCES categories(id),
-        creator_id INTEGER REFERENCES users(id),
+        category_id INTEGER REFERENCES public.categories(id),
+        creator_id INTEGER REFERENCES public.users(id),
         image_ids JSONB NOT NULL,
         play_count INTEGER DEFAULT 0,
         like_count INTEGER DEFAULT 0,
@@ -84,10 +87,10 @@ export async function setupDatabaseTables() {
     
     // Test yorumları tablosunu oluştur
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS test_comments (
+      CREATE TABLE IF NOT EXISTS public.test_comments (
         id SERIAL PRIMARY KEY,
-        test_id INTEGER REFERENCES tests(id) ON DELETE CASCADE,
-        user_id INTEGER REFERENCES users(id),
+        test_id INTEGER REFERENCES public.tests(id) ON DELETE CASCADE,
+        user_id INTEGER REFERENCES public.users(id),
         content TEXT NOT NULL,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
@@ -96,10 +99,10 @@ export async function setupDatabaseTables() {
     
     // Oyun skorları tablosunu oluştur
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS game_scores (
+      CREATE TABLE IF NOT EXISTS public.game_scores (
         id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id),
-        test_id INTEGER REFERENCES tests(id) ON DELETE CASCADE,
+        user_id INTEGER REFERENCES public.users(id),
+        test_id INTEGER REFERENCES public.tests(id) ON DELETE CASCADE,
         score INTEGER NOT NULL,
         completion_time INTEGER,
         attempts_count INTEGER NOT NULL,
@@ -112,22 +115,22 @@ export async function setupDatabaseTables() {
     
     // Görünümler oluştur
     await pool.query(`
-      CREATE OR REPLACE VIEW popular_tests AS
-      SELECT * FROM tests 
+      CREATE OR REPLACE VIEW public.popular_tests AS
+      SELECT * FROM public.tests 
       WHERE published = true AND approved = true
       ORDER BY play_count DESC;
     `);
     
     await pool.query(`
-      CREATE OR REPLACE VIEW newest_tests AS
-      SELECT * FROM tests 
+      CREATE OR REPLACE VIEW public.newest_tests AS
+      SELECT * FROM public.tests 
       WHERE published = true AND approved = true
       ORDER BY created_at DESC;
     `);
     
     await pool.query(`
-      CREATE OR REPLACE VIEW featured_tests AS
-      SELECT * FROM tests 
+      CREATE OR REPLACE VIEW public.featured_tests AS
+      SELECT * FROM public.tests 
       WHERE published = true AND approved = true
       ORDER BY play_count DESC, like_count DESC;
     `);
@@ -135,47 +138,77 @@ export async function setupDatabaseTables() {
     
     // Stored prosedürleri oluştur
     await pool.query(`
-      CREATE OR REPLACE FUNCTION get_popular_tests(limit_param INTEGER)
-      RETURNS SETOF tests AS $$
+      CREATE OR REPLACE FUNCTION public.get_popular_tests(limit_param INTEGER)
+      RETURNS SETOF public.tests AS $$
       BEGIN
         RETURN QUERY
-        SELECT * FROM tests 
+        SELECT * FROM public.tests 
         WHERE published = true AND approved = true
         ORDER BY play_count DESC
         LIMIT limit_param;
       END;
-      $$ LANGUAGE plpgsql;
+      $$ LANGUAGE plpgsql SECURITY DEFINER;
     `);
     
     await pool.query(`
-      CREATE OR REPLACE FUNCTION get_newest_tests(limit_param INTEGER)
-      RETURNS SETOF tests AS $$
+      CREATE OR REPLACE FUNCTION public.get_newest_tests(limit_param INTEGER)
+      RETURNS SETOF public.tests AS $$
       BEGIN
         RETURN QUERY
-        SELECT * FROM tests 
+        SELECT * FROM public.tests 
         WHERE published = true AND approved = true
         ORDER BY created_at DESC
         LIMIT limit_param;
       END;
-      $$ LANGUAGE plpgsql;
+      $$ LANGUAGE plpgsql SECURITY DEFINER;
     `);
     
     await pool.query(`
-      CREATE OR REPLACE FUNCTION exec_sql(sql_query TEXT)
+      CREATE OR REPLACE FUNCTION public.exec_sql(sql_query TEXT)
       RETURNS VOID AS $$
       BEGIN
         EXECUTE sql_query;
       END;
-      $$ LANGUAGE plpgsql;
+      $$ LANGUAGE plpgsql SECURITY DEFINER;
     `);
     console.log('Stored prosedürler oluşturuldu');
+    
+    // Supabase için gerekli izinleri ve sahiplikleri ayarla
+    try {
+      await pool.query(`
+        -- Tabloların ve nesnelerin sahipliğini ayarla (optional)
+        ALTER TABLE public.categories OWNER TO postgres;
+        ALTER TABLE public.users OWNER TO postgres;
+        ALTER TABLE public.images OWNER TO postgres;
+        ALTER TABLE public.tests OWNER TO postgres;
+        ALTER TABLE public.test_comments OWNER TO postgres;
+        ALTER TABLE public.game_scores OWNER TO postgres;
+        
+        ALTER VIEW public.popular_tests OWNER TO postgres;
+        ALTER VIEW public.newest_tests OWNER TO postgres;
+        ALTER VIEW public.featured_tests OWNER TO postgres;
+        
+        ALTER FUNCTION public.get_popular_tests(INTEGER) OWNER TO postgres;
+        ALTER FUNCTION public.get_newest_tests(INTEGER) OWNER TO postgres;
+        ALTER FUNCTION public.exec_sql(TEXT) OWNER TO postgres;
+        
+        -- Anon ve service rollerine gerekli izinleri ver
+        GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+        GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
+        GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
+        GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO anon, authenticated, service_role;
+      `);
+      console.log('Supabase izinleri ayarlandı');
+    } catch (permissionError) {
+      console.error('İzin ayarlama hatası:', permissionError);
+    }
     
     // Hızlı test kategorisi oluştur
     try {
       await pool.query(`
-        INSERT INTO categories (name, description, icon_url)
+        INSERT INTO public.categories (name, description, icon_url)
         VALUES ('Genel', 'Genel kategorisi', 'https://example.com/icon.png')
-        ON CONFLICT (name) DO NOTHING;
+        ON CONFLICT DO NOTHING;
       `);
       console.log('Test kategorisi oluşturuldu');
     } catch (categoryError) {
