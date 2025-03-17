@@ -117,29 +117,25 @@ export class MemStorage implements IStorage {
         title: "Spor Araba",
         imageUrl: "car1.jpg",
         categoryId: 1,
-        answers: ["Ferrari", "Ferrari 458", "458 Italia"],
-        difficulty: 2
+        answers: ["Ferrari", "Ferrari 458", "458 Italia"]
       },
       {
         title: "Klasik Film",
         imageUrl: "movie1.jpg",
         categoryId: 2,
-        answers: ["The Dark Knight", "Batman", "Kara Şövalye"],
-        difficulty: 1
+        answers: ["The Dark Knight", "Batman", "Kara Şövalye"]
       },
       {
         title: "YouTuber",
         imageUrl: "celebrity1.jpg",
         categoryId: 3,
-        answers: ["Enes Batur", "Enes"],
-        difficulty: 1
+        answers: ["Enes Batur", "Enes"]
       },
       {
         title: "Popüler Oyun",
         imageUrl: "game1.jpg",
         categoryId: 4,
-        answers: ["Red Dead Redemption", "RDR", "Red Dead"],
-        difficulty: 3
+        answers: ["Red Dead Redemption", "RDR", "Red Dead"]
       }
     ];
     
@@ -156,7 +152,6 @@ export class MemStorage implements IStorage {
         categoryId: 2,
         creatorId: null,
         imageIds: [2],
-        difficulty: 1,
         isPublic: true,
         anonymousCreator: false,
         thumbnail: "https://example.com/film-thumbnail.jpg",
@@ -170,7 +165,6 @@ export class MemStorage implements IStorage {
         categoryId: 1,
         creatorId: null,
         imageIds: [1],
-        difficulty: 2,
         isPublic: true,
         anonymousCreator: false,
         thumbnail: "https://example.com/car-thumbnail.jpg",
@@ -184,7 +178,6 @@ export class MemStorage implements IStorage {
         categoryId: 3,
         creatorId: null,
         imageIds: [3],
-        difficulty: 1,
         isPublic: true,
         anonymousCreator: false,
         thumbnail: "https://example.com/youtuber-thumbnail.jpg",
@@ -198,7 +191,6 @@ export class MemStorage implements IStorage {
         categoryId: 4,
         creatorId: null,
         imageIds: [4],
-        difficulty: 3,
         isPublic: true,
         anonymousCreator: false,
         thumbnail: "https://example.com/game-thumbnail.jpg",

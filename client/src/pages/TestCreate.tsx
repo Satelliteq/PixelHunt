@@ -261,10 +261,7 @@ export default function TestCreate() {
     }
   };
 
-  const difficultyText = (level: number) => {
-    const levels = ['Çok Kolay', 'Kolay', 'Orta', 'Zor', 'Çok Zor'];
-    return levels[level - 1] || 'Orta';
-  };
+  // Zorluk seviyesi kaldırıldı
 
   return (
     <div className="max-w-3xl mx-auto py-8 px-4">
@@ -445,10 +442,6 @@ export default function TestCreate() {
           <div className="bg-card p-6 rounded-lg border shadow-sm">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold">Görseller ve Cevaplar</h2>
-              <Button type="button" variant="outline" size="sm" onClick={addImage}>
-                <Plus className="h-4 w-4 mr-2" />
-                Görsel Ekle
-              </Button>
             </div>
 
             {imageInputs.map((image, index) => (
@@ -514,7 +507,7 @@ export default function TestCreate() {
                   </div>
                 </div>
 
-                <div>
+                <div className="mb-4">
                   <FormLabel className="block mb-2">Kabul Edilebilir Cevaplar</FormLabel>
                   <div className="flex gap-2 mb-2">
                     <Input
@@ -551,6 +544,20 @@ export default function TestCreate() {
                       </div>
                     ))}
                   </div>
+                </div>
+                
+                {/* Her görselin altına Yeni Görsel Ekle butonu */}
+                <div className="mt-4 text-center">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={addImage}
+                    className="w-full"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Yeni Görsel Ekle
+                  </Button>
                 </div>
               </div>
             ))}
