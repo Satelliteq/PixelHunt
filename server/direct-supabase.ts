@@ -11,25 +11,36 @@ import { getNewestTests as directGetNewestTests,
 
 /**
  * Veritabanından doğrudan SQL sorgusu çalıştıran yardımcı fonksiyon
+ * Önce Supabase RPC ile dener, başarısız olursa doğrudan PostgreSQL bağlantısı kullanır
  */
 async function executeRawSql<T>(sqlQuery: string): Promise<T[]> {
+  // Supabase RPC fonksiyonuyla deneme yapmıyoruz çünkü bazen bu metot çalışmıyor
+  // Doğrudan PostgreSQL bağlantısı kullanarak daha güvenilir sonuçlar alıyoruz
   try {
-    // Try to use the PostgreSQL connection directly
+    // PostgreSQL connection havuzu oluştur
     const { Pool } = require('pg');
     const pool = new Pool({
       connectionString: process.env.DATABASE_URL
     });
     
-    const result = await pool.query(sqlQuery);
-    await pool.end();
-    
-    if (result && result.rows) {
-      return result.rows as T[];
+    try {
+      // Sorguyu çalıştır
+      const result = await pool.query(sqlQuery);
+      
+      if (result && result.rows) {
+        return result.rows as T[];
+      }
+      
+      return [];
+    } catch (queryError) {
+      console.error('SQL sorgu hatası:', queryError);
+      return [];
+    } finally {
+      // Havuzu kapat
+      await pool.end();
     }
-    
-    return [];
   } catch (directError) {
-    console.error('Doğrudan SQL sorgusu çalıştırma hatası:', directError);
+    console.error('PostgreSQL bağlantı hatası:', directError);
     return [];
   }
 }
@@ -208,7 +219,74 @@ export async function getPopularTests(limit: number = 10): Promise<Test[]> {
   try {
     console.log('Popüler testler alınıyor, limit:', limit);
     
-    // Try Supabase RPC function first
+    // First try with direct SQL using a raw query
+    // This is more reliable than Supabase API when tables exist but aren't visible to Supabase
+    console.log('Doğrudan SQL ile popüler testler alınıyor...');
+    try {
+      const sqlQuery = `
+        SELECT * FROM tests 
+        WHERE published = true AND approved = true
+        ORDER BY play_count DESC
+        LIMIT ${limit}
+      `;
+      
+      const tests = await executeRawSql<any>(sqlQuery);
+      
+      if (tests && tests.length > 0) {
+        console.log('Doğrudan SQL ile popüler testler alındı, sayı:', tests.length);
+        return tests.map(test => ({
+          id: test.id,
+          title: test.title,
+          description: test.description || null,
+          uuid: test.uuid,
+          categoryId: test.category_id,
+          creatorId: test.creator_id,
+          imageIds: test.image_ids,
+          playCount: test.play_count,
+          likeCount: test.like_count,
+          createdAt: test.created_at,
+          isPublic: test.is_public,
+          anonymousCreator: test.anonymous_creator,
+          thumbnail: test.thumbnail,
+          approved: test.approved,
+          published: test.published,
+          difficulty: test.difficulty
+        }));
+      }
+    } catch (sqlError) {
+      console.error('SQL popüler testleri getirme hatası:', sqlError);
+    }
+    
+    // Then try using the directGetPopularTests function from direct-db.ts
+    try {
+      const directTests = await directGetPopularTests(limit);
+      if (directTests.length > 0) {
+        console.log('Direct DB ile popüler testler alındı, sayı:', directTests.length);
+        return directTests.map(test => ({
+          id: test.id,
+          title: test.title,
+          description: test.description || null,
+          uuid: test.uuid,
+          categoryId: test.categoryId,
+          creatorId: test.creatorId,
+          imageIds: test.imageIds,
+          playCount: test.playCount,
+          likeCount: test.likeCount,
+          createdAt: test.createdAt,
+          isPublic: test.isPublic,
+          anonymousCreator: test.anonymousCreator,
+          thumbnail: test.thumbnail,
+          approved: test.approved,
+          published: test.published,
+          difficulty: test.difficulty
+        }));
+      }
+    } catch (directError) {
+      console.error('Direct DB popüler testleri getirme hatası:', directError);
+    }
+    
+    // Fallback to Supabase methods
+    // Try Supabase RPC function
     const { data, error } = await supabase.rpc('get_popular_tests', {
       limit_param: limit
     });
@@ -233,10 +311,6 @@ export async function getPopularTests(limit: number = 10): Promise<Test[]> {
         published: test.published,
         difficulty: test.difficulty
       }));
-    }
-    
-    if (error) {
-      console.error('RPC popüler testleri getirme hatası:', error);
     }
     
     // Try direct Supabase query
@@ -270,23 +344,41 @@ export async function getPopularTests(limit: number = 10): Promise<Test[]> {
       }));
     }
     
-    if (testsError) {
-      console.error('Supabase popüler testleri getirme hatası:', testsError);
-    }
+    // All methods failed
+    console.error('Tüm yöntemler başarısız oldu, popüler testler alınamadı.');
+    return [];
+  } catch (error) {
+    console.error('Popüler testleri getirmede beklenmeyen hata:', error);
+    return [];
+  }
+}
+
+/**
+ * En yeni testleri getir
+ */
+export async function getNewestTests(limit: number = 10): Promise<Test[]> {
+  try {
+    console.log('En yeni testler alınıyor, limit:', limit);
     
-    // Try view table if it exists
+    // First try with direct SQL using a raw query
+    // This is more reliable than Supabase API when tables exist but aren't visible to Supabase
+    console.log('Doğrudan SQL ile en yeni testler alınıyor...');
     try {
-      const { data: viewData, error: viewError } = await supabase
-        .from('popular_tests')
-        .select('*')
-        .limit(limit);
+      const sqlQuery = `
+        SELECT * FROM tests 
+        WHERE published = true AND approved = true
+        ORDER BY created_at DESC
+        LIMIT ${limit}
+      `;
       
-      if (!viewError && viewData && viewData.length > 0) {
-        console.log('Supabase popular_tests view ile testler alındı, sayı:', viewData.length);
-        return viewData.map((test: any) => ({
+      const tests = await executeRawSql<any>(sqlQuery);
+      
+      if (tests && tests.length > 0) {
+        console.log('Doğrudan SQL ile en yeni testler alındı, sayı:', tests.length);
+        return tests.map(test => ({
           id: test.id,
           title: test.title,
-          description: test.description,
+          description: test.description || null,
           uuid: test.uuid,
           categoryId: test.category_id,
           creatorId: test.creator_id,
@@ -302,17 +394,15 @@ export async function getPopularTests(limit: number = 10): Promise<Test[]> {
           difficulty: test.difficulty
         }));
       }
-    } catch (viewErr) {
-      console.error('Popular_tests view sorgusu hatası:', viewErr);
+    } catch (sqlError) {
+      console.error('SQL en yeni testleri getirme hatası:', sqlError);
     }
     
-    // Fallback to direct SQL
-    console.log('Doğrudan SQL ile popüler testler alınıyor...');
+    // Then try using the directGetNewestTests function from direct-db.ts
     try {
-      // Use the directGetPopularTests function
-      const directTests = await directGetPopularTests(limit);
+      const directTests = await directGetNewestTests(limit);
       if (directTests.length > 0) {
-        console.log('Direct DB ile popüler testler alındı, sayı:', directTests.length);
+        console.log('Direct DB ile en yeni testler alındı, sayı:', directTests.length);
         return directTests.map(test => ({
           id: test.id,
           title: test.title,
@@ -333,26 +423,11 @@ export async function getPopularTests(limit: number = 10): Promise<Test[]> {
         }));
       }
     } catch (directError) {
-      console.error('Direct DB popüler testleri getirme hatası:', directError);
+      console.error('Direct DB en yeni testleri getirme hatası:', directError);
     }
     
-    // All methods failed
-    console.error('Tüm yöntemler başarısız oldu, popüler testler alınamadı.');
-    return [];
-  } catch (error) {
-    console.error('Popüler testleri getirmede beklenmeyen hata:', error);
-    return [];
-  }
-}
-
-/**
- * En yeni testleri getir
- */
-export async function getNewestTests(limit: number = 10): Promise<Test[]> {
-  try {
-    console.log('En yeni testler alınıyor, limit:', limit);
-    
-    // Try Supabase RPC function first
+    // Fallback to Supabase methods
+    // Try Supabase RPC function
     const { data, error } = await supabase.rpc('get_newest_tests', {
       limit_param: limit
     });
@@ -377,10 +452,6 @@ export async function getNewestTests(limit: number = 10): Promise<Test[]> {
         published: test.published,
         difficulty: test.difficulty
       }));
-    }
-    
-    if (error) {
-      console.error('RPC en yeni testleri getirme hatası:', error);
     }
     
     // Try direct Supabase query
@@ -414,23 +485,41 @@ export async function getNewestTests(limit: number = 10): Promise<Test[]> {
       }));
     }
     
-    if (testsError) {
-      console.error('Supabase en yeni testleri getirme hatası:', testsError);
-    }
+    // All methods failed
+    console.error('Tüm yöntemler başarısız oldu, en yeni testler alınamadı.');
+    return [];
+  } catch (error) {
+    console.error('En yeni testleri getirmede beklenmeyen hata:', error);
+    return [];
+  }
+}
+
+/**
+ * Öne çıkan testleri getir
+ */
+export async function getFeaturedTests(limit: number = 10): Promise<Test[]> {
+  try {
+    console.log('Öne çıkan testler alınıyor, limit:', limit);
     
-    // Try view table if it exists
+    // First try with direct SQL using a raw query
+    // This is more reliable than Supabase API when tables exist but aren't visible to Supabase
+    console.log('Doğrudan SQL ile öne çıkan testler alınıyor...');
     try {
-      const { data: viewData, error: viewError } = await supabase
-        .from('newest_tests')
-        .select('*')
-        .limit(limit);
+      const sqlQuery = `
+        SELECT * FROM tests 
+        WHERE published = true AND approved = true
+        ORDER BY play_count DESC, like_count DESC
+        LIMIT ${limit}
+      `;
       
-      if (!viewError && viewData && viewData.length > 0) {
-        console.log('Supabase newest_tests view ile testler alındı, sayı:', viewData.length);
-        return viewData.map((test: any) => ({
+      const tests = await executeRawSql<any>(sqlQuery);
+      
+      if (tests && tests.length > 0) {
+        console.log('Doğrudan SQL ile öne çıkan testler alındı, sayı:', tests.length);
+        return tests.map(test => ({
           id: test.id,
           title: test.title,
-          description: test.description,
+          description: test.description || null,
           uuid: test.uuid,
           categoryId: test.category_id,
           creatorId: test.creator_id,
@@ -446,17 +535,15 @@ export async function getNewestTests(limit: number = 10): Promise<Test[]> {
           difficulty: test.difficulty
         }));
       }
-    } catch (viewErr) {
-      console.error('Newest_tests view sorgusu hatası:', viewErr);
+    } catch (sqlError) {
+      console.error('SQL öne çıkan testleri getirme hatası:', sqlError);
     }
     
-    // Fallback to direct SQL
-    console.log('Doğrudan SQL ile en yeni testler alınıyor...');
+    // Then try using the directGetFeaturedTests function from direct-db.ts
     try {
-      // Use the directGetNewestTests function
-      const directTests = await directGetNewestTests(limit);
+      const directTests = await directGetFeaturedTests(limit);
       if (directTests.length > 0) {
-        console.log('Direct DB ile en yeni testler alındı, sayı:', directTests.length);
+        console.log('Direct DB ile öne çıkan testler alındı, sayı:', directTests.length);
         return directTests.map(test => ({
           id: test.id,
           title: test.title,
@@ -477,26 +564,11 @@ export async function getNewestTests(limit: number = 10): Promise<Test[]> {
         }));
       }
     } catch (directError) {
-      console.error('Direct DB en yeni testleri getirme hatası:', directError);
+      console.error('Direct DB öne çıkan testleri getirme hatası:', directError);
     }
     
-    // All methods failed
-    console.error('Tüm yöntemler başarısız oldu, en yeni testler alınamadı.');
-    return [];
-  } catch (error) {
-    console.error('En yeni testleri getirmede beklenmeyen hata:', error);
-    return [];
-  }
-}
-
-/**
- * Öne çıkan testleri getir
- */
-export async function getFeaturedTests(limit: number = 10): Promise<Test[]> {
-  try {
-    console.log('Öne çıkan testler alınıyor, limit:', limit);
-    
-    // Try direct Supabase query first - featured typically combines popularity and recency
+    // Fallback to Supabase methods
+    // Try direct Supabase query
     const { data: testsData, error: testsError } = await supabase
       .from('tests')
       .select('*')
@@ -526,10 +598,6 @@ export async function getFeaturedTests(limit: number = 10): Promise<Test[]> {
         published: test.published,
         difficulty: test.difficulty
       }));
-    }
-    
-    if (testsError) {
-      console.error('Supabase öne çıkan testleri getirme hatası:', testsError);
     }
     
     // Try view table if it exists
@@ -562,36 +630,6 @@ export async function getFeaturedTests(limit: number = 10): Promise<Test[]> {
       }
     } catch (viewErr) {
       console.error('Featured_tests view sorgusu hatası:', viewErr);
-    }
-    
-    // Fallback to direct SQL
-    console.log('Doğrudan SQL ile öne çıkan testler alınıyor...');
-    try {
-      // Use the directGetFeaturedTests function
-      const directTests = await directGetFeaturedTests(limit);
-      if (directTests.length > 0) {
-        console.log('Direct DB ile öne çıkan testler alındı, sayı:', directTests.length);
-        return directTests.map(test => ({
-          id: test.id,
-          title: test.title,
-          description: test.description || null,
-          uuid: test.uuid,
-          categoryId: test.categoryId,
-          creatorId: test.creatorId,
-          imageIds: test.imageIds,
-          playCount: test.playCount,
-          likeCount: test.likeCount,
-          createdAt: test.createdAt,
-          isPublic: test.isPublic,
-          anonymousCreator: test.anonymousCreator,
-          thumbnail: test.thumbnail,
-          approved: test.approved,
-          published: test.published,
-          difficulty: test.difficulty
-        }));
-      }
-    } catch (directError) {
-      console.error('Direct DB öne çıkan testleri getirme hatası:', directError);
     }
     
     // All methods failed
