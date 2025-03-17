@@ -19,18 +19,29 @@ export async function createTest(testData: any) {
     const { images, ...testInfo } = testData;
     const uuid = uuidv4();
     
+    // Snake_case formatına çevir
+    const snakeCaseTest = {
+      title: testInfo.title,
+      uuid,
+      description: testInfo.description,
+      category_id: testInfo.categoryId,
+      creator_id: testInfo.creatorId,
+      image_ids: testInfo.imageIds || [],
+      created_at: new Date().toISOString(),
+      play_count: 0,
+      like_count: 0,
+      is_public: testInfo.isPublic,
+      anonymous_creator: testInfo.anonymousCreator,
+      thumbnail: testInfo.thumbnail,
+      approved: true, // Varsayılan olarak onaylı olsun
+      published: true, // Varsayılan olarak yayınlı olsun
+      difficulty: testInfo.difficulty
+    };
+    
     // Testimizi oluştur
     const { data: test, error: testError } = await supabase
       .from('tests')
-      .insert([{
-        ...testInfo,
-        uuid,
-        createdAt: new Date().toISOString(),
-        playCount: 0,
-        likeCount: 0,
-        approved: true, // Varsayılan olarak onaylı olsun
-        published: true // Varsayılan olarak yayınlı olsun
-      }])
+      .insert([snakeCaseTest])
       .select()
       .single();
     
@@ -170,7 +181,7 @@ export async function getPopularTests(limit: number = 10) {
       .select('*')
       .eq('published', true)
       .eq('approved', true)
-      .order('playCount', { ascending: false })
+      .order('play_count', { ascending: false })
       .limit(limit);
     
     if (error) {
@@ -178,7 +189,27 @@ export async function getPopularTests(limit: number = 10) {
       return [];
     }
     
-    return data || [];
+    // Sonuçları camelCase'e dönüştür
+    const formattedData = data?.map(item => ({
+      id: item.id,
+      title: item.title,
+      description: item.description,
+      uuid: item.uuid,
+      categoryId: item.category_id,
+      creatorId: item.creator_id,
+      imageIds: item.image_ids,
+      playCount: item.play_count,
+      likeCount: item.like_count,
+      createdAt: item.created_at,
+      isPublic: item.is_public,
+      anonymousCreator: item.anonymous_creator,
+      thumbnail: item.thumbnail,
+      approved: item.approved,
+      published: item.published,
+      difficulty: item.difficulty
+    })) || [];
+    
+    return formattedData;
   } catch (error) {
     console.error('Error in getPopularTests:', error);
     return [];
@@ -195,7 +226,7 @@ export async function getNewestTests(limit: number = 10) {
       .select('*')
       .eq('published', true)
       .eq('approved', true)
-      .order('createdAt', { ascending: false })
+      .order('created_at', { ascending: false })
       .limit(limit);
     
     if (error) {
@@ -203,7 +234,27 @@ export async function getNewestTests(limit: number = 10) {
       return [];
     }
     
-    return data || [];
+    // Sonuçları camelCase'e dönüştür
+    const formattedData = data?.map(item => ({
+      id: item.id,
+      title: item.title,
+      description: item.description,
+      uuid: item.uuid,
+      categoryId: item.category_id,
+      creatorId: item.creator_id,
+      imageIds: item.image_ids,
+      playCount: item.play_count,
+      likeCount: item.like_count,
+      createdAt: item.created_at,
+      isPublic: item.is_public,
+      anonymousCreator: item.anonymous_creator,
+      thumbnail: item.thumbnail,
+      approved: item.approved,
+      published: item.published,
+      difficulty: item.difficulty
+    })) || [];
+    
+    return formattedData;
   } catch (error) {
     console.error('Error in getNewestTests:', error);
     return [];
@@ -273,7 +324,7 @@ export async function incrementTestLikeCount(id: number) {
     // Mevcut beğeni sayısını al
     const { data: existingTest, error: getError } = await supabase
       .from('tests')
-      .select('likeCount')
+      .select('like_count')
       .eq('id', id)
       .single();
     
@@ -283,11 +334,11 @@ export async function incrementTestLikeCount(id: number) {
     }
     
     // Beğeni sayısını artır
-    const currentLikeCount = existingTest.likeCount || 0;
+    const currentLikeCount = existingTest.like_count || 0;
     
     const { error: updateError } = await supabase
       .from('tests')
-      .update({ likeCount: currentLikeCount + 1 })
+      .update({ like_count: currentLikeCount + 1 })
       .eq('id', id);
     
     if (updateError) {
@@ -310,7 +361,7 @@ export async function incrementTestPlayCount(id: number) {
     // Mevcut oynanma sayısını al
     const { data: existingTest, error: getError } = await supabase
       .from('tests')
-      .select('playCount')
+      .select('play_count')
       .eq('id', id)
       .single();
     
@@ -320,11 +371,11 @@ export async function incrementTestPlayCount(id: number) {
     }
     
     // Oynanma sayısını artır
-    const currentPlayCount = existingTest.playCount || 0;
+    const currentPlayCount = existingTest.play_count || 0;
     
     const { error: updateError } = await supabase
       .from('tests')
-      .update({ playCount: currentPlayCount + 1 })
+      .update({ play_count: currentPlayCount + 1 })
       .eq('id', id);
     
     if (updateError) {
