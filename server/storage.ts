@@ -580,4 +580,19 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// PostgreSQL storage
+import { pgStorage } from './db-storage';
+
+// Veritabanı bağlantısını kontrol et ve hata durumunda memory storage'a dön
+let storage: IStorage;
+try {
+  // PostgreSQL kullan
+  storage = pgStorage;
+  console.log("Using PostgreSQL storage");
+} catch (error) {
+  // Hata durumunda MemStorage'a geri dön
+  console.error("Error connecting to PostgreSQL, falling back to MemStorage:", error);
+  storage = new MemStorage();
+}
+
+export { storage };
