@@ -318,44 +318,78 @@ export async function searchTests(options: {
  */
 export async function getPopularTests(limit: number = 10) {
   try {
+    // Debug log added to check Supabase URLs
+    console.log('Supabase URL:', supabaseUrl);
+    console.log('Supabase API fetching tests from:', `${supabaseUrl}/rest/v1/tests`);
+    
+    // Try a simpler query first
     const { data, error } = await supabase
       .from('tests')
       .select('*')
-      .eq('published', true)
-      .eq('approved', true)
-      .order('play_count', { ascending: false })
       .limit(limit);
     
     if (error) {
       console.error('Error fetching popular tests:', error);
-      return [];
+      
+      // If we get an error, attempt a raw SQL query through Supabase
+      try {
+        const { data: sqlData, error: sqlError } = await supabase
+          .rpc('get_popular_tests', { limit_param: limit });
+        
+        if (sqlError) {
+          console.error('Error executing RPC for popular tests:', sqlError);
+          
+          // Last resort: try to execute a direct SQL query
+          const { data: directData, error: directError } = await supabase
+            .from('tests_view') // Using view name just in case
+            .select('*')
+            .limit(limit);
+          
+          if (directError) {
+            console.error('All methods failed to fetch tests:', directError);
+            return [];
+          }
+          
+          console.log('Got tests via direct query:', directData?.length || 0);
+          return formatTestResults(directData);
+        }
+        
+        console.log('Got tests via RPC:', sqlData?.length || 0);
+        return formatTestResults(sqlData);
+      } catch (innerError) {
+        console.error('Error in fallback queries:', innerError);
+        return [];
+      }
     }
     
-    // Sonuçları camelCase'e dönüştür
-    const formattedData = data?.map(item => ({
-      id: item.id,
-      title: item.title,
-      description: item.description,
-      uuid: item.uuid,
-      categoryId: item.category_id,
-      creatorId: item.creator_id,
-      imageIds: item.image_ids,
-      playCount: item.play_count,
-      likeCount: item.like_count,
-      createdAt: item.created_at,
-      isPublic: item.is_public,
-      anonymousCreator: item.anonymous_creator,
-      thumbnail: item.thumbnail,
-      approved: item.approved,
-      published: item.published,
-      difficulty: item.difficulty
-    })) || [];
-    
-    return formattedData;
+    console.log('Got tests via regular query:', data?.length || 0);
+    return formatTestResults(data);
   } catch (error) {
     console.error('Error in getPopularTests:', error);
     return [];
   }
+}
+
+// Helper function to format test results
+function formatTestResults(data: any[] | null) {
+  return (data || []).map(item => ({
+    id: item.id,
+    title: item.title,
+    description: item.description,
+    uuid: item.uuid,
+    categoryId: item.category_id,
+    creatorId: item.creator_id,
+    imageIds: item.image_ids,
+    playCount: item.play_count,
+    likeCount: item.like_count,
+    createdAt: item.created_at,
+    isPublic: item.is_public,
+    anonymousCreator: item.anonymous_creator,
+    thumbnail: item.thumbnail,
+    approved: item.approved,
+    published: item.published,
+    difficulty: item.difficulty
+  }));
 }
 
 /**
@@ -363,6 +397,21 @@ export async function getPopularTests(limit: number = 10) {
  */
 export async function getNewestTests(limit: number = 10) {
   try {
+    // Try to use RPC function first
+    try {
+      const { data: rpcData, error: rpcError } = await supabase
+        .rpc('get_newest_tests', { limit_param: limit });
+      
+      if (!rpcError && rpcData) {
+        console.log('Got newest tests via RPC:', rpcData.length);
+        return formatTestResults(rpcData);
+      }
+    } catch (rpcErr) {
+      console.error('RPC error in getNewestTests:', rpcErr);
+      // Continue to fallback
+    }
+    
+    // Fallback to regular query
     const { data, error } = await supabase
       .from('tests')
       .select('*')
@@ -376,27 +425,8 @@ export async function getNewestTests(limit: number = 10) {
       return [];
     }
     
-    // Sonuçları camelCase'e dönüştür
-    const formattedData = data?.map(item => ({
-      id: item.id,
-      title: item.title,
-      description: item.description,
-      uuid: item.uuid,
-      categoryId: item.category_id,
-      creatorId: item.creator_id,
-      imageIds: item.image_ids,
-      playCount: item.play_count,
-      likeCount: item.like_count,
-      createdAt: item.created_at,
-      isPublic: item.is_public,
-      anonymousCreator: item.anonymous_creator,
-      thumbnail: item.thumbnail,
-      approved: item.approved,
-      published: item.published,
-      difficulty: item.difficulty
-    })) || [];
-    
-    return formattedData;
+    console.log('Got newest tests via regular query:', data?.length || 0);
+    return formatTestResults(data);
   } catch (error) {
     console.error('Error in getNewestTests:', error);
     return [];
