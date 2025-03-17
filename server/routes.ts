@@ -775,44 +775,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Received category creation request:", req.body);
       const categoryInput = insertCategorySchema.parse(req.body);
       
-      try {
-        // Supabase ile kategori ekleyelim
-        const { supabase } = await import('./supabase-setup');
-        
-        const { data, error } = await supabase
-          .from('categories')
-          .insert({
-            name: categoryInput.name,
-            description: categoryInput.description || null,
-            icon_url: categoryInput.iconUrl || null
-          })
-          .select()
-          .single();
-        
-        if (error) {
-          console.error("Kategori işlemi sırasında hata:", error);
-          throw error;
-        }
-        
-        if (data) {
-          // Veriyi frontend formatına dönüştürüyoruz
-          const formattedCategory = {
-            id: data.id,
-            name: data.name,
-            description: data.description,
-            iconUrl: data.icon_url
-          };
-          
-          console.log("Yeni kategori oluşturuldu:", formattedCategory);
-          return res.status(201).json(formattedCategory);
-        }
-      } catch (supabaseError) {
-        console.error("Supabase kategori ekleme hatası:", supabaseError);
+      // Supabase ile kategori oluşturalım - direct-supabase.ts modülünü kullan
+      const { createCategory } = await import('./direct-supabase');
+      const newCategory = await createCategory(categoryInput);
+      
+      if (!newCategory) {
+        console.error("Failed to create category in Supabase");
+        // Fallback: storage kullan
+        const fallbackCategory = await storage.createCategory(categoryInput);
+        return res.status(201).json(fallbackCategory);
       }
       
-      // Fallback: storage kullan
-      const newCategory = await storage.createCategory(categoryInput);
-      res.status(201).json(newCategory);
+      console.log("Yeni kategori oluşturuldu:", newCategory);
+      return res.status(201).json(newCategory);
     } catch (error) {
       console.error("Kategori işlemi sırasında hata:", error);
       if (error instanceof z.ZodError) {
@@ -831,14 +806,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const categoryInput = insertCategorySchema.parse(req.body);
-      const updatedCategory = await storage.updateCategory(id, categoryInput);
+      
+      // Supabase ile kategori güncelleyelim - direct-supabase.ts modülünü kullan
+      const { updateCategory } = await import('./direct-supabase');
+      const updatedCategory = await updateCategory(id, categoryInput);
       
       if (!updatedCategory) {
-        return res.status(404).json({ message: "Category not found" });
+        console.log("Failed to update category in Supabase, trying fallback");
+        // Fallback: storage kullan
+        const fallbackCategory = await storage.updateCategory(id, categoryInput);
+        
+        if (!fallbackCategory) {
+          return res.status(404).json({ message: "Category not found" });
+        }
+        
+        return res.json(fallbackCategory);
       }
       
-      res.json(updatedCategory);
+      console.log("Kategori güncellendi:", updatedCategory);
+      return res.json(updatedCategory);
     } catch (error) {
+      console.error("Kategori güncelleme hatası:", error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid category data", errors: error.errors });
       }
