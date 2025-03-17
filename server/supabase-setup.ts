@@ -203,6 +203,19 @@ async function createTablesWithPostgres() {
         END;
         $$ LANGUAGE plpgsql
       `;
+
+      // Function to execute arbitrary SQL (useful for Supabase RPC)
+      await pgClient`
+        CREATE OR REPLACE FUNCTION exec_sql(sql_query TEXT)
+        RETURNS JSONB AS $$
+        DECLARE
+          result JSONB;
+        BEGIN
+          EXECUTE 'SELECT json_agg(t) FROM (' || sql_query || ') t' INTO result;
+          RETURN COALESCE(result, '[]'::JSONB);
+        END;
+        $$ LANGUAGE plpgsql SECURITY DEFINER
+      `;
       console.log('Stored prosedürler oluşturuldu');
     } catch (procError) {
       console.error('Stored prosedürler oluşturma hatası:', procError);
