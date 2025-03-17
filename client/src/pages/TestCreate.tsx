@@ -100,7 +100,21 @@ export default function TestCreate() {
     try {
       setUploading(true);
       
-      // Dosyayı Base64'e çevirme işlemi
+      // Supabase Storage ile yükleme
+      if (isSupabaseConfigured()) {
+        const uuid = crypto.randomUUID();
+        const path = `thumbnails/${uuid}-${file.name}`;
+        const imageUrl = await uploadImage(file, path);
+        
+        if (imageUrl) {
+          setThumbnail(imageUrl);
+          form.setValue("thumbnail", imageUrl);
+          setUploading(false);
+          return;
+        }
+      }
+      
+      // Supabase çalışmazsa Base64 kullan
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
