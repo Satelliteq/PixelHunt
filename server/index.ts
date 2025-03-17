@@ -4,6 +4,7 @@ import { setupVite, serveStatic, log } from "./vite";
 import { setupSupabaseTables } from "./supabase-setup";
 import { initializeSupabaseTables } from "./initialize-tables";
 import { setupDatabaseTables } from "./db-setup";
+import { syncTablesWithSupabase } from "./db-supabase-sync";
 
 const app = express();
 app.use(express.json());
@@ -71,6 +72,15 @@ app.use((req, res, next) => {
     console.log('Supabase tabloları JavaScript client ile initialize edildi');
   } catch (initError) {
     console.error('Supabase JavaScript client initialize hatası:', initError);
+  }
+  
+  // PostgreSQL tabloları ile Supabase'i senkronize et
+  // Bu adım, tabloların Supabase tarafından doğru şekilde görülmesini sağlar
+  try {
+    await syncTablesWithSupabase();
+    console.log('Tablolar Supabase ile senkronize edildi');
+  } catch (syncError) {
+    console.error('Supabase senkronizasyon hatası:', syncError);
   }
   
   if (!dbInitSuccess) {

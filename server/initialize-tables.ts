@@ -1,6 +1,11 @@
 import { supabase } from './supabase-setup';
 import * as fs from 'fs';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
+
+// ES modules için __dirname ve __filename eşdeğerleri
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * This utility function tries to create tables using Supabase JavaScript client
