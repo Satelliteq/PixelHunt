@@ -355,10 +355,93 @@ export async function incrementTestLikeCount(id: number): Promise<boolean> {
   }
 }
 
+// Create or ensure a category exists
+export async function createOrEnsureCategory(name: string, description: string = ''): Promise<{id: number, name: string, description: string} | null> {
+  try {
+    // First check if categories table exists
+    const categoriesExist = await sql`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'categories'
+      );
+    `;
+    
+    // If categories table doesn't exist, create it
+    if (!categoriesExist[0].exists) {
+      await sql`
+        CREATE TABLE IF NOT EXISTS categories (
+          id SERIAL PRIMARY KEY,
+          name TEXT NOT NULL,
+          description TEXT,
+          icon_url TEXT
+        );
+      `;
+      console.log('Categories table created');
+    }
+    
+    // Check if the category already exists
+    const existingCategories = await sql`
+      SELECT * FROM categories WHERE name = ${name};
+    `;
+    
+    if (existingCategories.length > 0) {
+      console.log(`Category "${name}" already exists with ID: ${existingCategories[0].id}`);
+      return {
+        id: existingCategories[0].id,
+        name: existingCategories[0].name,
+        description: existingCategories[0].description
+      };
+    }
+    
+    // Create the category
+    const result = await sql`
+      INSERT INTO categories (name, description) 
+      VALUES (${name}, ${description})
+      RETURNING id, name, description;
+    `;
+    
+    if (result.length > 0) {
+      console.log(`Category "${name}" created with ID: ${result[0].id}`);
+      return {
+        id: result[0].id,
+        name: result[0].name,
+        description: result[0].description
+      };
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error creating category:', error);
+    return null;
+  }
+}
+
 // Initialize the database on import
 initTables().then(success => {
   if (success) {
     console.log('Database initialized successfully.');
+    
+    // Create default categories
+    createOrEnsureCategory('Genel', 'Genel kategorisi').then(() => {
+      console.log('Default "Genel" category created or verified');
+    });
+    
+    createOrEnsureCategory('Sanat', 'Sanat kategorisi').then(() => {
+      console.log('Default "Sanat" category created or verified');
+    });
+    
+    createOrEnsureCategory('Filmler', 'Filmler kategorisi').then(() => {
+      console.log('Default "Filmler" category created or verified');
+    });
+    
+    createOrEnsureCategory('Müzik', 'Müzik kategorisi').then(() => {
+      console.log('Default "Müzik" category created or verified');
+    });
+    
+    createOrEnsureCategory('Spor', 'Spor kategorisi').then(() => {
+      console.log('Default "Spor" category created or verified');
+    });
   } else {
     console.error('Database initialization failed.');
   }

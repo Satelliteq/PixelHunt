@@ -5,6 +5,7 @@ import { setupSupabaseTables } from "./supabase-setup";
 import { initializeSupabaseTables } from "./initialize-tables";
 import { setupDatabaseTables, checkIfTablesExist } from "./db-setup";
 import { syncTablesWithSupabase } from "./db-supabase-sync";
+import { initTables } from "./direct-db"; // Import direct-db initTables function
 
 const app = express();
 app.use(express.json());
@@ -44,22 +45,32 @@ app.use((req, res, next) => {
   // Veritabanı tablolarını iki yaklaşımla da oluşturmayı dene
   let dbInitSuccess = false;
   
-  // İlk olarak doğrudan PostgreSQL bağlantısı ile tabloları oluştur
-  // Bu, en temel ve düşük seviyeli yaklaşımdır
+  // İlk olarak direct-db modülünü kullanarak tablo oluşturmayı dene
   try {
-    const tablesExist = await checkIfTablesExist();
-    
-    if (tablesExist) {
-      console.log('Tablolar zaten mevcut, veritabanı kurulumu atlanıyor');
-      dbInitSuccess = true;
-    } else {
-      await setupDatabaseTables();
-      console.log('Doğrudan PostgreSQL bağlantısı ile tablolar oluşturuldu');
-      dbInitSuccess = true;
+    await initTables();
+    console.log('Direct-DB ile test tablosu başarıyla oluşturuldu.');
+    dbInitSuccess = true;
+  } catch (directDbError) {
+    console.error('Direct-DB tabloları oluşturma hatası:', directDbError);
+  }
+  
+  // Alternatif olarak doğrudan PostgreSQL bağlantısı ile tabloları oluştur
+  if (!dbInitSuccess) {
+    try {
+      const tablesExist = await checkIfTablesExist();
+      
+      if (tablesExist) {
+        console.log('Tablolar zaten mevcut, veritabanı kurulumu atlanıyor');
+        dbInitSuccess = true;
+      } else {
+        await setupDatabaseTables();
+        console.log('Doğrudan PostgreSQL bağlantısı ile tablolar oluşturuldu');
+        dbInitSuccess = true;
+      }
+    } catch (dbError) {
+      console.error('PostgreSQL tabloları oluşturma hatası:', dbError);
+      console.log('Supabase yöntemi ile devam ediliyor...');
     }
-  } catch (dbError) {
-    console.error('PostgreSQL tabloları oluşturma hatası:', dbError);
-    console.log('Supabase yöntemi ile devam ediliyor...');
   }
   
   // Alternatif olarak Supabase API ile tabloları oluşturmayı dene

@@ -17,8 +17,9 @@ async function executeRawSql<T>(sqlQuery: string): Promise<T[]> {
   // Supabase RPC fonksiyonuyla deneme yapmıyoruz çünkü bazen bu metot çalışmıyor
   // Doğrudan PostgreSQL bağlantısı kullanarak daha güvenilir sonuçlar alıyoruz
   try {
-    // PostgreSQL connection havuzu oluştur
-    const { Pool } = require('pg');
+    // PostgreSQL connection havuzu oluştur - ES modules için import dynamic kullanılıyor
+    const pg = await import('pg');
+    const Pool = pg.Pool;
     const pool = new Pool({
       connectionString: process.env.DATABASE_URL
     });
