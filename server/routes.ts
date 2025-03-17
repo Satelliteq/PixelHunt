@@ -72,10 +72,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Category routes
   app.get("/api/categories", async (_req: Request, res: Response) => {
     try {
+      try {
+        // Supabase ile kategorileri alalım
+        const { supabase } = await import('./supabase-setup');
+        
+        const { data, error } = await supabase
+          .from('categories')
+          .select('*');
+        
+        if (error) {
+          console.error("Error getting all categories:", error);
+        } else if (data && data.length > 0) {
+          // Veriyi frontend formatına dönüştürüyoruz
+          const formattedCategories = data.map(category => ({
+            id: category.id,
+            name: category.name,
+            description: category.description,
+            iconUrl: category.icon_url
+          }));
+          
+          console.log("Categories fetched from Supabase:", formattedCategories.length);
+          return res.json(formattedCategories);
+        }
+      } catch (supabaseError) {
+        console.error("Supabase categories error:", supabaseError);
+      }
+      
+      // Fallback: storage kullan
       const categories = await storage.getAllCategories();
+      console.log("Categories fetched from storage:", categories.length);
       res.json(categories);
     } catch (error) {
-      res.status(500).json({ message: "Server error" });
+      console.error("Error getting all categories:", error);
+      res.status(500).json([]);
     }
   });
   
@@ -297,35 +326,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
       
       try {
-        // Try using Supabase API first
-        const { getPopularTests } = await import('./supabase-api');
-        const popularTests = await getPopularTests(limit);
+        // Sadece Supabase API kullan
+        const { supabase } = await import('./supabase-setup');
         
-        if (popularTests && popularTests.length > 0) {
-          console.log("Using Supabase API for popular tests");
-          return res.json(popularTests);
+        // Önce prosedürü çağırmayı dene
+        try {
+          const { data: rpcData, error: rpcError } = await supabase.rpc('get_popular_tests', { 
+            limit_param: limit 
+          });
+          
+          if (!rpcError && rpcData && rpcData.length > 0) {
+            console.log("Using Supabase RPC for popular tests");
+            return res.json(rpcData);
+          } else if (rpcError) {
+            console.error("Error executing RPC for popular tests:", rpcError);
+          }
+        } catch (rpcCallError) {
+          console.error("Error calling RPC for popular tests:", rpcCallError);
+        }
+        
+        // Prosedür başarısız olursa doğrudan sorgu yap
+        try {
+          const { data, error } = await supabase
+            .from('tests')
+            .select('*')
+            .eq('published', true)
+            .eq('approved', true)
+            .order('play_count', { ascending: false })
+            .limit(limit);
+          
+          if (!error && data) {
+            console.log("Using Supabase query for popular tests");
+            return res.json(data);
+          } else if (error) {
+            console.error("Error fetching popular tests:", error);
+          }
+        } catch (queryError) {
+          console.error("Error executing query for popular tests:", queryError);
+        }
+        
+        // View kullanmayı dene
+        try {
+          const { data: viewData, error: viewError } = await supabase
+            .from('popular_tests')
+            .select('*')
+            .limit(limit);
+          
+          if (!viewError && viewData) {
+            console.log("Using Supabase view for popular tests");
+            return res.json(viewData);
+          } else {
+            console.error("All methods failed to fetch tests:", viewError);
+          }
+        } catch (viewQueryError) {
+          console.error("Error querying view for popular tests:", viewQueryError);
         }
       } catch (supabaseError) {
-        console.log("Supabase API error for popular tests:", supabaseError);
+        console.error("Supabase connection error:", supabaseError);
       }
       
-      try {
-        // Fallback to direct database access
-        const { getPopularTests } = await import('./direct-db');
-        const directTests = await getPopularTests(limit);
-        
-        console.log("Using direct DB for popular tests, found:", directTests.length);
-        return res.json(directTests);
-      } catch (directDbError) {
-        console.error("Direct DB error for popular tests:", directDbError);
-      }
-      
-      // If all methods fail, try the storage interface
-      const storageTests = await storage.getPopularTests(limit);
-      console.log("Using storage interface for popular tests");
-      res.json(storageTests);
+      // Verileri bulamazsak boş dizi döndür
+      res.json([]);
     } catch (error) {
-      console.error("All methods failed to fetch popular tests:", error);
+      console.error("Error in popular tests route:", error);
       res.status(500).json([]);
     }
   });
@@ -335,35 +398,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
       
       try {
-        // Try using Supabase API first
-        const { getNewestTests } = await import('./supabase-api');
-        const newestTests = await getNewestTests(limit);
+        // Sadece Supabase API kullan
+        const { supabase } = await import('./supabase-setup');
         
-        if (newestTests && newestTests.length > 0) {
-          console.log("Using Supabase API for newest tests");
-          return res.json(newestTests);
+        // Önce prosedürü çağırmayı dene
+        try {
+          const { data: rpcData, error: rpcError } = await supabase.rpc('get_newest_tests', { 
+            limit_param: limit 
+          });
+          
+          if (!rpcError && rpcData && rpcData.length > 0) {
+            console.log("Using Supabase RPC for newest tests");
+            return res.json(rpcData);
+          } else if (rpcError) {
+            console.error("Error executing RPC for newest tests:", rpcError);
+          }
+        } catch (rpcCallError) {
+          console.error("Error calling RPC for newest tests:", rpcCallError);
+        }
+        
+        // Prosedür başarısız olursa doğrudan sorgu yap
+        try {
+          const { data, error } = await supabase
+            .from('tests')
+            .select('*')
+            .eq('published', true)
+            .eq('approved', true)
+            .order('created_at', { ascending: false })
+            .limit(limit);
+          
+          if (!error && data) {
+            console.log("Using Supabase query for newest tests");
+            return res.json(data);
+          } else if (error) {
+            console.error("Error fetching newest tests:", error);
+          }
+        } catch (queryError) {
+          console.error("Error executing query for newest tests:", queryError);
+        }
+        
+        // View kullanmayı dene
+        try {
+          const { data: viewData, error: viewError } = await supabase
+            .from('newest_tests')
+            .select('*')
+            .limit(limit);
+          
+          if (!viewError && viewData) {
+            console.log("Using Supabase view for newest tests");
+            return res.json(viewData);
+          } else {
+            console.error("All methods failed to fetch tests:", viewError);
+          }
+        } catch (viewQueryError) {
+          console.error("Error querying view for newest tests:", viewQueryError);
         }
       } catch (supabaseError) {
-        console.log("Supabase API error for newest tests:", supabaseError);
+        console.error("Supabase connection error:", supabaseError);
       }
       
-      try {
-        // Fallback to direct database access
-        const { getNewestTests } = await import('./direct-db');
-        const directTests = await getNewestTests(limit);
-        
-        console.log("Using direct DB for newest tests, found:", directTests.length);
-        return res.json(directTests);
-      } catch (directDbError) {
-        console.error("Direct DB error for newest tests:", directDbError);
-      }
-      
-      // If all methods fail, try the storage interface
-      const storageTests = await storage.getNewestTests(limit);
-      console.log("Using storage interface for newest tests");
-      res.json(storageTests);
+      // Verileri bulamazsak boş dizi döndür
+      res.json([]);
     } catch (error) {
-      console.error("All methods failed to fetch newest tests:", error);
+      console.error("Error in newest tests route:", error);
       res.status(500).json([]);
     }
   });
@@ -373,35 +470,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
       
       try {
-        // Try using Supabase API first
-        const { getPopularTests } = await import('./supabase-api');
-        const featuredTests = await getPopularTests(limit);
+        // Sadece Supabase API kullan
+        const { supabase } = await import('./supabase-setup');
         
-        if (featuredTests && featuredTests.length > 0) {
-          console.log("Using Supabase API for featured tests");
-          return res.json(featuredTests);
+        // Doğrudan sorgu yap
+        try {
+          const { data, error } = await supabase
+            .from('tests')
+            .select('*')
+            .eq('published', true)
+            .eq('approved', true)
+            .order('play_count', { ascending: false })
+            .order('like_count', { ascending: false })
+            .limit(limit);
+          
+          if (!error && data) {
+            console.log("Using Supabase query for featured tests");
+            return res.json(data);
+          } else if (error) {
+            console.error("Error fetching featured tests:", error);
+          }
+        } catch (queryError) {
+          console.error("Error executing query for featured tests:", queryError);
+        }
+        
+        // View kullanmayı dene
+        try {
+          const { data: viewData, error: viewError } = await supabase
+            .from('featured_tests')
+            .select('*')
+            .limit(limit);
+          
+          if (!viewError && viewData) {
+            console.log("Using Supabase view for featured tests");
+            return res.json(viewData);
+          } else {
+            console.error("All methods failed to fetch tests:", viewError);
+          }
+        } catch (viewQueryError) {
+          console.error("Error querying view for featured tests:", viewQueryError);
         }
       } catch (supabaseError) {
-        console.log("Supabase API error for featured tests:", supabaseError);
+        console.error("Supabase connection error:", supabaseError);
       }
       
-      try {
-        // Fallback to direct database access
-        const { getFeaturedTests } = await import('./direct-db');
-        const directTests = await getFeaturedTests(limit);
-        
-        console.log("Using direct DB for featured tests, found:", directTests.length);
-        return res.json(directTests);
-      } catch (directDbError) {
-        console.error("Direct DB error for featured tests:", directDbError);
-      }
-      
-      // If all methods fail, try the storage interface
-      const storageTests = await storage.getFeaturedTests(limit);
-      console.log("Using storage interface for featured tests");
-      res.json(storageTests);
+      // Verileri bulamazsak boş dizi döndür
+      res.json([]);
     } catch (error) {
-      console.error("All methods failed to fetch featured tests:", error);
+      console.error("Error in featured tests route:", error);
       res.status(500).json([]);
     }
   });
@@ -677,10 +793,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // CRUD operations for categories (admin only)
   app.post("/api/categories", isAdmin, async (req: Request, res: Response) => {
     try {
+      console.log("Received category creation request:", req.body);
       const categoryInput = insertCategorySchema.parse(req.body);
+      
+      try {
+        // Supabase ile kategori ekleyelim
+        const { supabase } = await import('./supabase-setup');
+        
+        const { data, error } = await supabase
+          .from('categories')
+          .insert({
+            name: categoryInput.name,
+            description: categoryInput.description || null,
+            icon_url: categoryInput.iconUrl || null
+          })
+          .select()
+          .single();
+        
+        if (error) {
+          console.error("Kategori işlemi sırasında hata:", error);
+          throw error;
+        }
+        
+        if (data) {
+          // Veriyi frontend formatına dönüştürüyoruz
+          const formattedCategory = {
+            id: data.id,
+            name: data.name,
+            description: data.description,
+            iconUrl: data.icon_url
+          };
+          
+          console.log("Yeni kategori oluşturuldu:", formattedCategory);
+          return res.status(201).json(formattedCategory);
+        }
+      } catch (supabaseError) {
+        console.error("Supabase kategori ekleme hatası:", supabaseError);
+      }
+      
+      // Fallback: storage kullan
       const newCategory = await storage.createCategory(categoryInput);
       res.status(201).json(newCategory);
     } catch (error) {
+      console.error("Kategori işlemi sırasında hata:", error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid category data", errors: error.errors });
       }

@@ -1,7 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { initializeSupabaseTables } from "./supabase-api";
+import { setupSupabaseTables } from "./supabase-setup";
 
 const app = express();
 app.use(express.json());
@@ -39,7 +39,14 @@ app.use((req, res, next) => {
 
 (async () => {
   // Supabase veritabanı tablolarını başlat
-  await initializeSupabaseTables();
+  try {
+    await setupSupabaseTables();
+    console.log('Supabase tabloları oluşturuldu veya güncellendi');
+  } catch (error) {
+    console.error('Supabase tabloları oluşturma hatası:', error);
+    console.log('Uygulama, Supabase tablolarının manuel olarak oluşturulmasına rağmen çalışacak');
+  }
+  
   console.log('Supabase tables are being checked...');
   
   const server = await registerRoutes(app);
