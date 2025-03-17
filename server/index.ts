@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { setupSupabaseTables } from "./supabase-setup";
 import { initializeSupabaseTables } from "./initialize-tables";
+import { setupDatabaseTables } from "./db-setup";
 
 const app = express();
 app.use(express.json());
@@ -46,6 +47,14 @@ app.use((req, res, next) => {
   } catch (error) {
     console.error('Supabase tabloları oluşturma hatası:', error);
     console.log('Uygulama, Supabase tablolarının manuel olarak oluşturulmasına rağmen çalışacak');
+  }
+  
+  // Doğrudan PostgreSQL bağlantısı kullanarak tabloları oluştur
+  try {
+    await setupDatabaseTables();
+    console.log('Doğrudan PostgreSQL bağlantısı ile tablolar oluşturuldu');
+  } catch (dbError) {
+    console.error('PostgreSQL tabloları oluşturma hatası:', dbError);
   }
   
   console.log('Supabase tables are being checked...');
