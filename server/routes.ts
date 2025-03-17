@@ -72,36 +72,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Category routes
   app.get("/api/categories", async (_req: Request, res: Response) => {
     try {
-      try {
-        // Supabase ile kategorileri alalım
-        const { supabase } = await import('./supabase-setup');
-        
-        const { data, error } = await supabase
-          .from('categories')
-          .select('*');
-        
-        if (error) {
-          console.error("Error getting all categories:", error);
-        } else if (data && data.length > 0) {
-          // Veriyi frontend formatına dönüştürüyoruz
-          const formattedCategories = data.map(category => ({
-            id: category.id,
-            name: category.name,
-            description: category.description,
-            iconUrl: category.icon_url
-          }));
-          
-          console.log("Categories fetched from Supabase:", formattedCategories.length);
-          return res.json(formattedCategories);
-        }
-      } catch (supabaseError) {
-        console.error("Supabase categories error:", supabaseError);
-      }
+      // Supabase ile kategorileri alalım - direct-supabase.ts modülünü kullan
+      const { getAllCategories } = await import('./direct-supabase');
       
-      // Fallback: storage kullan
-      const categories = await storage.getAllCategories();
-      console.log("Categories fetched from storage:", categories.length);
-      res.json(categories);
+      const categories = await getAllCategories();
+      console.log("Categories fetched from Supabase:", categories.length);
+      return res.json(categories);
     } catch (error) {
       console.error("Error getting all categories:", error);
       res.status(500).json([]);
@@ -116,14 +92,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid category ID" });
       }
       
-      const category = await storage.getCategory(id);
+      // Supabase ile kategori alalım - direct-supabase.ts modülünü kullan
+      const { getCategoryById } = await import('./direct-supabase');
+      const category = await getCategoryById(id);
       
       if (!category) {
         return res.status(404).json({ message: "Category not found" });
       }
       
-      res.json(category);
+      return res.json(category);
     } catch (error) {
+      console.error(`Error getting category ID ${req.params.id}:`, error);
       res.status(500).json({ message: "Server error" });
     }
   });

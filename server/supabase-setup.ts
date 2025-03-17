@@ -272,6 +272,5 @@ async function createCategories() {
 }
 
 // Bu dosya import edildiğinde otomatik olarak tabloları oluştur
-setupSupabaseTables().then(() => {
-  console.log('Supabase kurulumu tamamlandı');
-});
+// IIFE kullanmadan sadece export edilen fonksiyon
+// main index.ts tarafından çağrılacak
