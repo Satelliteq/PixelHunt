@@ -6,7 +6,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuth } from "@/lib/AuthContext";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured, uploadImage } from "@/lib/supabase";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -215,7 +215,7 @@ export default function TestCreate() {
     setImageInputs(newImages);
   };
   
-  const handleFileUpload = (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
     
@@ -238,13 +238,47 @@ export default function TestCreate() {
       return;
     }
     
-    const reader = new FileReader();
-    reader.onloadend = () => {
+    try {
+      // Yükleme durumunu göster
       const newImages = [...imageInputs];
-      newImages[index].imageUrl = reader.result as string;
+      newImages[index].imageUrl = "Yükleniyor...";
       setImageInputs(newImages);
-    };
-    reader.readAsDataURL(file);
+      
+      // Supabase Storage ile yükleme
+      if (isSupabaseConfigured()) {
+        const uuid = crypto.randomUUID();
+        const path = `test-images/${uuid}-${file.name}`;
+        const imageUrl = await uploadImage(file, path);
+        
+        if (imageUrl) {
+          const updatedImages = [...imageInputs];
+          updatedImages[index].imageUrl = imageUrl;
+          setImageInputs(updatedImages);
+          return;
+        }
+      }
+      
+      // Supabase çalışmazsa Base64 kullan
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const newestImages = [...imageInputs];
+        newestImages[index].imageUrl = reader.result as string;
+        setImageInputs(newestImages);
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error("Görsel yükleme hatası:", error);
+      toast({
+        title: "Hata",
+        description: "Görsel yüklenirken bir hata oluştu. Lütfen tekrar deneyin.",
+        variant: "destructive",
+      });
+      
+      // Hata durumunda boş değere resetle
+      const errorImages = [...imageInputs];
+      errorImages[index].imageUrl = "";
+      setImageInputs(errorImages);
+    }
   };
 
   const addAnswer = (index: number) => {
