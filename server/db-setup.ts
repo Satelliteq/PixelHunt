@@ -14,8 +14,32 @@ const pool = new Pool({
  * postgresql client ile çalıştırır
  */
 
+export async function checkIfTablesExist(): Promise<boolean> {
+  try {
+    const result = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' AND table_name = 'tests'
+      );
+    `);
+    
+    return result.rows[0].exists;
+  } catch (error) {
+    console.error('Tablo kontrolü hatası:', error);
+    return false;
+  }
+}
+
 export async function setupDatabaseTables() {
   console.log('Veritabanı tabloları başlatılıyor...');
+  
+  // Önce tabloların var olup olmadığını kontrol edelim
+  const tablesExist = await checkIfTablesExist();
+  
+  if (tablesExist) {
+    console.log('Tablolar zaten var, kurulum adımı atlanıyor.');
+    return true;
+  }
   
   try {
     // Schema bilgisi olmadan doğrudan public schema'da tablo oluştur

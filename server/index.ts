@@ -3,7 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { setupSupabaseTables } from "./supabase-setup";
 import { initializeSupabaseTables } from "./initialize-tables";
-import { setupDatabaseTables } from "./db-setup";
+import { setupDatabaseTables, checkIfTablesExist } from "./db-setup";
 import { syncTablesWithSupabase } from "./db-supabase-sync";
 
 const app = express();
@@ -47,9 +47,16 @@ app.use((req, res, next) => {
   // İlk olarak doğrudan PostgreSQL bağlantısı ile tabloları oluştur
   // Bu, en temel ve düşük seviyeli yaklaşımdır
   try {
-    await setupDatabaseTables();
-    console.log('Doğrudan PostgreSQL bağlantısı ile tablolar oluşturuldu');
-    dbInitSuccess = true;
+    const tablesExist = await checkIfTablesExist();
+    
+    if (tablesExist) {
+      console.log('Tablolar zaten mevcut, veritabanı kurulumu atlanıyor');
+      dbInitSuccess = true;
+    } else {
+      await setupDatabaseTables();
+      console.log('Doğrudan PostgreSQL bağlantısı ile tablolar oluşturuldu');
+      dbInitSuccess = true;
+    }
   } catch (dbError) {
     console.error('PostgreSQL tabloları oluşturma hatası:', dbError);
     console.log('Supabase yöntemi ile devam ediliyor...');
