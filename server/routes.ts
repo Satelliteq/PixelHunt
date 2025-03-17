@@ -295,40 +295,114 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/tests/popular", async (req: Request, res: Response) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
-      // Supabase API'sini kullan
-      const { getPopularTests } = await import('./supabase-api');
-      const popularTests = await getPopularTests(limit);
-      res.json(popularTests);
+      
+      try {
+        // Try using Supabase API first
+        const { getPopularTests } = await import('./supabase-api');
+        const popularTests = await getPopularTests(limit);
+        
+        if (popularTests && popularTests.length > 0) {
+          console.log("Using Supabase API for popular tests");
+          return res.json(popularTests);
+        }
+      } catch (supabaseError) {
+        console.log("Supabase API error for popular tests:", supabaseError);
+      }
+      
+      try {
+        // Fallback to direct database access
+        const { getPopularTests } = await import('./direct-db');
+        const directTests = await getPopularTests(limit);
+        
+        console.log("Using direct DB for popular tests, found:", directTests.length);
+        return res.json(directTests);
+      } catch (directDbError) {
+        console.error("Direct DB error for popular tests:", directDbError);
+      }
+      
+      // If all methods fail, try the storage interface
+      const storageTests = await storage.getPopularTests(limit);
+      console.log("Using storage interface for popular tests");
+      res.json(storageTests);
     } catch (error) {
-      console.error("Error fetching popular tests:", error);
-      res.status(500).json({ message: "Server error" });
+      console.error("All methods failed to fetch popular tests:", error);
+      res.status(500).json([]);
     }
   });
   
   app.get("/api/tests/newest", async (req: Request, res: Response) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
-      // Supabase API'sini kullan
-      const { getNewestTests } = await import('./supabase-api');
-      const newestTests = await getNewestTests(limit);
-      res.json(newestTests);
+      
+      try {
+        // Try using Supabase API first
+        const { getNewestTests } = await import('./supabase-api');
+        const newestTests = await getNewestTests(limit);
+        
+        if (newestTests && newestTests.length > 0) {
+          console.log("Using Supabase API for newest tests");
+          return res.json(newestTests);
+        }
+      } catch (supabaseError) {
+        console.log("Supabase API error for newest tests:", supabaseError);
+      }
+      
+      try {
+        // Fallback to direct database access
+        const { getNewestTests } = await import('./direct-db');
+        const directTests = await getNewestTests(limit);
+        
+        console.log("Using direct DB for newest tests, found:", directTests.length);
+        return res.json(directTests);
+      } catch (directDbError) {
+        console.error("Direct DB error for newest tests:", directDbError);
+      }
+      
+      // If all methods fail, try the storage interface
+      const storageTests = await storage.getNewestTests(limit);
+      console.log("Using storage interface for newest tests");
+      res.json(storageTests);
     } catch (error) {
-      console.error("Error fetching newest tests:", error);
-      res.status(500).json({ message: "Server error" });
+      console.error("All methods failed to fetch newest tests:", error);
+      res.status(500).json([]);
     }
   });
   
   app.get("/api/tests/featured", async (req: Request, res: Response) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
-      // Şimdilik öne çıkan testler için popüler testleri kullanıyoruz
-      // Supabase API'sini kullan
-      const { getPopularTests } = await import('./supabase-api');
-      const featuredTests = await getPopularTests(limit);
-      res.json(featuredTests);
+      
+      try {
+        // Try using Supabase API first
+        const { getPopularTests } = await import('./supabase-api');
+        const featuredTests = await getPopularTests(limit);
+        
+        if (featuredTests && featuredTests.length > 0) {
+          console.log("Using Supabase API for featured tests");
+          return res.json(featuredTests);
+        }
+      } catch (supabaseError) {
+        console.log("Supabase API error for featured tests:", supabaseError);
+      }
+      
+      try {
+        // Fallback to direct database access
+        const { getFeaturedTests } = await import('./direct-db');
+        const directTests = await getFeaturedTests(limit);
+        
+        console.log("Using direct DB for featured tests, found:", directTests.length);
+        return res.json(directTests);
+      } catch (directDbError) {
+        console.error("Direct DB error for featured tests:", directDbError);
+      }
+      
+      // If all methods fail, try the storage interface
+      const storageTests = await storage.getFeaturedTests(limit);
+      console.log("Using storage interface for featured tests");
+      res.json(storageTests);
     } catch (error) {
-      console.error("Error fetching featured tests:", error);
-      res.status(500).json({ message: "Server error" });
+      console.error("All methods failed to fetch featured tests:", error);
+      res.status(500).json([]);
     }
   });
   
@@ -355,14 +429,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid test ID" });
       }
       
-      const test = await storage.getTest(id);
-      
-      if (!test) {
-        return res.status(404).json({ message: "Test not found" });
+      try {
+        // Try using storage first
+        const test = await storage.getTest(id);
+        if (test) {
+          console.log('Using storage for test details');
+          return res.json(test);
+        }
+      } catch (storageError) {
+        console.log('Storage error for test details, trying direct DB:', storageError);
       }
       
-      res.json(test);
+      // Fallback to direct database access
+      try {
+        const { getTestById } = await import('./direct-db');
+        const test = await getTestById(id);
+        
+        if (!test) {
+          return res.status(404).json({ message: "Test not found" });
+        }
+        
+        console.log('Using direct DB for test details');
+        return res.json(test);
+      } catch (directDbError) {
+        console.error('Direct DB error for test details:', directDbError);
+        return res.status(404).json({ message: "Test not found" });
+      }
     } catch (error) {
+      console.error('Error getting test by ID:', error);
       res.status(500).json({ message: "Server error" });
     }
   });
@@ -370,10 +464,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/tests", async (req: Request, res: Response) => {
     try {
       console.log("Received test creation request:", req.body);
-      // Supabase API'yi kullan
-      const { createTest } = await import('./supabase-api');
-      const newTest = await createTest(req.body);
-      res.status(201).json(newTest);
+      
+      try {
+        // Try using Supabase API first
+        const { createTest } = await import('./supabase-api');
+        const newTest = await createTest(req.body);
+        if (newTest) {
+          console.log('Using Supabase API for test creation');
+          return res.status(201).json(newTest);
+        }
+      } catch (supabaseError) {
+        console.log('Supabase API error for test creation, trying direct DB:', supabaseError);
+      }
+      
+      // Fallback to direct database access
+      try {
+        const { createTest } = await import('./direct-db');
+        const newTest = await createTest(req.body);
+        
+        if (!newTest) {
+          throw new Error('Failed to create test');
+        }
+        
+        console.log('Using direct DB for test creation');
+        return res.status(201).json(newTest);
+      } catch (directDbError) {
+        console.error('Direct DB error for test creation:', directDbError);
+      }
+      
+      // Last resort, try using storage
+      const testInput = insertTestSchema.parse(req.body);
+      const newTest = await storage.createTest(testInput);
+      console.log('Using storage for test creation');
+      return res.status(201).json(newTest);
     } catch (error) {
       console.error("Test creation error:", error);
       if (error instanceof z.ZodError) {
