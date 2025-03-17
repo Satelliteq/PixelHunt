@@ -8,6 +8,148 @@ const supabaseKey = process.env.SUPABASE_ANON_KEY || '';
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
 /**
+ * Supabase tablolarını oluştur
+ * Bu fonksiyon projenin ilk başlatılması sırasında tabloların varlığını kontrol eder
+ * ve gerekirse yeni tablolar oluşturur.
+ */
+export async function initializeSupabaseTables() {
+  console.log('Initializing Supabase tables...');
+  
+  try {
+    // Tests tablosunu oluştur
+    const { error: testsError } = await supabase.rpc('create_table_if_not_exists', {
+      table_name: 'tests',
+      table_definition: `
+        id SERIAL PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT,
+        uuid TEXT NOT NULL UNIQUE,
+        category_id INTEGER,
+        creator_id INTEGER,
+        image_ids JSONB DEFAULT '[]',
+        play_count INTEGER DEFAULT 0,
+        like_count INTEGER DEFAULT 0,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        is_public BOOLEAN DEFAULT TRUE,
+        anonymous_creator BOOLEAN DEFAULT FALSE,
+        thumbnail TEXT,
+        approved BOOLEAN DEFAULT FALSE,
+        published BOOLEAN DEFAULT FALSE,
+        difficulty INTEGER DEFAULT 1
+      `
+    });
+    
+    if (testsError) {
+      console.error('Error creating tests table:', testsError);
+    } else {
+      console.log('Tests table created or already exists');
+    }
+    
+    // Test sorularını oluştur
+    const { error: questionsError } = await supabase.rpc('create_table_if_not_exists', {
+      table_name: 'test_questions',
+      table_definition: `
+        id SERIAL PRIMARY KEY,
+        test_id INTEGER NOT NULL REFERENCES tests(id) ON DELETE CASCADE,
+        image_url TEXT NOT NULL,
+        answers JSONB NOT NULL,
+        order_num INTEGER DEFAULT 0,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      `
+    });
+    
+    if (questionsError) {
+      console.error('Error creating test_questions table:', questionsError);
+    } else {
+      console.log('Test_questions table created or already exists');
+    }
+    
+    // Test yorumları oluştur
+    const { error: commentsError } = await supabase.rpc('create_table_if_not_exists', {
+      table_name: 'test_comments',
+      table_definition: `
+        id SERIAL PRIMARY KEY,
+        test_id INTEGER NOT NULL REFERENCES tests(id) ON DELETE CASCADE,
+        user_id INTEGER,
+        comment TEXT NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      `
+    });
+    
+    if (commentsError) {
+      console.error('Error creating test_comments table:', commentsError);
+    } else {
+      console.log('Test_comments table created or already exists');
+    }
+    
+    // Oyun skorları oluştur
+    const { error: scoresError } = await supabase.rpc('create_table_if_not_exists', {
+      table_name: 'game_scores',
+      table_definition: `
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER,
+        test_id INTEGER NOT NULL,
+        score INTEGER NOT NULL,
+        attempts_count INTEGER NOT NULL,
+        completion_time INTEGER,
+        completed BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      `
+    });
+    
+    if (scoresError) {
+      console.error('Error creating game_scores table:', scoresError);
+    } else {
+      console.log('Game_scores table created or already exists');
+    }
+    
+    // Kategoriler oluştur
+    const { error: categoriesError } = await supabase.rpc('create_table_if_not_exists', {
+      table_name: 'categories',
+      table_definition: `
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        description TEXT,
+        icon_url TEXT
+      `
+    });
+    
+    if (categoriesError) {
+      console.error('Error creating categories table:', categoriesError);
+    } else {
+      console.log('Categories table created or already exists');
+    }
+    
+    // Resimler tablosu oluştur
+    const { error: imagesError } = await supabase.rpc('create_table_if_not_exists', {
+      table_name: 'images',
+      table_definition: `
+        id SERIAL PRIMARY KEY,
+        url TEXT NOT NULL,
+        category_id INTEGER,
+        answers JSONB NOT NULL,
+        play_count INTEGER DEFAULT 0,
+        like_count INTEGER DEFAULT 0,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        difficulty INTEGER DEFAULT 1
+      `
+    });
+    
+    if (imagesError) {
+      console.error('Error creating images table:', imagesError);
+    } else {
+      console.log('Images table created or already exists');
+    }
+    
+    console.log('Table initialization completed');
+    return true;
+  } catch (error) {
+    console.error('Error during table initialization:', error);
+    return false;
+  }
+}
+
+/**
  * Test oluşturma fonksiyonu
  * Bu fonksiyon test verilerini ve ilgili soruları Supabase'e kaydeder
  */
