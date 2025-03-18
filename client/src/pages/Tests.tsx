@@ -217,7 +217,7 @@ export default function Tests() {
   // Handle test click
   const [_, navigate] = useLocation();
   const handleTestClick = (testId: number) => {
-    navigate(`/tests/${testId}`);
+    navigate(`/test/${testId}`);
   };
 
   return (
