@@ -35,10 +35,9 @@ export const tests = pgTable("tests", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description"),
-  creatorId: integer("creator_id"), // null if created by system
+  creatorId: integer("creator_id"), // null if created by system (anonymous)
   categoryId: integer("category_id"),
   imageIds: jsonb("image_ids").notNull(), // Array of image IDs
-  difficulty: integer("difficulty").default(1),
   playCount: integer("play_count").default(0),
   likeCount: integer("like_count").default(0),
   isPublic: boolean("is_public").default(true),
