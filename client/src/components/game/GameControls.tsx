@@ -126,9 +126,10 @@ export default function GameControls({
                   <Badge 
                     variant={
                       item.isCorrect ? "success" : 
-                      item.isClose ? "warning" : 
+                      item.isClose ? "default" : 
                       "destructive"
                     }
+                    className={item.isClose ? "bg-yellow-500 hover:bg-yellow-600" : ""}
                   >
                     {item.isCorrect ? "Doğru" : 
                      item.isClose ? "Yakın" : 
