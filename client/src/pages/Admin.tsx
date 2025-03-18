@@ -756,7 +756,7 @@ function AdminPanel() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => handleBanUser(user.id)}
+                              onClick={() => handleBanUser(user.id, false)}
                               title="Kullanıcıyı Banla"
                             >
                               <UserX className="w-4 h-4 text-destructive" />
@@ -765,7 +765,7 @@ function AdminPanel() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => handleBanUser(user.id)}
+                              onClick={() => handleBanUser(user.id, true)}
                               title="Kullanıcının Banını Kaldır"
                             >
                               <Check className="w-4 h-4 text-success" />

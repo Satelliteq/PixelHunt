@@ -17,13 +17,20 @@ export async function apiRequest(
 ): Promise<any> {
   const method = options?.method || 'GET';
   const data = options?.data;
-  const customHeaders = options?.headers || {};
+  const customHeaders: Record<string, string> = options?.headers || {};
   
-  // Varsayılan başlıklar (data varsa Content-Type)
-  const defaultHeaders = data ? { "Content-Type": "application/json" } : {};
+  // Varsayılan başlıklar ve özel başlıkları birleştir
+  const headers: Record<string, string> = {};
   
-  // Tüm başlıkları birleştir, özel başlıklar varsayılanları ezebilir
-  const headers = { ...defaultHeaders, ...customHeaders };
+  // Eğer data varsa Content-Type ekle
+  if (data) {
+    headers["Content-Type"] = "application/json";
+  }
+  
+  // Özel başlıkları ekle
+  Object.keys(customHeaders).forEach(key => {
+    headers[key] = customHeaders[key];
+  });
   
   const res = await fetch(url, {
     method,
