@@ -93,7 +93,6 @@ export const insertTestSchema = createInsertSchema(tests).pick({
   creatorId: true,
   categoryId: true,
   imageIds: true,
-  difficulty: true,
   isPublic: true,
   thumbnail: true,
 });

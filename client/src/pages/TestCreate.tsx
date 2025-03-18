@@ -30,7 +30,6 @@ const testFormSchema = z.object({
   title: z.string().min(5, "Başlık en az 5 karakter olmalıdır").max(100, "Başlık en fazla 100 karakter olabilir"),
   description: z.string().min(10, "Açıklama en az 10 karakter olmalıdır").nullable(),
   categoryId: z.number().min(1, "Lütfen bir kategori seçin"),
-  difficulty: z.number().min(1).max(5),
   isPublic: z.boolean().default(true),
   thumbnail: z.string().optional(),
   images: z.array(
@@ -61,17 +60,7 @@ export default function TestCreate() {
     queryKey: ['/api/categories'],
   });
 
-  // Kullanıcı girişi kontrolü
-  useEffect(() => {
-    if (!user) {
-      toast({
-        title: "Giriş yapmanız gerekiyor",
-        description: "Test oluşturmak için lütfen giriş yapın.",
-        variant: "destructive",
-      });
-      navigate("/login");
-    }
-  }, [user, navigate]);
+  // We're now allowing anonymous test creation, so no login check is needed.
 
   // Thumbnail yükleme işlevi
   const handleThumbnailUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,29 +114,21 @@ export default function TestCreate() {
       title: "",
       description: "",
       categoryId: 0,
-      difficulty: 3,
       isPublic: true,
       thumbnail: "",
       images: [],
     },
   });
 
+  const [isAnonymous, setIsAnonymous] = useState<boolean>(!user);
+
   const onSubmit = async (values: TestFormValues) => {
     try {
-      if (!user) {
-        toast({
-          title: "Giriş yapmanız gerekiyor",
-          description: "Test oluşturmak için lütfen giriş yapın.",
-          variant: "destructive",
-        });
-        navigate("/login");
-        return;
-      }
-      
+      // Allow anonymous test creation
       // Transform the image inputs into the correct format for the API
       const transformedValues = {
         ...values,
-        creatorId: user.id,
+        creatorId: isAnonymous ? null : user?.id, // Allow null for anonymous tests
         images: imageInputs.map((img) => ({
           imageUrl: img.imageUrl,
           answers: img.answers,
@@ -261,10 +242,7 @@ export default function TestCreate() {
     }
   };
 
-  const difficultyText = (level: number) => {
-    const levels = ['Çok Kolay', 'Kolay', 'Orta', 'Zor', 'Çok Zor'];
-    return levels[level - 1] || 'Orta';
-  };
+  // Difficulty section has been removed
 
   return (
     <div className="max-w-3xl mx-auto py-8 px-4">
@@ -313,7 +291,7 @@ export default function TestCreate() {
               )}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6">
               <FormField
                 control={form.control}
                 name="categoryId"
@@ -340,30 +318,6 @@ export default function TestCreate() {
                     </Select>
                     <FormDescription>
                       Testinizin en uygun kategorisini seçin.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="difficulty"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Zorluk Seviyesi: {difficultyText(field.value)}</FormLabel>
-                    <FormControl>
-                      <Slider
-                        min={1}
-                        max={5}
-                        step={1}
-                        defaultValue={[field.value]}
-                        onValueChange={(vals) => field.onChange(vals[0])}
-                        className="py-4"
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Testinizin zorluk derecesini 1-5 arasında belirleyin.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -441,6 +395,22 @@ export default function TestCreate() {
                 </FormItem>
               )}
             />
+            
+            <div className="flex flex-row items-start space-x-3 space-y-0 mt-4">
+              <Checkbox
+                checked={isAnonymous}
+                onCheckedChange={(value) => setIsAnonymous(!!value)}
+                disabled={!user}
+              />
+              <div className="space-y-1 leading-none">
+                <div className="font-medium">Anonim Olarak Paylaş</div>
+                <p className="text-sm text-muted-foreground">
+                  {user 
+                    ? "Testinizi anonim olarak paylaşmak istiyorsanız işaretleyin." 
+                    : "Giriş yapmadan test oluşturduğunuzda testiniz anonim olarak kaydedilir."}
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="bg-card p-6 rounded-lg border shadow-sm">
