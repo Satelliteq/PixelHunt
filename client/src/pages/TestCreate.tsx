@@ -416,10 +416,6 @@ export default function TestCreate() {
           <div className="bg-card p-6 rounded-lg border shadow-sm">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold">Görseller ve Cevaplar</h2>
-              <Button type="button" variant="outline" size="sm" onClick={addImage}>
-                <Plus className="h-4 w-4 mr-2" />
-                Görsel Ekle
-              </Button>
             </div>
 
             {imageInputs.map((image, index) => (
@@ -533,6 +529,15 @@ export default function TestCreate() {
                 <Button type="button" variant="outline" size="sm" className="mt-4" onClick={addImage}>
                   <Plus className="h-4 w-4 mr-2" />
                   Görsel Ekle
+                </Button>
+              </div>
+            )}
+            
+            {imageInputs.length > 0 && (
+              <div className="text-center mt-2">
+                <Button type="button" variant="outline" onClick={addImage} className="w-full">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Yeni Görsel Ekle
                 </Button>
               </div>
             )}
