@@ -40,8 +40,8 @@ export default function Tests() {
     // Category filter
     const matchesCategory = categoryFilter === "all" || (test.categoryId ? test.categoryId.toString() === categoryFilter : false);
     
-    // Difficulty filter
-    const matchesDifficulty = difficultyFilter === "all" || (test.difficulty ? test.difficulty.toString() === difficultyFilter : false);
+    // Difficulty filter is no longer needed since we removed difficulty
+    const matchesDifficulty = true;
     
     return matchesSearch && matchesCategory && matchesDifficulty;
   });
@@ -55,10 +55,6 @@ export default function Tests() {
         return (a.createdAt ? new Date(a.createdAt).getTime() : 0) - (b.createdAt ? new Date(b.createdAt).getTime() : 0);
       case "popular":
         return (b.playCount || 0) - (a.playCount || 0);
-      case "difficulty-asc":
-        return (a.difficulty || 0) - (b.difficulty || 0);
-      case "difficulty-desc":
-        return (b.difficulty || 0) - (a.difficulty || 0);
       default:
         return 0;
     }
@@ -90,7 +86,7 @@ export default function Tests() {
 
   // Test card component
   const TestCard = ({ test }: { test: Test }) => (
-    <Link href={`/tests/${test.id}`}>
+    <Link to={`/test/${test.id}`}>
       <div className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-5 cursor-pointer">
         <div className="mb-4 flex justify-between items-start">
           <div className="flex gap-3 items-center">
@@ -107,7 +103,7 @@ export default function Tests() {
             </div>
           </div>
           <Badge variant="secondary" className="text-xs">
-            {getDifficultyText(test.difficulty || 1)}
+            {getQuestionCount(test.imageIds)} Soru
           </Badge>
         </div>
         
@@ -136,7 +132,7 @@ export default function Tests() {
 
   // Test list item component
   const TestListItem = ({ test }: { test: Test }) => (
-    <Link href={`/tests/${test.id}`}>
+    <Link to={`/test/${test.id}`}>
       <div className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-4 flex items-center cursor-pointer">
         <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center mr-4 text-white">
           <span className="text-lg font-bold">
@@ -147,7 +143,7 @@ export default function Tests() {
           <div className="flex items-center gap-2 mb-1">
             <h3 className="font-medium">{test.title}</h3>
             <Badge variant="secondary" className="text-xs">
-              {getDifficultyText(test.difficulty || 1)}
+              {getQuestionCount(test.imageIds)} Soru
             </Badge>
           </div>
           <p className="text-sm text-muted-foreground line-clamp-1">
@@ -291,19 +287,7 @@ export default function Tests() {
                   </SelectContent>
                 </Select>
                 
-                <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
-                  <SelectTrigger className="w-[150px]">
-                    <SelectValue placeholder="Zorluk" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tüm Zorluklar</SelectItem>
-                    {[1, 2, 3, 4, 5].map((level) => (
-                      <SelectItem key={level} value={level.toString()}>
-                        {getDifficultyText(level)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+
                 
                 <Select value={sortOrder} onValueChange={setSortOrder}>
                   <SelectTrigger className="w-[150px]">
@@ -313,8 +297,6 @@ export default function Tests() {
                     <SelectItem value="newest">En Yeni</SelectItem>
                     <SelectItem value="oldest">En Eski</SelectItem>
                     <SelectItem value="popular">En Popüler</SelectItem>
-                    <SelectItem value="difficulty-asc">Zorluk (Kolay-Zor)</SelectItem>
-                    <SelectItem value="difficulty-desc">Zorluk (Zor-Kolay)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
