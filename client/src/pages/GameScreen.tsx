@@ -1,21 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'wouter';
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Clock, Heart, ThumbsUp, User, Award, AlertTriangle } from 'lucide-react';
+import { AlertTriangle, User, Heart, Share2, Trophy, Award, Clock, ThumbsUp } from 'lucide-react';
 import { Image, Test } from '../../shared/schema';
 import { toast } from '@/hooks/use-toast';
+import { formatTime, checkAnswer, calculateScore, playSoundEffect, calculateNewRevealPercent } from '@/lib/gameHelpers';
+import GameControls from '@/components/game/GameControls';
+import ScoreDisplay from '@/components/game/ScoreDisplay';
+import ImageReveal from '@/components/game/ImageReveal';
+import ContentCard from '@/components/game/ContentCard';
 
 export default function GameScreen() {
+  const [, setLocation] = useLocation();
   const { testId } = useParams<{ testId: string }>();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [userAnswer, setUserAnswer] = useState('');
   const [score, setScore] = useState(0);
   const [timeElapsed, setTimeElapsed] = useState(0);
   const [gameStatus, setGameStatus] = useState<'playing' | 'finished'>('playing');
   const [revealPercent, setRevealPercent] = useState(20); // Start with 20% revealed
+  const [wrongAttempts, setWrongAttempts] = useState(0);
+  const [guessHistory, setGuessHistory] = useState<Array<{
+    guess: string;
+    isCorrect: boolean;
+    isClose?: boolean;
+  }>>([]);
+  
+  // Reference to the correct answers for current image
+  const correctAnswersRef = useRef<string[]>([]);
 
   // Fetch test data
   const { data: test, isLoading: isTestLoading } = useQuery<Test>({
