@@ -278,9 +278,10 @@ export default function GameScreen() {
             </div>
           </>
         ) : (
-          // Game Finished Screen with Scoreboard, Comments and Similar Tests
+          // Game Finished Screen with UX optimized layout
           <div className="py-6 rounded-xl">
-            <div className="text-center mb-8">
+            {/* Header section with score summary */}
+            <div className="text-center mb-10">
               <Trophy className="h-16 w-16 mx-auto text-yellow-500 mb-4" />
               <h1 className="text-3xl font-bold mb-2">Tebrikler!</h1>
               <p className="text-xl mb-4">
@@ -295,132 +296,187 @@ export default function GameScreen() {
               </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {/* Top 5 Scoreboard */}
-              <div className="bg-black/30 backdrop-blur-sm rounded-xl p-5 shadow-lg">
-                <div className="flex items-center gap-2 mb-4">
-                  <ListOrdered className="w-5 h-5 text-yellow-500" />
-                  <h2 className="text-xl font-bold">Skor Tablosu (Top 5)</h2>
-                </div>
-                
-                {topScores && topScores.length > 0 ? (
-                  <div className="space-y-3">
-                    {(topScores as GameScore[]).slice(0, 5).map((scoreItem, index) => (
-                      <div key={index} className="flex items-center justify-between bg-black/20 p-3 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <span className="font-bold text-lg w-6">{index + 1}</span>
-                          <div>
-                            <p className="font-medium">{scoreItem.userId ? "Kullanıcı" : "Anonim"}</p>
-                            <p className="text-xs text-muted-foreground">{formatTime(scoreItem.completionTime || 0)}</p>
+            {/* Main content section - Left side for Similar Tests + Scoreboard, Right side empty for now */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+              {/* Left Column - Similar Tests + Scoreboard */}
+              <div className="space-y-6">
+                {/* Similar Tests */}
+                <div className="bg-black/30 backdrop-blur-sm rounded-xl p-5 shadow-lg">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Star className="w-5 h-5 text-orange-500" />
+                    <h2 className="text-xl font-bold">Benzer Testler</h2>
+                  </div>
+                  
+                  {similarTests && similarTests.length > 0 ? (
+                    <div className="space-y-3">
+                      {(similarTests as Test[])
+                        .filter(t => t.id !== Number(testId))
+                        .slice(0, 5)
+                        .map((similarTest, index) => (
+                          <div 
+                            key={index} 
+                            className="bg-black/20 p-3 rounded-lg cursor-pointer hover:bg-black/30"
+                            onClick={() => window.location.href = `/test/${similarTest.id}`}
+                          >
+                            <h4 className="font-medium">{similarTest.title}</h4>
+                            <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <Heart className="w-3 h-3" /> {similarTest.likeCount || 0}
+                              </span>
+                              <span>•</span>
+                              <span className="flex items-center gap-1">
+                                {similarTest.imageIds?.length || 0} görsel
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                        <span className="text-xl font-bold">{scoreItem.score}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-10 text-muted-foreground">
-                    <p>Henüz skor kaydedilmemiş</p>
-                  </div>
-                )}
-              </div>
-              
-              {/* Comments Section */}
-              <div className="bg-black/30 backdrop-blur-sm rounded-xl p-5 shadow-lg">
-                <div className="flex items-center gap-2 mb-4">
-                  <MessageSquare className="w-5 h-5 text-blue-500" />
-                  <h2 className="text-xl font-bold">Yorumlar</h2>
+                        ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-6 text-muted-foreground">
+                      <p>Benzer test bulunamadı</p>
+                    </div>
+                  )}
                 </div>
                 
-                {comments && comments.length > 0 ? (
-                  <div className="space-y-3 max-h-80 overflow-y-auto">
-                    {(comments as TestComment[]).map((comment, index) => (
-                      <div key={index} className="bg-black/20 p-3 rounded-lg">
-                        <div className="flex justify-between items-start mb-1">
-                          <h4 className="font-medium">{comment.userId ? "Kullanıcı" : "Anonim"}</h4>
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(comment.createdAt || Date.now()).toLocaleDateString()}
-                          </span>
-                        </div>
-                        <p className="text-sm">{comment.text}</p>
-                      </div>
-                    ))}
+                {/* Top 5 Scoreboard */}
+                <div className="bg-black/30 backdrop-blur-sm rounded-xl p-5 shadow-lg">
+                  <div className="flex items-center gap-2 mb-4">
+                    <ListOrdered className="w-5 h-5 text-yellow-500" />
+                    <h2 className="text-xl font-bold">Skor Tablosu (Top 5)</h2>
                   </div>
-                ) : (
-                  <div className="text-center py-10 text-muted-foreground">
-                    <p>Henüz yorum yapılmamış</p>
-                  </div>
-                )}
-                
-                <div className="mt-4 pt-4 border-t border-white/10">
-                  <form className="space-y-3" onSubmit={(e) => {
-                    e.preventDefault();
-                    // Yorum gönderme işlemi
-                  }}>
-                    <Input placeholder="Yorumunuzu yazın..." />
-                    <Button className="w-full">Yorum Yap</Button>
-                  </form>
-                </div>
-              </div>
-              
-              {/* Similar Tests */}
-              <div className="bg-black/30 backdrop-blur-sm rounded-xl p-5 shadow-lg">
-                <div className="flex items-center gap-2 mb-4">
-                  <Star className="w-5 h-5 text-orange-500" />
-                  <h2 className="text-xl font-bold">Benzer Testler</h2>
-                </div>
-                
-                {similarTests && similarTests.length > 0 ? (
-                  <div className="space-y-3 max-h-80 overflow-y-auto">
-                    {(similarTests as Test[])
-                      .filter(t => t.id !== Number(testId))
-                      .slice(0, 5)
-                      .map((similarTest, index) => (
-                        <div 
-                          key={index} 
-                          className="bg-black/20 p-3 rounded-lg cursor-pointer hover:bg-black/30"
-                          onClick={() => window.location.href = `/test/${similarTest.id}`}
-                        >
-                          <h4 className="font-medium">{similarTest.title}</h4>
-                          <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <Heart className="w-3 h-3" /> {similarTest.likeCount || 0}
-                            </span>
-                            <span>•</span>
-                            <span className="flex items-center gap-1">
-                              {similarTest.imageIds?.length || 0} görsel
-                            </span>
+                  
+                  {topScores && topScores.length > 0 ? (
+                    <div className="space-y-3">
+                      {(topScores as GameScore[]).slice(0, 5).map((scoreItem, index) => (
+                        <div key={index} className="flex items-center justify-between bg-black/20 p-3 rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <span className="font-bold text-lg w-6">{index + 1}</span>
+                            <div>
+                              <p className="font-medium">{scoreItem.userId ? "Kullanıcı" : "Anonim"}</p>
+                              <p className="text-xs text-muted-foreground">{formatTime(scoreItem.completionTime || 0)}</p>
+                            </div>
                           </div>
+                          <span className="text-xl font-bold">{scoreItem.score}</span>
                         </div>
                       ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-6 text-muted-foreground">
+                      <p>Henüz skor kaydedilmemiş</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Right Column - Test Stats & Actions */}
+              <div className="bg-black/20 backdrop-blur-sm rounded-xl p-5 shadow-lg flex flex-col">
+                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <Award className="w-5 h-5 text-primary" /> 
+                  Test Bilgileri
+                </h2>
+                
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="bg-black/20 p-4 rounded-lg text-center">
+                    <h3 className="text-sm text-muted-foreground mb-1">Kategori</h3>
+                    <p className="font-medium">{test?.categoryId ? "Film" : "Genel"}</p>
                   </div>
-                ) : (
-                  <div className="text-center py-10 text-muted-foreground">
-                    <p>Benzer test bulunamadı</p>
+                  <div className="bg-black/20 p-4 rounded-lg text-center">
+                    <h3 className="text-sm text-muted-foreground mb-1">Görseller</h3>
+                    <p className="font-medium">{test?.imageIds?.length || 0}</p>
                   </div>
-                )}
+                  <div className="bg-black/20 p-4 rounded-lg text-center">
+                    <h3 className="text-sm text-muted-foreground mb-1">Beğeni</h3>
+                    <p className="font-medium">{test?.likeCount || 0}</p>
+                  </div>
+                  <div className="bg-black/20 p-4 rounded-lg text-center">
+                    <h3 className="text-sm text-muted-foreground mb-1">Oynanma</h3>
+                    <p className="font-medium">{test?.playCount || 0}</p>
+                  </div>
+                </div>
+                
+                <p className="text-sm text-muted-foreground mb-6">{test?.description}</p>
+                
+                <div className="mt-auto space-y-3">
+                  <Button onClick={() => window.location.reload()} className="w-full" size="lg">
+                    <Trophy className="w-4 h-4 mr-2" /> Yeniden Oyna
+                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => setLocation('/tests')} className="flex-1">
+                      Diğer Testlere Dön
+                    </Button>
+                    <Button 
+                      variant="secondary" 
+                      className="flex-1"
+                      onClick={() => {
+                        apiRequest({
+                          url: `/api/tests/${testId}/like`,
+                          method: 'POST'
+                        }).catch(err => {
+                          console.error("Error liking test:", err);
+                        });
+                      }}
+                    >
+                      <ThumbsUp className="w-4 h-4 mr-2" /> Beğen
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
             
-            <div className="flex flex-wrap gap-4 justify-center mt-8">
-              <Button onClick={() => window.location.reload()} size="lg">
-                <Trophy className="w-4 h-4 mr-2" /> Yeniden Oyna
-              </Button>
-              <Button variant="outline" onClick={() => setLocation('/tests')} size="lg">
-                Diğer Testlere Dön
-              </Button>
+            {/* Comments Section - Full width at bottom */}
+            <div className="bg-black/30 backdrop-blur-sm rounded-xl p-5 shadow-lg">
+              <div className="flex items-center gap-2 mb-4">
+                <MessageSquare className="w-5 h-5 text-blue-500" />
+                <h2 className="text-xl font-bold">Yorumlar</h2>
+              </div>
+              
+              {comments && comments.length > 0 ? (
+                <div className="space-y-3 max-h-80 overflow-y-auto mb-6">
+                  {(comments as TestComment[]).map((comment, index) => (
+                    <div key={index} className="bg-black/20 p-3 rounded-lg">
+                      <div className="flex justify-between items-start mb-1">
+                        <h4 className="font-medium">{comment.userId ? "Kullanıcı" : "Anonim"}</h4>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(comment.createdAt || Date.now()).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p className="text-sm">{comment.text}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-muted-foreground mb-6">
+                  <p>Henüz yorum yapılmamış</p>
+                </div>
+              )}
+              
+              <div className="pt-4 border-t border-white/10">
+                <form className="flex gap-2" onSubmit={(e) => {
+                  e.preventDefault();
+                  // Yorum gönderme işlemi
+                }}>
+                  <Input placeholder="Yorumunuzu yazın..." className="flex-1" />
+                  <Button type="submit">Yorum Yap</Button>
+                </form>
+              </div>
+            </div>
+            
+            {/* Share Section */}
+            <div className="flex justify-center mt-6">
               <Button 
-                variant="secondary" 
+                variant="outline" 
+                size="sm" 
                 onClick={() => {
-                  apiRequest({
-                    url: `/api/tests/${testId}/like`,
-                    method: 'POST'
-                  }).catch(err => {
-                    console.error("Error liking test:", err);
-                  });
+                  if (navigator.share) {
+                    navigator.share({
+                      title: `${test?.title} skorum: ${score}`,
+                      text: `${test?.title} testinde ${formatTime(timeElapsed)} sürede ${score} puan topladım!`,
+                      url: window.location.href
+                    });
+                  }
                 }}
               >
-                <ThumbsUp className="w-4 h-4 mr-2" /> Beğen
+                <Share2 className="w-4 h-4 mr-2" /> Skoru Paylaş
               </Button>
             </div>
           </div>
