@@ -6,17 +6,6 @@ import {
   testComments, type TestComment, type InsertTestComment,
   gameScores, type GameScore, type InsertGameScore
 } from "@shared/schema";
-import { createClient } from '@supabase/supabase-js';
-
-// Export types for other modules to use
-export type { 
-  User, InsertUser,
-  Category, InsertCategory,
-  Image, InsertImage,
-  Test, InsertTest,
-  TestComment, InsertTestComment,
-  GameScore, InsertGameScore
-};
 
 // Interface for all storage operations
 export interface IStorage {
@@ -50,15 +39,12 @@ export interface IStorage {
   // Test operations
   getAllTests(): Promise<Test[]>;
   getTest(id: number): Promise<Test | undefined>;
-  getTestByUuid(uuid: string): Promise<Test | undefined>;
   getTestsByCategory(categoryId: number): Promise<Test[]>;
   createTest(test: InsertTest): Promise<Test>;
   updateTest(id: number, test: Partial<InsertTest>): Promise<Test | undefined>;
   deleteTest(id: number): Promise<boolean>;
   incrementTestPlayCount(id: number): Promise<void>;
   incrementTestLikeCount(id: number): Promise<void>;
-  updateTestApproval(id: number, approved: boolean): Promise<Test | undefined>;
-  updateTestPublishedStatus(id: number, published: boolean): Promise<Test | undefined>;
   getPopularTests(limit: number): Promise<Test[]>;
   getNewestTests(limit: number): Promise<Test[]>;
   getFeaturedTests(limit: number): Promise<Test[]>;
@@ -128,25 +114,29 @@ export class MemStorage implements IStorage {
         title: "Spor Araba",
         imageUrl: "car1.jpg",
         categoryId: 1,
-        answers: ["Ferrari", "Ferrari 458", "458 Italia"]
+        answers: ["Ferrari", "Ferrari 458", "458 Italia"],
+        difficulty: 2
       },
       {
         title: "Klasik Film",
         imageUrl: "movie1.jpg",
         categoryId: 2,
-        answers: ["The Dark Knight", "Batman", "Kara Şövalye"]
+        answers: ["The Dark Knight", "Batman", "Kara Şövalye"],
+        difficulty: 1
       },
       {
         title: "YouTuber",
         imageUrl: "celebrity1.jpg",
         categoryId: 3,
-        answers: ["Enes Batur", "Enes"]
+        answers: ["Enes Batur", "Enes"],
+        difficulty: 1
       },
       {
         title: "Popüler Oyun",
         imageUrl: "game1.jpg",
         categoryId: 4,
-        answers: ["Red Dead Redemption", "RDR", "Red Dead"]
+        answers: ["Red Dead Redemption", "RDR", "Red Dead"],
+        difficulty: 3
       }
     ];
     
@@ -157,60 +147,44 @@ export class MemStorage implements IStorage {
     // Add sample tests
     const testsSample: InsertTest[] = [
       {
-        uuid: "film-test-001",
         title: "Klasik Filmler Testi",
         description: "Popüler filmler hakkında bilginizi test edin",
         categoryId: 2,
         creatorId: null,
         imageIds: [2],
+        difficulty: 1,
         isPublic: true,
-        anonymousCreator: false,
-        thumbnail: "https://example.com/film-thumbnail.jpg",
-        approved: true,
-        published: true,
-        difficulty: 1
+        thumbnail: "https://example.com/film-thumbnail.jpg"
       },
       {
-        uuid: "car-test-001",
         title: "Spor Arabalar Testi",
         description: "Lüks ve spor arabalar hakkında ne kadar bilgilisiniz?",
         categoryId: 1,
         creatorId: null,
         imageIds: [1],
+        difficulty: 2,
         isPublic: true,
-        anonymousCreator: false,
-        thumbnail: "https://example.com/car-thumbnail.jpg",
-        approved: true,
-        published: true,
-        difficulty: 2
+        thumbnail: "https://example.com/car-thumbnail.jpg"
       },
       {
-        uuid: "youtuber-test-001",
         title: "YouTuberlar Testi",
         description: "Popüler YouTuber'ları ne kadar iyi tanıyorsunuz?",
         categoryId: 3,
         creatorId: null,
         imageIds: [3],
+        difficulty: 1,
         isPublic: true,
-        anonymousCreator: false,
-        thumbnail: "https://example.com/youtuber-thumbnail.jpg",
-        approved: true,
-        published: true,
-        difficulty: 1
+        thumbnail: "https://example.com/youtuber-thumbnail.jpg"
       },
       {
-        uuid: "game-test-001",
         title: "Video Oyunları Testi",
         description: "Video oyunları hakkındaki bilginizi test edin",
         categoryId: 4,
         creatorId: null,
         imageIds: [4],
+        difficulty: 3,
         isPublic: true,
-        anonymousCreator: false,
-        thumbnail: "https://example.com/game-thumbnail.jpg",
-        approved: true,
-        published: true,
-        difficulty: 3
+        thumbnail: "https://example.com/game-thumbnail.jpg"
       }
     ];
     
@@ -389,12 +363,6 @@ export class MemStorage implements IStorage {
     return this.testsMap.get(id);
   }
 
-  async getTestByUuid(uuid: string): Promise<Test | undefined> {
-    return Array.from(this.testsMap.values()).find(
-      test => test.uuid === uuid
-    );
-  }
-
   async getTestsByCategory(categoryId: number): Promise<Test[]> {
     return Array.from(this.testsMap.values()).filter(
       test => test.categoryId === categoryId
@@ -465,32 +433,6 @@ export class MemStorage implements IStorage {
       this.testsMap.set(id, updatedTest);
     }
   }
-  
-  async updateTestApproval(id: number, approved: boolean): Promise<Test | undefined> {
-    const test = await this.getTest(id);
-    if (!test) return undefined;
-    
-    const updatedTest = {
-      ...test,
-      approved
-    };
-    
-    this.testsMap.set(id, updatedTest);
-    return updatedTest;
-  }
-  
-  async updateTestPublishedStatus(id: number, published: boolean): Promise<Test | undefined> {
-    const test = await this.getTest(id);
-    if (!test) return undefined;
-    
-    const updatedTest = {
-      ...test,
-      published
-    };
-    
-    this.testsMap.set(id, updatedTest);
-    return updatedTest;
-  }
 
   async getPopularTests(limit: number): Promise<Test[]> {
     return Array.from(this.testsMap.values())
@@ -557,7 +499,12 @@ export class MemStorage implements IStorage {
     };
     this.gameScoresMap.set(id, newScore);
     
-    // Also update the user's total score if applicable
+    // Update test play count if testId is provided
+    if (score.testId) {
+      await this.incrementTestPlayCount(score.testId);
+    }
+    
+    // Update user score if userId is provided
     if (score.userId) {
       await this.updateUserScore(score.userId, score.score);
     }
@@ -576,22 +523,10 @@ export class MemStorage implements IStorage {
   async getTopScores(limit: number, gameMode?: string): Promise<GameScore[]> {
     let scores = Array.from(this.gameScoresMap.values());
     
-    if (gameMode) {
-      scores = scores.filter(score => score.gameMode === gameMode);
-    }
-    
     return scores
       .sort((a, b) => b.score - a.score)
       .slice(0, limit);
   }
 }
 
-// Şimdilik basit memory storage kullanacağız
-const memStorage = new MemStorage();
-console.log('[database] Memory storage initialized');
-
-let storage: IStorage = memStorage;
-
-// Default olarak memory storage
-export { storage };
-export default storage;
+export const storage = new MemStorage();

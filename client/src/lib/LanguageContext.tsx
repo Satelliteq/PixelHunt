@@ -1,5 +1,4 @@
-// Re-implement the Language context functionality directly
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { Language, TranslationKey, translations } from './translations';
 
 type LanguageContextType = {
@@ -8,19 +7,10 @@ type LanguageContextType = {
   t: (key: TranslationKey) => string;
 };
 
-// Default language (browser language or fallback to Turkish)
-const getDefaultLanguage = (): Language => {
-  if (typeof window !== 'undefined') {
-    const browserLang = navigator.language.split('-')[0];
-    if (browserLang === 'tr') return 'tr';
-  }
-  return 'tr'; // Default to Turkish
-};
-
 const defaultValue: LanguageContextType = {
-  language: getDefaultLanguage(),
+  language: 'tr',
   setLanguage: () => {},
-  t: (key: TranslationKey) => key,
+  t: (key) => key,
 };
 
 const LanguageContext = createContext<LanguageContextType>(defaultValue);
@@ -32,34 +22,23 @@ interface LanguageProviderProps {
 }
 
 export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
-  const [language, setLanguage] = useState<Language>(getDefaultLanguage());
+  // Try to get stored language preference or default to Turkish
+  const [language, setLanguage] = useState<Language>(() => {
+    const storedLanguage = localStorage.getItem('language');
+    return (storedLanguage === 'en' ? 'en' : 'tr') as Language;
+  });
 
-  // Load saved language preference from localStorage if available
-  React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedLanguage = localStorage.getItem('appLanguage') as Language;
-      if (savedLanguage && (savedLanguage === 'tr' || savedLanguage === 'en')) {
-        setLanguage(savedLanguage);
-      }
-    }
-  }, []);
-
-  // Save language preference to localStorage
-  React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('appLanguage', language);
-    }
-  }, [language]);
-
-  // Translation function
+  // Translate function
   const t = (key: TranslationKey): string => {
-    const translation = translations[language]?.[key];
-    if (!translation) {
-      console.warn(`Translation missing for key: ${key}`);
-      return key;
-    }
-    return translation;
+    return translations[language][key] || key;
   };
+
+  // Update localStorage when language changes
+  useEffect(() => {
+    localStorage.setItem('language', language);
+    // Optionally update document language for accessibility
+    document.documentElement.lang = language;
+  }, [language]);
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t }}>

@@ -1,6 +1,6 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
-import storage from "./storage";
+import { storage } from "./storage";
 import { z } from "zod";
 import { 
   insertUserSchema, 
@@ -72,39 +72,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Category routes
   app.get("/api/categories", async (_req: Request, res: Response) => {
     try {
-      // Önce direct-db den kategorileri getirmeyi dene (en güvenilir yöntem)
-      try {
-        const { getAllCategories: getDirectCategories } = await import('./direct-db');
-        const directCategories = await getDirectCategories();
-        
-        if (directCategories.length > 0) {
-          console.log("Categories fetched from direct-db:", directCategories.length);
-          return res.json(directCategories);
-        }
-      } catch (directError) {
-        console.error("Error getting categories from direct-db:", directError);
-      }
-      
-      // Supabase ile kategorileri getirmeyi dene
-      try {
-        const { getAllCategories } = await import('./direct-supabase');
-        const categories = await getAllCategories();
-        
-        if (categories.length > 0) {
-          console.log("Categories fetched from Supabase:", categories.length);
-          return res.json(categories);
-        }
-      } catch (supabaseError) {
-        console.error("Error getting categories from Supabase:", supabaseError);
-      }
-      
-      // Son çare: storage kullan
-      const storageCategories = await storage.getAllCategories();
-      console.log("Categories fetched from storage:", storageCategories.length);
-      return res.json(storageCategories);
+      const categories = await storage.getAllCategories();
+      res.json(categories);
     } catch (error) {
-      console.error("Error getting all categories:", error);
-      res.status(500).json([]);
+      res.status(500).json({ message: "Server error" });
     }
   });
   
@@ -116,17 +87,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid category ID" });
       }
       
-      // Supabase ile kategori alalım - direct-supabase.ts modülünü kullan
-      const { getCategoryById } = await import('./direct-supabase');
-      const category = await getCategoryById(id);
+      const category = await storage.getCategory(id);
       
       if (!category) {
         return res.status(404).json({ message: "Category not found" });
       }
       
-      return res.json(category);
+      res.json(category);
     } catch (error) {
-      console.error(`Error getting category ID ${req.params.id}:`, error);
       res.status(500).json({ message: "Server error" });
     }
   });
@@ -327,201 +295,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/tests/popular", async (req: Request, res: Response) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
-      
-      try {
-        // Sadece Supabase API kullan
-        const { supabase } = await import('./supabase-setup');
-        
-        // Önce prosedürü çağırmayı dene
-        try {
-          const { data: rpcData, error: rpcError } = await supabase.rpc('get_popular_tests', { 
-            limit_param: limit 
-          });
-          
-          if (!rpcError && rpcData && rpcData.length > 0) {
-            console.log("Using Supabase RPC for popular tests");
-            return res.json(rpcData);
-          } else if (rpcError) {
-            console.error("Error executing RPC for popular tests:", rpcError);
-          }
-        } catch (rpcCallError) {
-          console.error("Error calling RPC for popular tests:", rpcCallError);
-        }
-        
-        // Prosedür başarısız olursa doğrudan sorgu yap
-        try {
-          const { data, error } = await supabase
-            .from('tests')
-            .select('*')
-            .eq('published', true)
-            .eq('approved', true)
-            .order('play_count', { ascending: false })
-            .limit(limit);
-          
-          if (!error && data) {
-            console.log("Using Supabase query for popular tests");
-            return res.json(data);
-          } else if (error) {
-            console.error("Error fetching popular tests:", error);
-          }
-        } catch (queryError) {
-          console.error("Error executing query for popular tests:", queryError);
-        }
-        
-        // View kullanmayı dene
-        try {
-          const { data: viewData, error: viewError } = await supabase
-            .from('popular_tests')
-            .select('*')
-            .limit(limit);
-          
-          if (!viewError && viewData) {
-            console.log("Using Supabase view for popular tests");
-            return res.json(viewData);
-          } else {
-            console.error("All methods failed to fetch tests:", viewError);
-          }
-        } catch (viewQueryError) {
-          console.error("Error querying view for popular tests:", viewQueryError);
-        }
-      } catch (supabaseError) {
-        console.error("Supabase connection error:", supabaseError);
-      }
-      
-      // Verileri bulamazsak boş dizi döndür
-      res.json([]);
+      const popularTests = await storage.getPopularTests(limit);
+      res.json(popularTests);
     } catch (error) {
-      console.error("Error in popular tests route:", error);
-      res.status(500).json([]);
+      res.status(500).json({ message: "Server error" });
     }
   });
   
   app.get("/api/tests/newest", async (req: Request, res: Response) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
-      
-      try {
-        // Sadece Supabase API kullan
-        const { supabase } = await import('./supabase-setup');
-        
-        // Önce prosedürü çağırmayı dene
-        try {
-          const { data: rpcData, error: rpcError } = await supabase.rpc('get_newest_tests', { 
-            limit_param: limit 
-          });
-          
-          if (!rpcError && rpcData && rpcData.length > 0) {
-            console.log("Using Supabase RPC for newest tests");
-            return res.json(rpcData);
-          } else if (rpcError) {
-            console.error("Error executing RPC for newest tests:", rpcError);
-          }
-        } catch (rpcCallError) {
-          console.error("Error calling RPC for newest tests:", rpcCallError);
-        }
-        
-        // Prosedür başarısız olursa doğrudan sorgu yap
-        try {
-          const { data, error } = await supabase
-            .from('tests')
-            .select('*')
-            .eq('published', true)
-            .eq('approved', true)
-            .order('created_at', { ascending: false })
-            .limit(limit);
-          
-          if (!error && data) {
-            console.log("Using Supabase query for newest tests");
-            return res.json(data);
-          } else if (error) {
-            console.error("Error fetching newest tests:", error);
-          }
-        } catch (queryError) {
-          console.error("Error executing query for newest tests:", queryError);
-        }
-        
-        // View kullanmayı dene
-        try {
-          const { data: viewData, error: viewError } = await supabase
-            .from('newest_tests')
-            .select('*')
-            .limit(limit);
-          
-          if (!viewError && viewData) {
-            console.log("Using Supabase view for newest tests");
-            return res.json(viewData);
-          } else {
-            console.error("All methods failed to fetch tests:", viewError);
-          }
-        } catch (viewQueryError) {
-          console.error("Error querying view for newest tests:", viewQueryError);
-        }
-      } catch (supabaseError) {
-        console.error("Supabase connection error:", supabaseError);
-      }
-      
-      // Verileri bulamazsak boş dizi döndür
-      res.json([]);
+      const newestTests = await storage.getNewestTests(limit);
+      res.json(newestTests);
     } catch (error) {
-      console.error("Error in newest tests route:", error);
-      res.status(500).json([]);
+      res.status(500).json({ message: "Server error" });
     }
   });
   
   app.get("/api/tests/featured", async (req: Request, res: Response) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
-      
-      try {
-        // Sadece Supabase API kullan
-        const { supabase } = await import('./supabase-setup');
-        
-        // Doğrudan sorgu yap
-        try {
-          const { data, error } = await supabase
-            .from('tests')
-            .select('*')
-            .eq('published', true)
-            .eq('approved', true)
-            .order('play_count', { ascending: false })
-            .order('like_count', { ascending: false })
-            .limit(limit);
-          
-          if (!error && data) {
-            console.log("Using Supabase query for featured tests");
-            return res.json(data);
-          } else if (error) {
-            console.error("Error fetching featured tests:", error);
-          }
-        } catch (queryError) {
-          console.error("Error executing query for featured tests:", queryError);
-        }
-        
-        // View kullanmayı dene
-        try {
-          const { data: viewData, error: viewError } = await supabase
-            .from('featured_tests')
-            .select('*')
-            .limit(limit);
-          
-          if (!viewError && viewData) {
-            console.log("Using Supabase view for featured tests");
-            return res.json(viewData);
-          } else {
-            console.error("All methods failed to fetch tests:", viewError);
-          }
-        } catch (viewQueryError) {
-          console.error("Error querying view for featured tests:", viewQueryError);
-        }
-      } catch (supabaseError) {
-        console.error("Supabase connection error:", supabaseError);
-      }
-      
-      // Verileri bulamazsak boş dizi döndür
-      res.json([]);
+      const featuredTests = await storage.getFeaturedTests(limit);
+      res.json(featuredTests);
     } catch (error) {
-      console.error("Error in featured tests route:", error);
-      res.status(500).json([]);
+      res.status(500).json({ message: "Server error" });
     }
   });
   
@@ -548,82 +345,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid test ID" });
       }
       
-      try {
-        // Try using storage first
-        const test = await storage.getTest(id);
-        if (test) {
-          console.log('Using storage for test details');
-          return res.json(test);
-        }
-      } catch (storageError) {
-        console.log('Storage error for test details, trying direct DB:', storageError);
-      }
+      const test = await storage.getTest(id);
       
-      // Fallback to direct database access
-      try {
-        const { getTestById } = await import('./direct-db');
-        const test = await getTestById(id);
-        
-        if (!test) {
-          return res.status(404).json({ message: "Test not found" });
-        }
-        
-        console.log('Using direct DB for test details');
-        return res.json(test);
-      } catch (directDbError) {
-        console.error('Direct DB error for test details:', directDbError);
+      if (!test) {
         return res.status(404).json({ message: "Test not found" });
       }
+      
+      res.json(test);
     } catch (error) {
-      console.error('Error getting test by ID:', error);
       res.status(500).json({ message: "Server error" });
     }
   });
   
   app.post("/api/tests", async (req: Request, res: Response) => {
     try {
-      console.log("Received test creation request:", req.body);
-      
-      try {
-        // Try using Supabase API first
-        //const { createTest } = await import('./supabase-api');
-        // Use storage instead
-        const createTest = storage.createTest.bind(storage);
-        const newTest = await createTest(req.body);
-        if (newTest) {
-          console.log('Using Supabase API for test creation');
-          return res.status(201).json(newTest);
-        }
-      } catch (supabaseError) {
-        console.log('Supabase API error for test creation, trying direct DB:', supabaseError);
-      }
-      
-      // Fallback to direct database access
-      try {
-        const { createTest } = await import('./direct-db');
-        const newTest = await createTest(req.body);
-        
-        if (!newTest) {
-          throw new Error('Failed to create test');
-        }
-        
-        console.log('Using direct DB for test creation');
-        return res.status(201).json(newTest);
-      } catch (directDbError) {
-        console.error('Direct DB error for test creation:', directDbError);
-      }
-      
-      // Last resort, try using storage
       const testInput = insertTestSchema.parse(req.body);
       const newTest = await storage.createTest(testInput);
-      console.log('Using storage for test creation');
-      return res.status(201).json(newTest);
+      res.status(201).json(newTest);
     } catch (error) {
-      console.error("Test creation error:", error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid test data", errors: error.errors });
       }
-      res.status(500).json({ message: "Server error", details: error instanceof Error ? error.message : String(error) });
+      res.status(500).json({ message: "Server error" });
     }
   });
   
@@ -700,14 +443,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const isAdmin = (req: Request, res: Response, next: Function) => {
     // In a real app, this would verify the authenticated user has admin role
     // For our demo, we'll use a simple approach
-    // Geliştirme aşamasında admin kontrolünü devre dışı bırakıyoruz
-    // const isAdminUser = req.headers['x-admin-token'] === 'admin-secret-token';
+    const isAdminUser = req.headers['x-admin-token'] === 'admin-secret-token';
     
-    // if (!isAdminUser) {
-    //   return res.status(403).json({ message: "Access denied: Admin privileges required" });
-    // }
+    if (!isAdminUser) {
+      return res.status(403).json({ message: "Access denied: Admin privileges required" });
+    }
     
-    // Her isteğe izin ver (geliştirme aşamasında)
     next();
   };
   
@@ -798,50 +539,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // CRUD operations for categories (admin only)
   app.post("/api/categories", isAdmin, async (req: Request, res: Response) => {
     try {
-      console.log("Received category creation request:", req.body);
       const categoryInput = insertCategorySchema.parse(req.body);
-      
-      // İlk olarak direct-db kullanarak kategori oluşturmayı dene (en güvenilir yöntem)
-      const { createOrEnsureCategory } = await import('./direct-db');
-      const directCategory = await createOrEnsureCategory(
-        categoryInput.name, 
-        categoryInput.description || ''
-      );
-      
-      if (directCategory) {
-        console.log("Direct-DB ile kategori oluşturuldu:", directCategory);
-        const formattedCategory = {
-          id: directCategory.id,
-          name: directCategory.name,
-          description: directCategory.description,
-          iconUrl: null // direct oluşturmada icon_url henüz desteklenmiyor
-        };
-        return res.status(201).json(formattedCategory);
-      }
-      
-      // Direct method başarısız olursa Supabase ile deneyelim
-      console.log("Direct-DB kategori oluşturma başarısız, Supabase ile deneniyor...");
-      const { createCategory } = await import('./direct-supabase');
-      const newCategory = await createCategory(categoryInput);
-      
-      if (newCategory) {
-        console.log("Supabase ile kategori oluşturuldu:", newCategory);
-        return res.status(201).json(newCategory);
-      }
-      
-      // En son çare olarak storage'ı kullanalım
-      console.error("Supabase ile kategori oluşturma başarısız, storage ile deneniyor...");
-      const fallbackCategory = await storage.createCategory(categoryInput);
-      
-      if (fallbackCategory) {
-        console.log("Storage ile kategori oluşturuldu:", fallbackCategory);
-        return res.status(201).json(fallbackCategory);
-      }
-      
-      // Hiçbir yöntem başarılı olmadı
-      return res.status(500).json({ message: "Failed to create category with any method" });
+      const newCategory = await storage.createCategory(categoryInput);
+      res.status(201).json(newCategory);
     } catch (error) {
-      console.error("Kategori işlemi sırasında hata:", error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid category data", errors: error.errors });
       }
@@ -858,27 +559,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const categoryInput = insertCategorySchema.parse(req.body);
-      
-      // Supabase ile kategori güncelleyelim - direct-supabase.ts modülünü kullan
-      const { updateCategory } = await import('./direct-supabase');
-      const updatedCategory = await updateCategory(id, categoryInput);
+      const updatedCategory = await storage.updateCategory(id, categoryInput);
       
       if (!updatedCategory) {
-        console.log("Failed to update category in Supabase, trying fallback");
-        // Fallback: storage kullan
-        const fallbackCategory = await storage.updateCategory(id, categoryInput);
-        
-        if (!fallbackCategory) {
-          return res.status(404).json({ message: "Category not found" });
-        }
-        
-        return res.json(fallbackCategory);
+        return res.status(404).json({ message: "Category not found" });
       }
       
-      console.log("Kategori güncellendi:", updatedCategory);
-      return res.json(updatedCategory);
+      res.json(updatedCategory);
     } catch (error) {
-      console.error("Kategori güncelleme hatası:", error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid category data", errors: error.errors });
       }

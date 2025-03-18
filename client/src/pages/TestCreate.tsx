@@ -6,7 +6,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuth } from "@/lib/AuthContext";
-import { supabase, isSupabaseConfigured, uploadImage } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,8 +30,8 @@ const testFormSchema = z.object({
   title: z.string().min(5, "Başlık en az 5 karakter olmalıdır").max(100, "Başlık en fazla 100 karakter olabilir"),
   description: z.string().min(10, "Açıklama en az 10 karakter olmalıdır").nullable(),
   categoryId: z.number().min(1, "Lütfen bir kategori seçin"),
+  difficulty: z.number().min(1).max(5),
   isPublic: z.boolean().default(true),
-  anonymousCreator: z.boolean().default(false),
   thumbnail: z.string().optional(),
   images: z.array(
     z.object({
@@ -100,21 +100,7 @@ export default function TestCreate() {
     try {
       setUploading(true);
       
-      // Supabase Storage ile yükleme
-      if (isSupabaseConfigured()) {
-        const uuid = crypto.randomUUID();
-        const path = `thumbnails/${uuid}-${file.name}`;
-        const imageUrl = await uploadImage(file, path);
-        
-        if (imageUrl) {
-          setThumbnail(imageUrl);
-          form.setValue("thumbnail", imageUrl);
-          setUploading(false);
-          return;
-        }
-      }
-      
-      // Supabase çalışmazsa Base64 kullan
+      // Dosyayı Base64'e çevirme işlemi
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
@@ -139,8 +125,8 @@ export default function TestCreate() {
       title: "",
       description: "",
       categoryId: 0,
+      difficulty: 3,
       isPublic: true,
-      anonymousCreator: false,
       thumbnail: "",
       images: [],
     },
@@ -215,7 +201,7 @@ export default function TestCreate() {
     setImageInputs(newImages);
   };
   
-  const handleFileUpload = async (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
     
@@ -238,47 +224,13 @@ export default function TestCreate() {
       return;
     }
     
-    try {
-      // Yükleme durumunu göster
+    const reader = new FileReader();
+    reader.onloadend = () => {
       const newImages = [...imageInputs];
-      newImages[index].imageUrl = "Yükleniyor...";
+      newImages[index].imageUrl = reader.result as string;
       setImageInputs(newImages);
-      
-      // Supabase Storage ile yükleme
-      if (isSupabaseConfigured()) {
-        const uuid = crypto.randomUUID();
-        const path = `test-images/${uuid}-${file.name}`;
-        const imageUrl = await uploadImage(file, path);
-        
-        if (imageUrl) {
-          const updatedImages = [...imageInputs];
-          updatedImages[index].imageUrl = imageUrl;
-          setImageInputs(updatedImages);
-          return;
-        }
-      }
-      
-      // Supabase çalışmazsa Base64 kullan
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const newestImages = [...imageInputs];
-        newestImages[index].imageUrl = reader.result as string;
-        setImageInputs(newestImages);
-      };
-      reader.readAsDataURL(file);
-    } catch (error) {
-      console.error("Görsel yükleme hatası:", error);
-      toast({
-        title: "Hata",
-        description: "Görsel yüklenirken bir hata oluştu. Lütfen tekrar deneyin.",
-        variant: "destructive",
-      });
-      
-      // Hata durumunda boş değere resetle
-      const errorImages = [...imageInputs];
-      errorImages[index].imageUrl = "";
-      setImageInputs(errorImages);
-    }
+    };
+    reader.readAsDataURL(file);
   };
 
   const addAnswer = (index: number) => {
@@ -309,7 +261,10 @@ export default function TestCreate() {
     }
   };
 
-  // Zorluk seviyesi kaldırıldı
+  const difficultyText = (level: number) => {
+    const levels = ['Çok Kolay', 'Kolay', 'Orta', 'Zor', 'Çok Zor'];
+    return levels[level - 1] || 'Orta';
+  };
 
   return (
     <div className="max-w-3xl mx-auto py-8 px-4">
@@ -358,7 +313,7 @@ export default function TestCreate() {
               )}
             />
 
-            <div className="grid grid-cols-1 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
                 name="categoryId"
@@ -385,6 +340,30 @@ export default function TestCreate() {
                     </Select>
                     <FormDescription>
                       Testinizin en uygun kategorisini seçin.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="difficulty"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Zorluk Seviyesi: {difficultyText(field.value)}</FormLabel>
+                    <FormControl>
+                      <Slider
+                        min={1}
+                        max={5}
+                        step={1}
+                        defaultValue={[field.value]}
+                        onValueChange={(vals) => field.onChange(vals[0])}
+                        className="py-4"
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Testinizin zorluk derecesini 1-5 arasında belirleyin.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -442,54 +421,35 @@ export default function TestCreate() {
               )}
             />
 
-            <div className="space-y-4 mt-4">
-              <FormField
-                control={form.control}
-                name="isPublic"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Herkese Açık</FormLabel>
-                      <FormDescription>
-                        Testinizin diğer kullanıcılar tarafından görüntülenebilmesini istiyorsanız işaretleyin.
-                      </FormDescription>
-                    </div>
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="anonymousCreator"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Anonim Olarak Paylaş</FormLabel>
-                      <FormDescription>
-                        Bu seçenek işaretlenirse, kullanıcı adınız testi görüntüleyenler tarafından görülmeyecektir.
-                      </FormDescription>
-                    </div>
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="isPublic"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>Herkese Açık</FormLabel>
+                    <FormDescription>
+                      Testinizin diğer kullanıcılar tarafından görüntülenebilmesini istiyorsanız işaretleyin.
+                    </FormDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
           </div>
 
           <div className="bg-card p-6 rounded-lg border shadow-sm">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold">Görseller ve Cevaplar</h2>
+              <Button type="button" variant="outline" size="sm" onClick={addImage}>
+                <Plus className="h-4 w-4 mr-2" />
+                Görsel Ekle
+              </Button>
             </div>
 
             {imageInputs.map((image, index) => (
@@ -555,7 +515,7 @@ export default function TestCreate() {
                   </div>
                 </div>
 
-                <div className="mb-4">
+                <div>
                   <FormLabel className="block mb-2">Kabul Edilebilir Cevaplar</FormLabel>
                   <div className="flex gap-2 mb-2">
                     <Input
@@ -592,20 +552,6 @@ export default function TestCreate() {
                       </div>
                     ))}
                   </div>
-                </div>
-                
-                {/* Her görselin altına Yeni Görsel Ekle butonu */}
-                <div className="mt-4 text-center">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={addImage}
-                    className="w-full"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Yeni Görsel Ekle
-                  </Button>
                 </div>
               </div>
             ))}

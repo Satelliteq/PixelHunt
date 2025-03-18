@@ -1,85 +1,61 @@
-// Re-export our shared queryClient implementation
-import { QueryClient } from '@tanstack/react-query';
+import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
-// Utility function to handle API responses consistently
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
-    let errorText = '';
-    try {
-      const errorData = await res.json();
-      errorText = errorData.message || errorData.error || res.statusText;
-    } catch {
-      errorText = res.statusText;
-    }
-    
-    const error = new Error(errorText);
-    if (res.status === 401) {
-      // @ts-ignore
-      error.code = 'UNAUTHORIZED';
-    }
-    throw error;
+    const text = (await res.text()) || res.statusText;
+    throw new Error(`${res.status}: ${text}`);
   }
 }
 
-// Generic API request function for data fetching
-export async function apiRequest<T = any>(
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH',
+export async function apiRequest(
   url: string,
-  body?: any,
-  customHeaders?: Record<string, string>
-): Promise<T> {
-  const isFormData = body instanceof FormData;
+  options?: {
+    method?: string;
+    data?: unknown;
+  }
+): Promise<any> {
+  const method = options?.method || 'GET';
+  const data = options?.data;
   
-  const headers: Record<string, string> = {
-    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
-    ...customHeaders,
-  };
-  
-  const options: RequestInit = {
+  const res = await fetch(url, {
     method,
-    headers,
-    credentials: 'include', // Include cookies for auth
-    body: isFormData ? body : body ? JSON.stringify(body) : undefined,
-  };
-  
-  const res = await fetch(url, options);
+    headers: data ? { "Content-Type": "application/json" } : {},
+    body: data ? JSON.stringify(data) : undefined,
+    credentials: "include",
+  });
+
   await throwIfResNotOk(res);
-  
-  // Handle empty responses
-  const text = await res.text();
-  return text ? JSON.parse(text) : undefined;
+  return await res.json();
 }
 
-// Type for defining unauthorized behavior
 type UnauthorizedBehavior = "returnNull" | "throw";
-
-// Query function generator for React Query
-export const getQueryFn = <T>(options: {
+export const getQueryFn: <T>(options: {
   on401: UnauthorizedBehavior;
-  url: string;
-  method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
-}) => 
-  async (): Promise<T | null> => {
-    try {
-      return await apiRequest<T>(options.method || 'GET', options.url);
-    } catch (e) {
-      // @ts-ignore
-      if (e.code === 'UNAUTHORIZED') {
-        if (options.on401 === 'returnNull') {
-          return null;
-        }
-        throw e;
-      }
-      throw e;
+}) => QueryFunction<T> =
+  ({ on401: unauthorizedBehavior }) =>
+  async ({ queryKey }) => {
+    const res = await fetch(queryKey[0] as string, {
+      credentials: "include",
+    });
+
+    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+      return null;
     }
+
+    await throwIfResNotOk(res);
+    return await res.json();
   };
 
-// Configure Query Client with default options
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60, // 1 minute
+      queryFn: getQueryFn({ on401: "throw" }),
+      refetchInterval: false,
       refetchOnWindowFocus: false,
+      staleTime: Infinity,
+      retry: false,
+    },
+    mutations: {
       retry: false,
     },
   },
