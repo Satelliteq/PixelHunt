@@ -36,18 +36,85 @@ export function calculateScore(
 
 /**
  * Determines if an answer is correct by comparing with accepted answers
+ * And also checks if the answer is close enough (similar)
  * 
  * @param userAnswer - The user's guess
  * @param correctAnswers - Array of acceptable answers
- * @returns Boolean indicating if the answer is correct
+ * @returns Object with isCorrect and isClose flags
  */
-export function checkAnswer(userAnswer: string, correctAnswers: string[]): boolean {
+export function checkAnswer(userAnswer: string, correctAnswers: string[]): 
+{ isCorrect: boolean; isClose: boolean; closestAnswer?: string } {
   const normalizedUserAnswer = userAnswer.trim().toLowerCase();
   
-  // Check if any of the correct answers match
-  return correctAnswers.some(answer => 
+  // Check for exact match
+  const isCorrect = correctAnswers.some(answer => 
     answer.toLowerCase() === normalizedUserAnswer
   );
+  
+  if (isCorrect) {
+    return { isCorrect: true, isClose: false };
+  }
+  
+  // If not exact match, check for similarity (75% match)
+  let isClose = false;
+  let closestMatch = '';
+  let highestSimilarity = 0;
+  
+  correctAnswers.forEach(answer => {
+    const similarity = calculateStringSimilarity(normalizedUserAnswer, answer.toLowerCase());
+    if (similarity > highestSimilarity) {
+      highestSimilarity = similarity;
+      closestMatch = answer;
+    }
+  });
+  
+  isClose = highestSimilarity >= 0.75; // 75% veya üstü benzerlik varsa yakın tahmin
+  
+  return { 
+    isCorrect: false, 
+    isClose, 
+    closestAnswer: isClose ? closestMatch : undefined 
+  };
+}
+
+/**
+ * Calculates string similarity using Levenshtein distance
+ * 
+ * @param a - First string
+ * @param b - Second string
+ * @returns Similarity value between 0-1
+ */
+export function calculateStringSimilarity(a: string, b: string): number {
+  if (a.length === 0) return b.length === 0 ? 1 : 0;
+  if (b.length === 0) return 0;
+  
+  // Calculate Levenshtein distance
+  const matrix: number[][] = [];
+  
+  for (let i = 0; i <= b.length; i++) {
+    matrix[i] = [i];
+  }
+  
+  for (let j = 0; j <= a.length; j++) {
+    matrix[0][j] = j;
+  }
+  
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      const cost = b.charAt(i - 1) === a.charAt(j - 1) ? 0 : 1;
+      matrix[i][j] = Math.min(
+        matrix[i - 1][j] + 1,      // Deletion
+        matrix[i][j - 1] + 1,      // Insertion
+        matrix[i - 1][j - 1] + cost // Substitution
+      );
+    }
+  }
+  
+  const distance = matrix[b.length][a.length];
+  const maxLength = Math.max(a.length, b.length);
+  
+  // Return similarity as value between 0-1
+  return 1 - distance / maxLength;
 }
 
 /**
@@ -107,4 +174,51 @@ export function formatTime(seconds: number): string {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+}
+
+// Ses efektleri için URL'ler
+const SOUND_EFFECTS = {
+  correct: '/sounds/correct.mp3',
+  incorrect: '/sounds/incorrect.mp3',
+  close: '/sounds/close.mp3',
+  reveal: '/sounds/reveal.mp3',
+  complete: '/sounds/complete.mp3',
+};
+
+/**
+ * Belirtilen ses efektini çal
+ * 
+ * @param effectName - Efekt adı
+ * @param volume - Ses seviyesi (0-1)
+ */
+export function playSoundEffect(
+  effectName: keyof typeof SOUND_EFFECTS,
+  volume = 0.5
+): void {
+  try {
+    const audio = new Audio(SOUND_EFFECTS[effectName]);
+    audio.volume = volume;
+    audio.play().catch(e => console.error("Ses çalınamadı:", e));
+  } catch (err) {
+    console.error("Ses efekti çalınırken hata oluştu:", err);
+  }
+}
+
+/**
+ * Cevaba göre artan bir şekilde parça açma algoritması
+ * Her yanlış tahminde açılan parça miktarı artar
+ * 
+ * @param currentRevealPercent - Mevcut açılan yüzde
+ * @param wrongAttempts - Yanlış tahmin sayısı
+ * @param maxReveal - Maksimum açılabilecek yüzde
+ * @returns Yeni açılma yüzdesi
+ */
+export function calculateNewRevealPercent(
+  currentRevealPercent: number,
+  wrongAttempts: number,
+  maxReveal = 100
+): number {
+  // Yanlış tahmin sayısı arttıkça daha fazla parça açılır
+  const increaseAmount = Math.min(5 + (wrongAttempts * 2), 15);
+  return Math.min(currentRevealPercent + increaseAmount, maxReveal);
 }
