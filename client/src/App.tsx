@@ -18,6 +18,7 @@ import LiveGame from "@/pages/LiveGame";
 import TestGame from "@/pages/TestGame";
 import GameScreen from "@/pages/GameScreen";
 import TestCreate from "@/pages/TestCreate";
+import TestDetail from "@/pages/TestDetail";
 import Categories from "@/pages/Categories";
 import Tests from "@/pages/Tests"; 
 import Contact from "@/pages/Contact";
@@ -38,6 +39,7 @@ function Router() {
       <Route path="/game/live" component={LiveGame} />
       <Route path="/game/test" component={TestGame} />
       <Route path="/play/:testId" component={GameScreen} />
+      <Route path="/test/:testId" component={TestDetail} />
       <Route path="/categories" component={Categories} />
       <Route path="/tests" component={Tests} />
       <Route path="/create" component={TestCreate} />

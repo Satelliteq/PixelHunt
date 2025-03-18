@@ -99,7 +99,7 @@ export default function TestDetail() {
 
   // Add comment mutation
   const addCommentMutation = useMutation({
-    mutationFn: async (commentData: { userId: number; comment: string }) => {
+    mutationFn: async (commentData: { userId: number | string; comment: string }) => {
       return apiRequest(`/api/tests/${testId}/comments`, {
         method: 'POST',
         data: commentData
@@ -152,8 +152,8 @@ export default function TestDetail() {
     // Try to use share API if available
     if (navigator.share) {
       navigator.share({
-        title: test?.title,
-        text: test?.description,
+        title: test?.title || 'Test Paylaşımı',
+        text: test?.description || '',
         url: shareUrl,
       }).catch(() => {
         // Fallback - copy to clipboard
@@ -205,7 +205,7 @@ export default function TestDetail() {
     }
     
     addCommentMutation.mutate({
-      userId: user.id,
+      userId: Number(user.id),
       comment: commentText
     });
   };
