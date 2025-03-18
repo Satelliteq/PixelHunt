@@ -12,14 +12,22 @@ export async function apiRequest(
   options?: {
     method?: string;
     data?: unknown;
+    headers?: Record<string, string>;
   }
 ): Promise<any> {
   const method = options?.method || 'GET';
   const data = options?.data;
+  const customHeaders = options?.headers || {};
+  
+  // Varsayılan başlıklar (data varsa Content-Type)
+  const defaultHeaders = data ? { "Content-Type": "application/json" } : {};
+  
+  // Tüm başlıkları birleştir, özel başlıklar varsayılanları ezebilir
+  const headers = { ...defaultHeaders, ...customHeaders };
   
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers,
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });

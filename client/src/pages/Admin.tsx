@@ -247,18 +247,22 @@ function AdminPanel() {
     }
   };
 
-  // Kullanıcıları yükleme (örnek)
+  // Kullanıcı yönetimi için API istekleri
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      // Bu endpoint'i backend'de oluşturmanız gerekecek
-      const data = await apiRequest("/api/admin/users");
+      const data = await apiRequest("/api/admin/users", {
+        headers: {
+          "x-admin-token": "admin-secret-token", // Geliştirme amacıyla
+          // Production ortamında oturum tabanlı kimlik doğrulama kullanacağız
+        }
+      });
       setUsers(data);
     } catch (error) {
       console.error("Kullanıcılar yüklenirken hata:", error);
       toast({
         title: "Hata",
-        description: "Kullanıcılar yüklenirken bir hata oluştu.",
+        description: "Kullanıcılar yüklenirken bir hata oluştu. Admin yetkileriniz olduğundan emin olun.",
         variant: "destructive",
       });
     } finally {
@@ -304,26 +308,37 @@ function AdminPanel() {
     }
   };
 
-  // Kullanıcı banlama
-  const handleBanUser = async (userId: number) => {
-    if (window.confirm("Bu kullanıcıyı banlamak istediğinize emin misiniz?")) {
+  // Kullanıcı banlama veya ban kaldırma
+  const handleBanUser = async (userId: number, currentBanStatus: boolean) => {
+    const confirmMessage = currentBanStatus 
+      ? "Bu kullanıcının banını kaldırmak istediğinize emin misiniz?" 
+      : "Bu kullanıcıyı banlamak istediğinize emin misiniz?";
+    
+    if (window.confirm(confirmMessage)) {
       setIsLoading(true);
       try {
-        // Bu endpoint'i backend'de oluşturmanız gerekecek
         await apiRequest(`/api/admin/users/${userId}/ban`, {
           method: "POST",
+          data: { banned: !currentBanStatus },
+          headers: {
+            "x-admin-token": "admin-secret-token", // Geliştirme amacıyla
+          }
         });
+        
         toast({
           title: "Başarılı",
-          description: "Kullanıcı başarıyla banlandı.",
+          description: currentBanStatus 
+            ? "Kullanıcının banı kaldırıldı." 
+            : "Kullanıcı başarıyla banlandı.",
         });
+        
         // Kullanıcıları yeniden yükle
         fetchUsers();
       } catch (error) {
-        console.error("Kullanıcı banlanırken hata:", error);
+        console.error("Kullanıcı ban işlemi sırasında hata:", error);
         toast({
           title: "Hata",
-          description: "Kullanıcı banlan4�rken bir hata oluştu.",
+          description: "Kullanıcı işlemi sırasında bir hata oluştu.",
           variant: "destructive",
         });
       } finally {
@@ -343,15 +358,19 @@ function AdminPanel() {
     if (window.confirm(confirmMessage)) {
       setIsLoading(true);
       try {
-        // Bu endpoint'i backend'de oluşturmanız gerekecek
         await apiRequest(`/api/admin/users/${userId}/role`, {
           method: "POST",
           data: { role: newRole },
+          headers: {
+            "x-admin-token": "admin-secret-token", // Geliştirme amacıyla
+          }
         });
+        
         toast({
           title: "Başarılı",
           description: `Kullanıcı rolü ${newRole === "admin" ? "admin" : "kullanıcı"} olarak güncellendi.`,
         });
+        
         // Kullanıcıları yeniden yükle
         fetchUsers();
       } catch (error) {

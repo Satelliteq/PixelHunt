@@ -440,16 +440,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Admin routes
   // Middleware function to check if user is admin
-  const isAdmin = (req: Request, res: Response, next: Function) => {
-    // In a real app, this would verify the authenticated user has admin role
-    // For our demo, we'll use a simple approach
-    const isAdminUser = req.headers['x-admin-token'] === 'admin-secret-token';
+  const isAdmin = async (req: Request, res: Response, next: Function) => {
+    // Admin kullanıcıları kontrol et - oturum bilgilerinden
+    // Veya req.user ile kullanıcı bilgilerine erişilebilir
     
-    if (!isAdminUser) {
+    try {
+      // İstek kimlik doğrulaması için bir oturum kullanılabilir
+      // const userId = req.session?.userId;
+      
+      // Geliştirme ve test amacıyla 'x-admin-token' başlığını da kabul edelim
+      const adminTokenHeader = req.headers['x-admin-token'];
+      
+      if (adminTokenHeader === 'admin-secret-token') {
+        return next();
+      }
+      
+      // Kullanıcı oturumunu kontrol edin
+      if (req.headers['x-user-id']) {
+        const userId = Number(req.headers['x-user-id']);
+        if (!isNaN(userId)) {
+          const user = await storage.getUser(userId);
+          
+          if (user && user.role === 'admin') {
+            return next();
+          }
+        }
+      }
+      
       return res.status(403).json({ message: "Access denied: Admin privileges required" });
+    } catch (error) {
+      console.error('Admin authentication error:', error);
+      return res.status(500).json({ message: "Server error during authentication" });
     }
-    
-    next();
   };
   
   // Get all users (admin only)
