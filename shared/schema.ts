@@ -18,6 +18,7 @@ export const categories = pgTable("categories", {
   name: text("name").notNull(),
   description: text("description"),
   iconUrl: text("icon_url"),
+  color: text("color").default("#4F46E5"), // Varsayılan renk - indigo-600
 });
 
 export const images = pgTable("images", {
@@ -77,6 +78,7 @@ export const insertCategorySchema = createInsertSchema(categories).pick({
   name: true,
   description: true,
   iconUrl: true,
+  color: true,
 });
 
 export const insertImageSchema = createInsertSchema(images).pick({

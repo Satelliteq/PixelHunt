@@ -138,6 +138,9 @@ const categoryFormSchema = insertCategorySchema.extend({
   name: z.string().min(3, {
     message: "Kategori adı en az 3 karakter olmalıdır.",
   }),
+  color: z.string().regex(/^#([0-9A-F]{6})$/i, {
+    message: "Geçerli bir hex renk kodu girin (örn: #FF5733).",
+  }).default("#4F46E5"),
 });
 
 type CategoryFormValues = z.infer<typeof categoryFormSchema>;
@@ -269,6 +272,7 @@ function AdminPanel() {
     categoryForm.reset({
       name: category.name,
       description: category.description,
+      color: category.color || "#4F46E5",
     });
     setIsCategoryDialogOpen(true);
   };
@@ -408,6 +412,7 @@ function AdminPanel() {
                         categoryForm.reset({
                           name: "",
                           description: "",
+                          color: "#4F46E5",
                         });
                       }}
                     >
@@ -464,6 +469,33 @@ function AdminPanel() {
                                   rows={3}
                                 />
                               </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={categoryForm.control}
+                          name="color"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Renk</FormLabel>
+                              <div className="flex items-center gap-4">
+                                <div 
+                                  className="w-10 h-10 rounded-md border" 
+                                  style={{ backgroundColor: field.value || "#4F46E5" }}
+                                />
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    type="text"
+                                    placeholder="#4F46E5"
+                                  />
+                                </FormControl>
+                              </div>
+                              <FormDescription>
+                                Kategori için bir renk kodu girin (örn: #FF5733). Bu renk, kategori kartlarında kullanılacaktır.
+                              </FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}
