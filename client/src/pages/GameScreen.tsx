@@ -194,119 +194,51 @@ export default function GameScreen() {
       
         {gameStatus === 'playing' && currentImage ? (
           <>
-            {/* Modern Game Header - Navigation and Time */}
-            <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl p-4 flex items-center justify-between mb-6 shadow-lg">
+            {/* Minimal Game Header - Only shows stage and elapsed time */}
+            <div className="bg-black/40 backdrop-blur-sm rounded-xl p-3 flex items-center justify-between mb-6 shadow-lg">
               <div className="flex items-center gap-3">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={() => window.history.back()}
-                  className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="m15 18-6-6 6-6"/>
-                  </svg>
-                  <span className="sr-only">Geri Dön</span>
-                </Button>
-                <h2 className="text-xl font-semibold text-gray-800 dark:text-white">{test?.title}</h2>
+                <div className="flex items-center gap-1 bg-primary/20 px-3 py-1 rounded-full">
+                  <span className="text-sm font-medium">Aşama {currentImageIndex + 1}/{test?.imageIds?.length || 0}</span>
+                </div>
+                <div className="flex items-center gap-1 bg-black/30 px-3 py-1 rounded-full">
+                  <Clock className="w-3 h-3 mr-1" />
+                  <span className="text-sm font-medium">{formatTime(timeElapsed)}</span>
+                </div>
               </div>
-              
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700/70 px-4 py-2 rounded-full">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-                    <circle cx="12" cy="12" r="10"/>
-                    <polyline points="12 6 12 12 16 14"/>
-                  </svg>
-                  <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{formatTime(timeElapsed)}</span>
-                </div>
-                
-                <div className="flex items-center gap-1 bg-primary/10 px-4 py-2 rounded-full">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
-                    <polyline points="14 2 14 8 20 8"/>
-                  </svg>
-                  <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
-                    Aşama {currentImageIndex + 1}/{test?.imageIds?.length || 0}
-                  </span>
-                </div>
-                
-                <Button 
-                  variant="outline" 
-                  size="icon"
-                  className="bg-red-50 hover:bg-red-100 border-red-200 dark:bg-red-900/20 dark:hover:bg-red-900/30 dark:border-red-800/50"
-                  onClick={() => {
-                    // Bildir butonu fonksiyonu
-                    toast({
-                      title: "İçerik Bildirildi",
-                      description: "Bu test içeriği yöneticilere bildirildi. Teşekkürler!",
-                      variant: "default"
-                    });
-                  }}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500">
-                    <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                    <line x1="12" y1="9" x2="12" y2="13"/>
-                    <line x1="12" y1="17" x2="12.01" y2="17"/>
-                  </svg>
-                  <span className="sr-only">Bildir</span>
-                </Button>
+              <div>
+                <span className="text-lg font-bold">{score} Puan</span>
               </div>
             </div>
             
-            {/* Score Display */}
-            <div className="bg-gradient-to-r from-primary/10 to-primary/5 dark:from-primary/20 dark:to-primary/10 backdrop-blur-sm rounded-xl p-3 mb-6 flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <div className="bg-white/80 dark:bg-gray-800/80 p-2 rounded-lg">
-                  <Trophy className="w-6 h-6 text-yellow-500" />
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wider font-medium">Mevcut Skor</p>
-                  <p className="text-xl font-bold text-gray-900 dark:text-white">{score}</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-4">
-                <div className="text-right">
-                  <p className="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wider font-medium">Tahmin</p>
-                  <p className="text-lg font-semibold text-gray-900 dark:text-white">{guessHistory.length}</p>
-                </div>
-              </div>
-            </div>
-            
-            {/* Image Section with controls below */}
-            <div className="mb-8">
+            {/* Game Area */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Image Reveal with fixed percentage */}
-              <div className="relative mb-4">
+              <div className="md:col-span-2">
                 <ImageReveal 
                   imageUrl={currentImage?.imageUrl || ''}
                   revealPercent={revealPercent}
                   gridSize={4}
-                  className="aspect-video w-full rounded-xl shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700"
+                  className="aspect-video rounded-xl shadow-xl overflow-hidden"
                 />
-                
-                {/* Progress indicator */}
-                <div className="absolute bottom-4 left-0 right-0 flex justify-center">
-                  <div className="bg-black/60 backdrop-blur-sm rounded-full px-3 py-1 text-white text-sm font-medium">
-                    {Math.round(revealPercent)}% açık
-                  </div>
-                </div>
               </div>
               
-              {/* Guess Controls below image */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">
+              {/* Game Controls */}
+              <div className="bg-black/30 backdrop-blur-sm rounded-xl p-4 flex flex-col">
+                <h3 className="text-lg font-semibold mb-2">{test?.title}</h3>
+                
                 {/* Guess History - Positioned directly above input */}
-                <div className="mb-4 overflow-y-auto max-h-36 bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                <div className="mb-4 overflow-y-auto max-h-52 bg-black/20 rounded-lg p-2">
                   {guessHistory.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="space-y-2">
                       {guessHistory.map((item, index) => (
                         <div 
                           key={index} 
-                          className={`px-3 py-1.5 rounded-md text-sm ${
+                          className={`px-3 py-2 rounded-md text-sm ${
                             item.isCorrect 
-                              ? 'bg-green-50 border border-green-200 text-green-700 dark:bg-green-900/30 dark:border-green-800/50 dark:text-green-400' 
+                              ? 'bg-green-500/20 border border-green-500/30' 
                               : item.isClose 
-                                ? 'bg-yellow-50 border border-yellow-200 text-yellow-700 dark:bg-yellow-900/30 dark:border-yellow-800/50 dark:text-yellow-400' 
-                                : 'bg-red-50 border border-red-200 text-red-700 dark:bg-red-900/30 dark:border-red-800/50 dark:text-red-400'
+                                ? 'bg-yellow-500/20 border border-yellow-500/30' 
+                                : 'bg-red-500/20 border border-red-500/30'
                           }`}
                         >
                           {item.guess}
@@ -314,116 +246,65 @@ export default function GameScreen() {
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center text-gray-500 dark:text-gray-400 py-6">
+                    <div className="text-center text-muted-foreground py-6">
                       <p>Tahminleriniz burada görünecek</p>
                     </div>
                   )}
                 </div>
                 
                 {/* Guess Input */}
-                <form 
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleGuess(userAnswer);
-                    setUserAnswer('');
-                  }}
-                  className="flex gap-2"
-                >
-                  <Input
-                    value={userAnswer}
-                    onChange={(e) => setUserAnswer(e.target.value)}
-                    placeholder="Bu nedir? Tahmin et..."
-                    className="flex-1 bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700"
-                  />
-                  <Button type="submit" className="bg-primary text-white hover:bg-primary/90">
-                    Tahmin Et
-                  </Button>
-                  <Button type="button" variant="outline" onClick={handleSkip} className="border-gray-300 dark:border-gray-600">
-                    Atla
-                  </Button>
-                </form>
+                <div className="mt-auto">
+                  <form 
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleGuess(userAnswer);
+                      setUserAnswer('');
+                    }}
+                    className="space-y-3"
+                  >
+                    <Input
+                      value={userAnswer}
+                      onChange={(e) => setUserAnswer(e.target.value)}
+                      placeholder="Bu nedir? Tahmin et..."
+                      className="w-full"
+                    />
+                    <div className="flex gap-2">
+                      <Button type="submit" className="w-full">Tahmin Et</Button>
+                      <Button type="button" variant="outline" onClick={handleSkip}>Atla</Button>
+                    </div>
+                  </form>
+                </div>
               </div>
-            </div>
-            
-            {/* Test Info */}
-            <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 shadow-lg">
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-3">{test?.title}</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300">{test?.description || "Bu test hakkında bilgiler..."}</p>
             </div>
           </>
         ) : (
-          // Modern Game Finished Screen with light/dark mode support
+          // Game Finished Screen with UX optimized layout
           <div className="py-6 rounded-xl">
             {/* Header section with score summary */}
-            <div className="mb-10">
-              <div className="flex justify-between items-center mb-6">
-                <Button 
-                  variant="ghost" 
-                  className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  onClick={() => setLocation('/tests')}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-                    <path d="m15 18-6-6 6-6"/>
-                  </svg>
-                  Testlere Dön
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700"
-                  onClick={() => {
-                    if (navigator.share) {
-                      navigator.share({
-                        title: `${test?.title} skorum: ${score}`,
-                        text: `${test?.title} testinde ${formatTime(timeElapsed)} sürede ${score} puan topladım!`,
-                        url: window.location.href
-                      });
-                    }
-                  }}
-                >
-                  <Share2 className="w-4 h-4 mr-2" /> Paylaş
-                </Button>
-              </div>
+            <div className="text-center mb-10">
+              <Trophy className="h-16 w-16 mx-auto text-yellow-500 mb-4" />
+              <h1 className="text-3xl font-bold mb-2">Tebrikler!</h1>
+              <p className="text-xl mb-4">
+                {test?.title} testini <span className="font-semibold">{formatTime(timeElapsed)}</span> sürede tamamladınız.
+              </p>
               
-              <div className="text-center">
-                <div className="inline-block p-6 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-full mb-6">
-                  <Trophy className="h-16 w-16 text-yellow-500" />
-                </div>
-                <h1 className="text-3xl font-bold mb-2 text-gray-900 dark:text-white">Tebrikler!</h1>
-                <p className="text-xl mb-4 text-gray-700 dark:text-gray-300">
-                  {test?.title} testini <span className="font-semibold">{formatTime(timeElapsed)}</span> sürede tamamladınız.
+              <div className="max-w-md mx-auto bg-black/30 rounded-lg p-4 mb-6">
+                <p className="text-2xl font-bold mb-2">{score} Puan</p>
+                <p className="text-sm text-muted-foreground">
+                  {test?.imageIds?.length || 0} görseli {guessHistory.filter(g => g.isCorrect).length} doğru tahminle tamamladınız
                 </p>
-              </div>
-              
-              <div className="max-w-md mx-auto bg-gradient-to-r from-primary/10 to-primary/5 dark:from-primary/20 dark:to-primary/10 rounded-xl p-6 mt-8">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Toplam Puan</p>
-                  <p className="text-3xl font-bold text-gray-900 dark:text-white">{score}</p>
-                </div>
-                <div className="bg-white/60 dark:bg-gray-800/60 h-1 w-full rounded-full mb-4"></div>
-                <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
-                  <p>
-                    <span className="font-semibold text-gray-900 dark:text-white">{test?.imageIds?.length || 0}</span> görsel
-                  </p>
-                  <p>
-                    <span className="font-semibold text-gray-900 dark:text-white">{guessHistory.filter(g => g.isCorrect).length}</span> doğru tahmin
-                  </p>
-                  <p>
-                    <span className="font-semibold text-gray-900 dark:text-white">{timeElapsed}</span> saniye
-                  </p>
-                </div>
               </div>
             </div>
             
-            {/* Main content section - Left side for Similar Tests + Scoreboard */}
+            {/* Main content section - Left side for Similar Tests + Scoreboard, Right side empty for now */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-              {/* Left Column - Similar Tests + Stats */}
+              {/* Left Column - Similar Tests + Scoreboard */}
               <div className="space-y-6">
                 {/* Similar Tests */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-lg border border-gray-100 dark:border-gray-700">
+                <div className="bg-black/30 backdrop-blur-sm rounded-xl p-5 shadow-lg">
                   <div className="flex items-center gap-2 mb-4">
-                    <Star className="w-5 h-5 text-amber-500" />
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Benzer Testler</h2>
+                    <Star className="w-5 h-5 text-orange-500" />
+                    <h2 className="text-xl font-bold">Benzer Testler</h2>
                   </div>
                   
                   {similarTests && similarTests.length > 0 ? (
@@ -434,21 +315,16 @@ export default function GameScreen() {
                         .map((similarTest, index) => (
                           <div 
                             key={index} 
-                            className="bg-gray-50 dark:bg-gray-900/50 p-3 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-900/70 border border-gray-200 dark:border-gray-700 transition-colors"
+                            className="bg-black/20 p-3 rounded-lg cursor-pointer hover:bg-black/30"
                             onClick={() => window.location.href = `/test/${similarTest.id}`}
                           >
-                            <h4 className="font-medium text-gray-900 dark:text-white">{similarTest.title}</h4>
-                            <div className="flex items-center gap-4 mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            <h4 className="font-medium">{similarTest.title}</h4>
+                            <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
                               <span className="flex items-center gap-1">
-                                <Heart className="w-3 h-3 text-red-500" /> {similarTest.likeCount || 0}
+                                <Heart className="w-3 h-3" /> {similarTest.likeCount || 0}
                               </span>
                               <span>•</span>
                               <span className="flex items-center gap-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
-                                  <circle cx="9" cy="9" r="2" />
-                                  <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
-                                </svg>
                                 {similarTest.imageIds?.length || 0} görsel
                               </span>
                             </div>
@@ -456,169 +332,152 @@ export default function GameScreen() {
                         ))}
                     </div>
                   ) : (
-                    <div className="text-center py-6 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/30 rounded-lg">
+                    <div className="text-center py-6 text-muted-foreground">
                       <p>Benzer test bulunamadı</p>
                     </div>
                   )}
                 </div>
                 
-                {/* Test Stats */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-lg border border-gray-100 dark:border-gray-700">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Award className="w-5 h-5 text-blue-500" /> 
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Test Bilgileri</h2>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg text-center border border-gray-200 dark:border-gray-700">
-                      <h3 className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-medium mb-1">Kategori</h3>
-                      <p className="font-medium text-gray-900 dark:text-white">{test?.categoryId ? "Film" : "Genel"}</p>
-                    </div>
-                    <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg text-center border border-gray-200 dark:border-gray-700">
-                      <h3 className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-medium mb-1">Görseller</h3>
-                      <p className="font-medium text-gray-900 dark:text-white">{test?.imageIds?.length || 0}</p>
-                    </div>
-                    <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg text-center border border-gray-200 dark:border-gray-700">
-                      <h3 className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-medium mb-1">Beğeni</h3>
-                      <p className="font-medium text-gray-900 dark:text-white">{test?.likeCount || 0}</p>
-                    </div>
-                    <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg text-center border border-gray-200 dark:border-gray-700">
-                      <h3 className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-medium mb-1">Oynanma</h3>
-                      <p className="font-medium text-gray-900 dark:text-white">{test?.playCount || 0}</p>
-                    </div>
-                  </div>
-                  
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 bg-gray-50 dark:bg-gray-900/30 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-                    {test?.description || "Bu test hakkında bilgiler burada gösterilecektir."}
-                  </p>
-                  
-                  <Button 
-                    className="w-full bg-primary text-white hover:bg-primary/90" 
-                    onClick={() => {
-                      apiRequest({
-                        url: `/api/tests/${testId}/like`,
-                        method: 'POST'
-                      }).catch(err => {
-                        console.error("Error liking test:", err);
-                      });
-                    }}
-                  >
-                    <ThumbsUp className="w-4 h-4 mr-2" /> Beğen
-                  </Button>
-                </div>
-              </div>
-              
-              {/* Right Column - Scoreboard and Actions */}
-              <div className="space-y-6">
                 {/* Top 5 Scoreboard */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-lg border border-gray-100 dark:border-gray-700">
+                <div className="bg-black/30 backdrop-blur-sm rounded-xl p-5 shadow-lg">
                   <div className="flex items-center gap-2 mb-4">
                     <ListOrdered className="w-5 h-5 text-yellow-500" />
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Skor Tablosu (Top 5)</h2>
+                    <h2 className="text-xl font-bold">Skor Tablosu (Top 5)</h2>
                   </div>
                   
                   {topScores && topScores.length > 0 ? (
                     <div className="space-y-3">
                       {(topScores as GameScore[]).slice(0, 5).map((scoreItem, index) => (
-                        <div key={index} className="flex items-center justify-between bg-gray-50 dark:bg-gray-900/50 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <div key={index} className="flex items-center justify-between bg-black/20 p-3 rounded-lg">
                           <div className="flex items-center gap-3">
-                            <div className={`w-8 h-8 flex items-center justify-center rounded-full 
-                              ${index === 0 
-                                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-500' 
-                                : index === 1 
-                                  ? 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300' 
-                                  : index === 2 
-                                    ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-500'
-                                    : 'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-400'
-                              }`}>
-                              <span className="font-bold">{index + 1}</span>
-                            </div>
+                            <span className="font-bold text-lg w-6">{index + 1}</span>
                             <div>
-                              <p className="font-medium text-gray-900 dark:text-white">{scoreItem.userId ? "Kullanıcı" : "Anonim"}</p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
-                                  <circle cx="12" cy="12" r="10"/>
-                                  <polyline points="12 6 12 12 16 14"/>
-                                </svg>
-                                {formatTime(scoreItem.completionTime || 0)}
-                              </p>
+                              <p className="font-medium">{scoreItem.userId ? "Kullanıcı" : "Anonim"}</p>
+                              <p className="text-xs text-muted-foreground">{formatTime(scoreItem.completionTime || 0)}</p>
                             </div>
                           </div>
-                          <span className="text-xl font-bold text-gray-900 dark:text-white">{scoreItem.score}</span>
+                          <span className="text-xl font-bold">{scoreItem.score}</span>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-8 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/30 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div className="text-center py-6 text-muted-foreground">
                       <p>Henüz skor kaydedilmemiş</p>
                     </div>
                   )}
                 </div>
+              </div>
+              
+              {/* Right Column - Test Stats & Actions */}
+              <div className="bg-black/20 backdrop-blur-sm rounded-xl p-5 shadow-lg flex flex-col">
+                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <Award className="w-5 h-5 text-primary" /> 
+                  Test Bilgileri
+                </h2>
                 
-                {/* Action Buttons */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-lg border border-gray-100 dark:border-gray-700">
-                  <Button onClick={() => window.location.reload()} className="w-full bg-gradient-to-r from-primary to-primary/90 text-white mb-3" size="lg">
-                    <Trophy className="w-5 h-5 mr-2" /> Yeniden Oyna
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="bg-black/20 p-4 rounded-lg text-center">
+                    <h3 className="text-sm text-muted-foreground mb-1">Kategori</h3>
+                    <p className="font-medium">{test?.categoryId ? "Film" : "Genel"}</p>
+                  </div>
+                  <div className="bg-black/20 p-4 rounded-lg text-center">
+                    <h3 className="text-sm text-muted-foreground mb-1">Görseller</h3>
+                    <p className="font-medium">{test?.imageIds?.length || 0}</p>
+                  </div>
+                  <div className="bg-black/20 p-4 rounded-lg text-center">
+                    <h3 className="text-sm text-muted-foreground mb-1">Beğeni</h3>
+                    <p className="font-medium">{test?.likeCount || 0}</p>
+                  </div>
+                  <div className="bg-black/20 p-4 rounded-lg text-center">
+                    <h3 className="text-sm text-muted-foreground mb-1">Oynanma</h3>
+                    <p className="font-medium">{test?.playCount || 0}</p>
+                  </div>
+                </div>
+                
+                <p className="text-sm text-muted-foreground mb-6">{test?.description}</p>
+                
+                <div className="mt-auto space-y-3">
+                  <Button onClick={() => window.location.reload()} className="w-full" size="lg">
+                    <Trophy className="w-4 h-4 mr-2" /> Yeniden Oyna
                   </Button>
-                  <Button variant="outline" onClick={() => setLocation('/tests')} className="w-full border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300">
-                    Diğer Testlere Göz At
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => setLocation('/tests')} className="flex-1">
+                      Diğer Testlere Dön
+                    </Button>
+                    <Button 
+                      variant="secondary" 
+                      className="flex-1"
+                      onClick={() => {
+                        apiRequest({
+                          url: `/api/tests/${testId}/like`,
+                          method: 'POST'
+                        }).catch(err => {
+                          console.error("Error liking test:", err);
+                        });
+                      }}
+                    >
+                      <ThumbsUp className="w-4 h-4 mr-2" /> Beğen
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
             
             {/* Comments Section - Full width at bottom */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-lg border border-gray-100 dark:border-gray-700">
+            <div className="bg-black/30 backdrop-blur-sm rounded-xl p-5 shadow-lg">
               <div className="flex items-center gap-2 mb-4">
                 <MessageSquare className="w-5 h-5 text-blue-500" />
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Yorumlar</h2>
+                <h2 className="text-xl font-bold">Yorumlar</h2>
               </div>
               
               {comments && comments.length > 0 ? (
                 <div className="space-y-3 max-h-80 overflow-y-auto mb-6">
                   {(comments as TestComment[]).map((comment, index) => (
-                    <div key={index} className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-700 dark:text-gray-300">
-                            {comment.userId ? comment.userId.toString().charAt(0).toUpperCase() : "A"}
-                          </div>
-                          <h4 className="font-medium text-gray-900 dark:text-white">{comment.userId ? "Kullanıcı" : "Anonim"}</h4>
-                        </div>
-                        <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                    <div key={index} className="bg-black/20 p-3 rounded-lg">
+                      <div className="flex justify-between items-start mb-1">
+                        <h4 className="font-medium">{comment.userId ? "Kullanıcı" : "Anonim"}</h4>
+                        <span className="text-xs text-muted-foreground">
                           {new Date(comment.createdAt || Date.now()).toLocaleDateString()}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-700 dark:text-gray-300 pl-10">{comment.text}</p>
+                      <p className="text-sm">{comment.text}</p>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-10 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/30 rounded-lg mb-6 border border-gray-200 dark:border-gray-700">
+                <div className="text-center py-6 text-muted-foreground mb-6">
                   <p>Henüz yorum yapılmamış</p>
-                  <p className="text-sm mt-1">Bu test hakkında ilk yorumu sen yap!</p>
                 </div>
               )}
               
-              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="pt-4 border-t border-white/10">
                 <form className="flex gap-2" onSubmit={(e) => {
                   e.preventDefault();
                   // Yorum gönderme işlemi
-                  toast({
-                    title: "Yorum gönderildi",
-                    description: "Yorumunuz onaylama sürecinden sonra yayınlanacaktır.",
-                    variant: "default"
-                  });
                 }}>
-                  <Input 
-                    placeholder="Yorumunuzu yazın..." 
-                    className="flex-1 bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700" 
-                  />
-                  <Button type="submit" className="bg-primary text-white hover:bg-primary/90">
-                    Yorum Yap
-                  </Button>
+                  <Input placeholder="Yorumunuzu yazın..." className="flex-1" />
+                  <Button type="submit">Yorum Yap</Button>
                 </form>
               </div>
+            </div>
+            
+            {/* Share Section */}
+            <div className="flex justify-center mt-6">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => {
+                  if (navigator.share) {
+                    navigator.share({
+                      title: `${test?.title} skorum: ${score}`,
+                      text: `${test?.title} testinde ${formatTime(timeElapsed)} sürede ${score} puan topladım!`,
+                      url: window.location.href
+                    });
+                  }
+                }}
+              >
+                <Share2 className="w-4 h-4 mr-2" /> Skoru Paylaş
+              </Button>
             </div>
           </div>
         )}
