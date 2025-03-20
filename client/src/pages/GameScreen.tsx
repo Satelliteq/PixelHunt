@@ -219,78 +219,90 @@ export default function GameScreen() {
               </div>
             </div>
             
-            {/* Game Area - Restructured to place controls right under the image */}
+            {/* Game Area - Tasarımı görseldeki gibi yeniden yapılandırıldı */}
             <div className="flex flex-col space-y-4">
-              {/* Image Reveal + Game Info */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                {/* Image Reveal - Full width on mobile, 3/4 width on desktop */}
-                <div className="md:col-span-3">
-                  <ImageReveal 
-                    imageUrl={currentImage?.imageUrl || ''}
-                    revealPercent={revealPercent}
-                    gridSize={4}
-                    className="aspect-video rounded-xl shadow-xl overflow-hidden"
-                  />
-                </div>
-                
-                {/* Game Info - Positioned on the right on desktop */}
-                <div className="bg-black/30 backdrop-blur-sm rounded-xl p-4 flex flex-col">
-                  <h3 className="text-lg font-semibold mb-2">{test?.title}</h3>
-                  <div className="text-sm text-muted-foreground">
-                    <p>Bu testte, görselleri inceleyerek doğru tahminlerde bulunun.</p>
-                    <p className="mt-2">Ne kadar az açılımda doğru tahmini yaparsanız o kadar çok puan kazanırsınız.</p>
-                  </div>
-                </div>
+              {/* Sadece Image Reveal - ekranın genişliğine yayılmış */}
+              <div>
+                <ImageReveal 
+                  imageUrl={currentImage?.imageUrl || ''}
+                  revealPercent={revealPercent}
+                  gridSize={4}
+                  className="aspect-video rounded-xl shadow-xl overflow-hidden"
+                />
               </div>
               
-              {/* Guess History + Input directly below the image - Full width */}
-              <div className="bg-black/30 backdrop-blur-sm rounded-xl p-4">
-                {/* Guess History */}
-                <div className="mb-4 overflow-y-auto max-h-40 bg-black/20 rounded-lg p-2">
-                  {guessHistory.length > 0 ? (
-                    <div className="space-y-2">
-                      {guessHistory.map((item, index) => (
-                        <div 
-                          key={index} 
-                          className={`px-3 py-2 rounded-md text-sm ${
-                            item.isCorrect 
-                              ? 'bg-green-500/20 border border-green-500/30' 
-                              : item.isClose 
-                                ? 'bg-yellow-500/20 border border-yellow-500/30' 
-                                : 'bg-red-500/20 border border-red-500/30'
-                          }`}
-                        >
-                          {item.guess}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center text-muted-foreground py-6">
-                      <p>Tahminleriniz burada görünecek</p>
-                    </div>
-                  )}
+              {/* Ana içerik alanı - Özet bilgi, tahmin giriş alanı ve cevaplar */}
+              <div className="flex flex-col space-y-4">
+                {/* Özet Bilgi ve Skor */}
+                <div className="bg-black/30 backdrop-blur-sm rounded-xl p-3 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold">{test?.title}</h3>
+                    <p className="text-sm text-muted-foreground">Görüntüye bakarak tahminde bulunun</p>
+                  </div>
+                  <div className="text-xl font-bold">{score} Puan</div>
                 </div>
                 
-                {/* Guess Input */}
-                <form 
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleGuess(userAnswer);
-                    setUserAnswer('');
-                  }}
-                  className="space-y-3"
-                >
-                  <Input
-                    value={userAnswer}
-                    onChange={(e) => setUserAnswer(e.target.value)}
-                    placeholder="Bu nedir? Tahmin et..."
-                    className="w-full"
-                  />
-                  <div className="flex gap-2">
-                    <Button type="submit" className="w-full">Tahmin Et</Button>
-                    <Button type="button" variant="outline" onClick={handleSkip}>Atla</Button>
+                {/* Tahmin Giriş Alanı */}
+                <div className="bg-primary/10 backdrop-blur-sm rounded-xl p-3">
+                  <form 
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleGuess(userAnswer);
+                      setUserAnswer('');
+                    }}
+                    className="flex flex-col space-y-2"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={userAnswer}
+                        onChange={(e) => setUserAnswer(e.target.value)}
+                        placeholder="Bu nedir? Tahmin et..."
+                        className="flex-1"
+                      />
+                      <Button type="submit">Tahmin Et</Button>
+                    </div>
+                    <div className="flex justify-between">
+                      <div className="text-sm">Aşama {currentImageIndex + 1}/{test?.imageIds?.length || 0}</div>
+                      <Button type="button" variant="ghost" size="sm" onClick={handleSkip}>
+                        Bu resmi atla →
+                      </Button>
+                    </div>
+                  </form>
+                </div>
+                
+                {/* Tahmin Geçmişi - Ekran görüntüsündeki gibi tam genişlikte */}
+                <div className="bg-black/20 backdrop-blur-sm rounded-xl">
+                  {/* Başlık Alanı */}
+                  <div className="bg-primary/20 p-3 rounded-t-xl">
+                    <div className="font-semibold">CEVAPLAR</div>
                   </div>
-                </form>
+                  
+                  {/* Cevaplar Listesi */}
+                  <div className="p-3 max-h-60 overflow-y-auto">
+                    {guessHistory.length > 0 ? (
+                      <div className="space-y-2">
+                        {guessHistory.map((item, index) => (
+                          <div 
+                            key={index} 
+                            className={`p-3 rounded-md flex items-center ${
+                              item.isCorrect 
+                                ? 'bg-green-500/20 border-l-4 border-green-500' 
+                                : item.isClose 
+                                  ? 'bg-yellow-500/20 border-l-4 border-yellow-500' 
+                                  : 'bg-red-500/20 border-l-4 border-red-500'
+                            }`}
+                          >
+                            <span>{item.guess}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center text-muted-foreground py-6">
+                        <p>Tahminleriniz burada görünecek</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </>
