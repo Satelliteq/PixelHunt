@@ -197,6 +197,15 @@ export default function GameScreen() {
             {/* Minimal Game Header - Only shows stage and elapsed time */}
             <div className="bg-black/40 backdrop-blur-sm rounded-xl p-3 flex items-center justify-between mb-6 shadow-lg">
               <div className="flex items-center gap-3">
+                {/* Back button */}
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => window.history.back()} 
+                  className="bg-black/30 hover:bg-black/50"
+                >
+                  Geri Dön
+                </Button>
                 <div className="flex items-center gap-1 bg-primary/20 px-3 py-1 rounded-full">
                   <span className="text-sm font-medium">Aşama {currentImageIndex + 1}/{test?.imageIds?.length || 0}</span>
                 </div>
@@ -210,24 +219,34 @@ export default function GameScreen() {
               </div>
             </div>
             
-            {/* Game Area */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Image Reveal with fixed percentage */}
-              <div className="md:col-span-2">
-                <ImageReveal 
-                  imageUrl={currentImage?.imageUrl || ''}
-                  revealPercent={revealPercent}
-                  gridSize={4}
-                  className="aspect-video rounded-xl shadow-xl overflow-hidden"
-                />
+            {/* Game Area - Restructured to place controls right under the image */}
+            <div className="flex flex-col space-y-4">
+              {/* Image Reveal + Game Info */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {/* Image Reveal - Full width on mobile, 3/4 width on desktop */}
+                <div className="md:col-span-3">
+                  <ImageReveal 
+                    imageUrl={currentImage?.imageUrl || ''}
+                    revealPercent={revealPercent}
+                    gridSize={4}
+                    className="aspect-video rounded-xl shadow-xl overflow-hidden"
+                  />
+                </div>
+                
+                {/* Game Info - Positioned on the right on desktop */}
+                <div className="bg-black/30 backdrop-blur-sm rounded-xl p-4 flex flex-col">
+                  <h3 className="text-lg font-semibold mb-2">{test?.title}</h3>
+                  <div className="text-sm text-muted-foreground">
+                    <p>Bu testte, görselleri inceleyerek doğru tahminlerde bulunun.</p>
+                    <p className="mt-2">Ne kadar az açılımda doğru tahmini yaparsanız o kadar çok puan kazanırsınız.</p>
+                  </div>
+                </div>
               </div>
               
-              {/* Game Controls */}
-              <div className="bg-black/30 backdrop-blur-sm rounded-xl p-4 flex flex-col">
-                <h3 className="text-lg font-semibold mb-2">{test?.title}</h3>
-                
-                {/* Guess History - Positioned directly above input */}
-                <div className="mb-4 overflow-y-auto max-h-52 bg-black/20 rounded-lg p-2">
+              {/* Guess History + Input directly below the image - Full width */}
+              <div className="bg-black/30 backdrop-blur-sm rounded-xl p-4">
+                {/* Guess History */}
+                <div className="mb-4 overflow-y-auto max-h-40 bg-black/20 rounded-lg p-2">
                   {guessHistory.length > 0 ? (
                     <div className="space-y-2">
                       {guessHistory.map((item, index) => (
@@ -253,27 +272,25 @@ export default function GameScreen() {
                 </div>
                 
                 {/* Guess Input */}
-                <div className="mt-auto">
-                  <form 
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      handleGuess(userAnswer);
-                      setUserAnswer('');
-                    }}
-                    className="space-y-3"
-                  >
-                    <Input
-                      value={userAnswer}
-                      onChange={(e) => setUserAnswer(e.target.value)}
-                      placeholder="Bu nedir? Tahmin et..."
-                      className="w-full"
-                    />
-                    <div className="flex gap-2">
-                      <Button type="submit" className="w-full">Tahmin Et</Button>
-                      <Button type="button" variant="outline" onClick={handleSkip}>Atla</Button>
-                    </div>
-                  </form>
-                </div>
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleGuess(userAnswer);
+                    setUserAnswer('');
+                  }}
+                  className="space-y-3"
+                >
+                  <Input
+                    value={userAnswer}
+                    onChange={(e) => setUserAnswer(e.target.value)}
+                    placeholder="Bu nedir? Tahmin et..."
+                    className="w-full"
+                  />
+                  <div className="flex gap-2">
+                    <Button type="submit" className="w-full">Tahmin Et</Button>
+                    <Button type="button" variant="outline" onClick={handleSkip}>Atla</Button>
+                  </div>
+                </form>
               </div>
             </div>
           </>
