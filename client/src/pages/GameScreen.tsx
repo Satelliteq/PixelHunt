@@ -2,16 +2,16 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
-  AlertTriangle, User, Heart, Share2, Trophy, Award, Clock, ThumbsUp,
+  AlertTriangle, Heart, Share2, Trophy, Award, Clock, ThumbsUp,
   MessageSquare, Star, ListOrdered
 } from 'lucide-react';
 import type { Image, Test, TestComment, GameScore } from '../../shared/schema';
 import { toast } from '@/hooks/use-toast';
 import { formatTime, checkAnswer, calculateScore, playSoundEffect } from '@/lib/gameHelpers';
-import GameControls from '@/components/game/GameControls';
 import ScoreDisplay from '@/components/game/ScoreDisplay';
 import ImageReveal from '@/components/game/ImageReveal';
 import ContentCard from '@/components/game/ContentCard';
