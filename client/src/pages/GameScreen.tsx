@@ -218,7 +218,7 @@ export default function GameScreen() {
           
           <div className="grid grid-cols-12 gap-6">
             <div className="col-span-12 md:col-span-8">
-              <Card className="bg-zinc-900 border-zinc-800">
+              <Card className="border-muted bg-card">
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <CardTitle>Resmi Tahmin Et</CardTitle>
@@ -258,12 +258,12 @@ export default function GameScreen() {
                       <Button type="button" variant="outline" size="sm" onClick={handleSkip}>
                         Bu resmi atla
                       </Button>
-                      <div className="text-sm text-zinc-400">Ne kadar az açılım ile tahmin ederseniz o kadar çok puan kazanırsınız.</div>
+                      <div className="text-sm text-muted-foreground">Ne kadar az açılım ile tahmin ederseniz o kadar çok puan kazanırsınız.</div>
                     </div>
                   </form>
                   
                   {/* Tahmin Geçmişi - Aynı Card içinde ama daha kompakt */}
-                  <div className="mt-4 border-t border-zinc-800 pt-4">
+                  <div className="mt-4 border-t border-border pt-4">
                     <h3 className="text-sm font-semibold mb-2">TAHMİNLER</h3>
                     <div className="max-h-32 overflow-y-auto">
                       {guessHistory.length > 0 ? (
@@ -273,10 +273,10 @@ export default function GameScreen() {
                               key={index} 
                               className={`p-2 text-sm rounded-md flex items-center ${
                                 item.isCorrect 
-                                  ? 'bg-green-700/20 border-l-2 border-green-500' 
+                                  ? 'bg-green-500/10 border-l-2 border-green-500 dark:bg-green-700/20' 
                                   : item.isClose 
-                                    ? 'bg-yellow-700/20 border-l-2 border-yellow-500' 
-                                    : 'bg-red-700/20 border-l-2 border-red-500'
+                                    ? 'bg-yellow-500/10 border-l-2 border-yellow-500 dark:bg-yellow-700/20' 
+                                    : 'bg-red-500/10 border-l-2 border-red-500 dark:bg-red-700/20'
                               }`}
                             >
                               <span className="font-medium">{item.guess}</span>
@@ -306,20 +306,20 @@ export default function GameScreen() {
                 }}
               />
               
-              <Card className="bg-zinc-900 border-zinc-800 mt-4">
+              <Card className="border-muted bg-card mt-4">
                 <CardHeader className="pb-2">
                   <CardTitle>Test Bilgileri</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-zinc-400 mb-2">
+                  <p className="text-sm text-muted-foreground mb-2">
                     {test?.description || "Bu test hakkında bilgiler..."}
                   </p>
                   <div className="text-sm">
-                    <div className="flex justify-between py-1 border-b border-zinc-800">
+                    <div className="flex justify-between py-1 border-b border-border">
                       <span>Toplam Görsel:</span>
                       <span className="font-medium">{test?.imageIds?.length || 0}</span>
                     </div>
-                    <div className="flex justify-between py-1 border-b border-zinc-800">
+                    <div className="flex justify-between py-1 border-b border-border">
                       <span>Mevcut Aşama:</span>
                       <span className="font-medium">{currentImageIndex + 1}</span>
                     </div>
@@ -371,13 +371,13 @@ export default function GameScreen() {
               </p>
             </div>
             
-            <div className="max-w-md mx-auto p-6 mt-8 bg-zinc-900 rounded-xl">
+            <div className="max-w-md mx-auto p-6 mt-8 bg-card border border-border rounded-xl">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm font-medium">Toplam Puan</p>
                 <p className="text-3xl font-bold">{score}</p>
               </div>
-              <div className="bg-zinc-800 h-1 w-full rounded-full mb-4"></div>
-              <div className="flex justify-between text-sm text-zinc-400">
+              <div className="bg-muted h-1 w-full rounded-full mb-4"></div>
+              <div className="flex justify-between text-sm text-muted-foreground">
                 <p>
                   <span className="font-semibold">{test?.imageIds?.length || 0}</span> görsel
                 </p>
@@ -392,7 +392,7 @@ export default function GameScreen() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-            <Card className="bg-zinc-900 border-zinc-800">
+            <Card className="border-muted bg-card">
               <CardHeader>
                 <CardTitle>Benzer Testler</CardTitle>
               </CardHeader>
@@ -405,11 +405,11 @@ export default function GameScreen() {
                       .map((similarTest, index) => (
                         <div 
                           key={index} 
-                          className="p-3 rounded-lg cursor-pointer hover:bg-zinc-800 transition-colors"
+                          className="p-3 rounded-lg cursor-pointer hover:bg-muted transition-colors"
                           onClick={() => window.location.href = `/test/${similarTest.id}`}
                         >
                           <h4 className="font-medium">{similarTest.title}</h4>
-                          <div className="flex items-center gap-4 mt-1 text-xs text-zinc-400">
+                          <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
                             <span className="flex items-center gap-1">
                               <Heart className="w-3 h-3 text-red-500" /> {similarTest.likeCount || 0}
                             </span>
@@ -422,38 +422,38 @@ export default function GameScreen() {
                       ))}
                   </div>
                 ) : (
-                  <div className="text-center py-6 text-zinc-500">
+                  <div className="text-center py-6 text-muted-foreground">
                     <p>Benzer test bulunamadı</p>
                   </div>
                 )}
               </CardContent>
             </Card>
             
-            <Card className="bg-zinc-900 border-zinc-800">
+            <Card className="border-muted bg-card">
               <CardHeader>
                 <CardTitle>Test Bilgileri</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <p className="text-sm text-zinc-400">
+                  <p className="text-sm text-muted-foreground">
                     {test?.description || "Bu test hakkında bilgiler..."}
                   </p>
                   
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="p-3 rounded-lg bg-zinc-800 text-center">
-                      <p className="text-xs text-zinc-500 mb-1">Kategori</p>
+                    <div className="p-3 rounded-lg bg-muted text-center">
+                      <p className="text-xs text-muted-foreground mb-1">Kategori</p>
                       <p className="font-medium">{test?.categoryId ? "Film" : "Genel"}</p>
                     </div>
-                    <div className="p-3 rounded-lg bg-zinc-800 text-center">
-                      <p className="text-xs text-zinc-500 mb-1">Görseller</p>
+                    <div className="p-3 rounded-lg bg-muted text-center">
+                      <p className="text-xs text-muted-foreground mb-1">Görseller</p>
                       <p className="font-medium">{test?.imageIds?.length || 0}</p>
                     </div>
-                    <div className="p-3 rounded-lg bg-zinc-800 text-center">
-                      <p className="text-xs text-zinc-500 mb-1">Beğeni</p>
+                    <div className="p-3 rounded-lg bg-muted text-center">
+                      <p className="text-xs text-muted-foreground mb-1">Beğeni</p>
                       <p className="font-medium">{test?.likeCount || 0}</p>
                     </div>
-                    <div className="p-3 rounded-lg bg-zinc-800 text-center">
-                      <p className="text-xs text-zinc-500 mb-1">Oynanma</p>
+                    <div className="p-3 rounded-lg bg-muted text-center">
+                      <p className="text-xs text-muted-foreground mb-1">Oynanma</p>
                       <p className="font-medium">{test?.playCount || 0}</p>
                     </div>
                   </div>
@@ -476,7 +476,7 @@ export default function GameScreen() {
             </Card>
           </div>
           
-          <Card className="bg-zinc-900 border-zinc-800">
+          <Card className="border-muted bg-card">
             <CardHeader>
               <CardTitle>Yorumlar</CardTitle>
             </CardHeader>
@@ -484,15 +484,15 @@ export default function GameScreen() {
               {comments && Array.isArray(comments) && comments.length > 0 ? (
                 <div className="space-y-3 max-h-80 overflow-y-auto mb-6">
                   {(comments as TestComment[]).map((comment, index) => (
-                    <div key={index} className="bg-zinc-800 p-4 rounded-lg">
+                    <div key={index} className="bg-muted p-4 rounded-lg">
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-zinc-700 flex items-center justify-center">
+                          <div className="w-8 h-8 rounded-full bg-background flex items-center justify-center">
                             {comment.userId ? comment.userId.toString().charAt(0).toUpperCase() : "A"}
                           </div>
                           <h4 className="font-medium">{comment.userId ? "Kullanıcı" : "Anonim"}</h4>
                         </div>
-                        <span className="text-xs text-zinc-500 px-2 py-1 rounded">
+                        <span className="text-xs text-muted-foreground px-2 py-1 rounded">
                           {new Date(comment.createdAt || Date.now()).toLocaleDateString()}
                         </span>
                       </div>
@@ -501,13 +501,13 @@ export default function GameScreen() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-10 text-zinc-500 rounded-lg mb-6">
+                <div className="text-center py-10 text-muted-foreground rounded-lg mb-6">
                   <p>Henüz yorum yapılmamış</p>
                   <p className="text-sm mt-1">Bu test hakkında ilk yorumu sen yap!</p>
                 </div>
               )}
               
-              <div className="pt-4 border-t border-zinc-800">
+              <div className="pt-4 border-t border-border">
                 <form className="flex gap-2" onSubmit={(e) => {
                   e.preventDefault();
                   // Yorum gönderme işlemi
