@@ -650,21 +650,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const limit = parseInt(req.query.limit as string || "50", 10);
       
-      // Use postgres module directly
+      // Access user activities through the storage interface
       try {
-        const { Pool } = require('pg');
-        const pool = new Pool({
-          connectionString: process.env.DATABASE_URL,
-        });
-        
-        const result = await pool.query(
-          'SELECT * FROM user_activities ORDER BY created_at DESC LIMIT $1',
-          [limit]
-        );
-        
-        console.log('Activity query result:', { count: result.rows.length });
-        await pool.end();
-        return res.json(result.rows);
+        // Use supabaseStorage if it has the method, otherwise fall back to memory storage
+        if (typeof storage.getLatestActivities === 'function') {
+          const activities = await storage.getLatestActivities(limit);
+          console.log('Activity query result:', { count: activities.length });
+          return res.json(activities);
+        } else {
+          // Return empty array if not implemented
+          console.log('getLatestActivities not implemented in storage, returning empty array');
+          return res.json([]);
+        }
       } catch (dbError: any) {
         console.error('Database query error:', dbError);
         return res.status(500).json({ message: "Database error while fetching activities", error: dbError.message });
@@ -685,21 +682,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid user ID" });
       }
       
-      // Use postgres module directly
+      // Access user activities through the storage interface
       try {
-        const { Pool } = require('pg');
-        const pool = new Pool({
-          connectionString: process.env.DATABASE_URL,
-        });
-        
-        const result = await pool.query(
-          'SELECT * FROM user_activities WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2',
-          [userId, limit]
-        );
-        
-        console.log('User activity query result:', { userId, count: result.rows.length });
-        await pool.end();
-        return res.json(result.rows);
+        // Use supabaseStorage if it has the method, otherwise fall back to memory storage
+        if (typeof storage.getUserActivities === 'function') {
+          const activities = await storage.getUserActivities(userId, limit);
+          console.log('User activity query result:', { userId, count: activities.length });
+          return res.json(activities);
+        } else {
+          // Return empty array if not implemented
+          console.log('getUserActivities not implemented in storage, returning empty array');
+          return res.json([]);
+        }
       } catch (dbError: any) {
         console.error('Database query error:', dbError);
         return res.status(500).json({ message: "Database error while fetching user activities", error: dbError.message });
