@@ -27,6 +27,11 @@ export async function apiRequest(
     headers["Content-Type"] = "application/json";
   }
   
+  // Admin endpoint'leri için token ekleyelim
+  if (url.includes('/admin/')) {
+    headers["x-admin-token"] = "admin-secret-token";
+  }
+  
   // Özel başlıkları ekle
   Object.keys(customHeaders).forEach(key => {
     headers[key] = customHeaders[key];
@@ -49,8 +54,17 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
+    const url = queryKey[0] as string;
+    const headers: Record<string, string> = {};
+    
+    // Admin endpoint'leri için token ekleyelim
+    if (url.includes('/admin/')) {
+      headers["x-admin-token"] = "admin-secret-token";
+    }
+    
+    const res = await fetch(url, {
       credentials: "include",
+      headers
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
