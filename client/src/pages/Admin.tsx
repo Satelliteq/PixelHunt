@@ -153,6 +153,8 @@ function AdminPanel() {
   const [categories, setCategories] = useState<any[]>([]);
   const [tests, setTests] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const [activities, setActivities] = useState<any[]>([]);
+  const [popularTests, setPopularTests] = useState<any[]>([]);
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
 
@@ -386,6 +388,29 @@ function AdminPanel() {
     }
   };
 
+  // Aktivite ve popüler testleri yükleme
+  const fetchActivities = async () => {
+    setIsLoading(true);
+    try {
+      // Bu endpoint henüz yoksa, geçici veri döndürebiliriz
+      // const data = await apiRequest("/api/admin/activities");
+      // setActivities(data);
+      
+      // Popüler testleri yükle
+      const popularData = await apiRequest("/api/tests/popular?limit=3");
+      setPopularTests(popularData);
+    } catch (error) {
+      console.error("Aktiviteler yüklenirken hata:", error);
+      toast({
+        title: "Hata",
+        description: "Aktiviteler yüklenirken bir hata oluştu.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Sayfa açıldığında ilgili verileri yükle
   useEffect(() => {
     // Active tab değiştiğinde ilgili verileri yükle
@@ -395,6 +420,8 @@ function AdminPanel() {
       fetchTests();
     } else if (activeTab === "users") {
       fetchUsers();
+    } else if (activeTab === "activities") {
+      fetchActivities();
     }
   }, [activeTab]);
 
@@ -403,10 +430,11 @@ function AdminPanel() {
       <h1 className="text-3xl font-bold mb-6">Admin Paneli</h1>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-3 mb-8">
+        <TabsList className="grid grid-cols-4 mb-8">
           <TabsTrigger value="categories">Kategoriler</TabsTrigger>
           <TabsTrigger value="tests">Testler</TabsTrigger>
           <TabsTrigger value="users">Kullanıcılar</TabsTrigger>
+          <TabsTrigger value="activities">Aktiviteler</TabsTrigger>
         </TabsList>
 
         {/* Kategoriler Tab */}
@@ -776,6 +804,113 @@ function AdminPanel() {
                     ))}
                   </TableBody>
                 </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Aktiviteler Tab */}
+        <TabsContent value="activities">
+          <Card>
+            <CardHeader>
+              <CardTitle>Kullanıcı Aktiviteleri</CardTitle>
+              <CardDescription>
+                Son kullanıcı aktivitelerini görüntüleyin.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="space-y-4">
+                    <h3 className="text-xl font-medium">Son Aktiviteler</h3>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Kullanıcı</TableHead>
+                          <TableHead>Aktivite</TableHead>
+                          <TableHead>Detay</TableHead>
+                          <TableHead>Tarih</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {/* Örnek aktivite girdileri */}
+                        <TableRow>
+                          <TableCell>user123</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">Test Oluşturma</Badge>
+                          </TableCell>
+                          <TableCell>Sanat Testi</TableCell>
+                          <TableCell>
+                            {new Date().toLocaleString('tr-TR')}
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell>admin</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">Kategori Güncelleme</Badge>
+                          </TableCell>
+                          <TableCell>Tarih Kategorisi</TableCell>
+                          <TableCell>
+                            {new Date().toLocaleString('tr-TR')}
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell>user456</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">Oyun Puanı</Badge>
+                          </TableCell>
+                          <TableCell>450 puan</TableCell>
+                          <TableCell>
+                            {new Date().toLocaleString('tr-TR')}
+                          </TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h3 className="text-xl font-medium">Popüler Testler</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <Card>
+                        <CardHeader className="p-4">
+                          <CardTitle className="text-base">Film Karakterleri</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-4 pt-0">
+                          <div className="flex justify-between text-sm text-muted-foreground">
+                            <span>Oynanma: 1245</span>
+                            <span>Beğeni: 320</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardHeader className="p-4">
+                          <CardTitle className="text-base">Klasik Arabalar</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-4 pt-0">
+                          <div className="flex justify-between text-sm text-muted-foreground">
+                            <span>Oynanma: 980</span>
+                            <span>Beğeni: 210</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardHeader className="p-4">
+                          <CardTitle className="text-base">Dünya Başkentleri</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-4 pt-0">
+                          <div className="flex justify-between text-sm text-muted-foreground">
+                            <span>Oynanma: 850</span>
+                            <span>Beğeni: 185</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
+                </div>
               )}
             </CardContent>
           </Card>

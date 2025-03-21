@@ -34,9 +34,10 @@ export class SupabaseStorage implements IStorage {
     const user = await this.getUser(id);
     if (!user) return undefined;
 
+    const currentScore = user.score || 0;
     const updatedUser = await db
       .update(schema.users)
-      .set({ score: user.score + scoreToAdd })
+      .set({ score: currentScore + scoreToAdd })
       .where(eq(schema.users.id, id))
       .returning();
 
@@ -166,19 +167,27 @@ export class SupabaseStorage implements IStorage {
   }
 
   async incrementPlayCount(id: number): Promise<void> {
+    const image = await this.getImage(id);
+    if (!image) return;
+    
+    const currentPlayCount = image.playCount || 0;
     await db
       .update(schema.images)
       .set({ 
-        playCount: db.raw('play_count + 1')
+        playCount: currentPlayCount + 1
       })
       .where(eq(schema.images.id, id));
   }
 
   async incrementLikeCount(id: number): Promise<void> {
+    const image = await this.getImage(id);
+    if (!image) return;
+    
+    const currentLikeCount = image.likeCount || 0;
     await db
       .update(schema.images)
       .set({ 
-        likeCount: db.raw('like_count + 1')
+        likeCount: currentLikeCount + 1
       })
       .where(eq(schema.images.id, id));
   }
@@ -295,19 +304,27 @@ export class SupabaseStorage implements IStorage {
   }
 
   async incrementTestPlayCount(id: number): Promise<void> {
+    const test = await this.getTest(id);
+    if (!test) return;
+    
+    const currentPlayCount = test.playCount || 0;
     await db
       .update(schema.tests)
       .set({ 
-        playCount: db.raw('play_count + 1') 
+        playCount: currentPlayCount + 1 
       })
       .where(eq(schema.tests.id, id));
   }
 
   async incrementTestLikeCount(id: number): Promise<void> {
+    const test = await this.getTest(id);
+    if (!test) return;
+    
+    const currentLikeCount = test.likeCount || 0;
     await db
       .update(schema.tests)
       .set({ 
-        likeCount: db.raw('like_count + 1') 
+        likeCount: currentLikeCount + 1 
       })
       .where(eq(schema.tests.id, id));
   }
