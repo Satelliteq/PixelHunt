@@ -439,7 +439,7 @@ function AdminPanel() {
     } else if (activeTab === "users") {
       fetchUsers();
     } else if (activeTab === "activities") {
-      fetchActivities();
+      fetchActivitiesAndPopularTests();
     }
   }, [activeTab]);
 
