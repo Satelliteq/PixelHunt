@@ -875,39 +875,25 @@ function AdminPanel() {
                   <div className="space-y-4">
                     <h3 className="text-xl font-medium">Popüler Testler</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <Card>
-                        <CardHeader className="p-4">
-                          <CardTitle className="text-base">Film Karakterleri</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0">
-                          <div className="flex justify-between text-sm text-muted-foreground">
-                            <span>Oynanma: 1245</span>
-                            <span>Beğeni: 320</span>
-                          </div>
-                        </CardContent>
-                      </Card>
-                      <Card>
-                        <CardHeader className="p-4">
-                          <CardTitle className="text-base">Klasik Arabalar</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0">
-                          <div className="flex justify-between text-sm text-muted-foreground">
-                            <span>Oynanma: 980</span>
-                            <span>Beğeni: 210</span>
-                          </div>
-                        </CardContent>
-                      </Card>
-                      <Card>
-                        <CardHeader className="p-4">
-                          <CardTitle className="text-base">Dünya Başkentleri</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0">
-                          <div className="flex justify-between text-sm text-muted-foreground">
-                            <span>Oynanma: 850</span>
-                            <span>Beğeni: 185</span>
-                          </div>
-                        </CardContent>
-                      </Card>
+                      {popularTests.length > 0 ? (
+                        popularTests.map((test) => (
+                          <Card key={test.id}>
+                            <CardHeader className="p-4">
+                              <CardTitle className="text-base">{test.title}</CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-4 pt-0">
+                              <div className="flex justify-between text-sm text-muted-foreground">
+                                <span>Oynanma: {test.playCount || 0}</span>
+                                <span>Beğeni: {test.likeCount || 0}</span>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))
+                      ) : (
+                        <div className="col-span-3 text-center text-muted-foreground py-4">
+                          Henüz popüler test bulunmuyor.
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

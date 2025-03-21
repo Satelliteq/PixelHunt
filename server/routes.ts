@@ -640,6 +640,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Server error" });
     }
   });
+  
+  // Admin - Get all activities
+  app.get("/api/admin/activities", isAdmin, async (req: Request, res: Response) => {
+    try {
+      const limit = parseInt(req.query.limit as string || "50", 10);
+      
+      // Check if the storage implementation has the required method
+      if (typeof (storage as any).getLatestActivities === 'function') {
+        const activities = await (storage as any).getLatestActivities(limit);
+        res.json(activities);
+      } else {
+        // Fallback for storage implementations without activity tracking
+        res.json([]);
+      }
+    } catch (error) {
+      console.error("Error fetching activities:", error);
+      res.status(500).json({ message: "Server error while fetching activities" });
+    }
+  });
+  
+  // Admin - Get activities for a specific user
+  app.get("/api/admin/users/:id/activities", isAdmin, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.id, 10);
+      const limit = parseInt(req.query.limit as string || "50", 10);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      // Check if the storage implementation has the required method
+      if (typeof (storage as any).getUserActivities === 'function') {
+        const activities = await (storage as any).getUserActivities(userId, limit);
+        res.json(activities);
+      } else {
+        // Fallback for storage implementations without activity tracking
+        res.json([]);
+      }
+    } catch (error) {
+      console.error("Error fetching user activities:", error);
+      res.status(500).json({ message: "Server error while fetching user activities" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
