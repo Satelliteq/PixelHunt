@@ -2,6 +2,8 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
+import pkg from 'pg';
+const { Pool } = pkg;
 import { 
   insertUserSchema, 
   insertCategorySchema, 
@@ -648,13 +650,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const limit = parseInt(req.query.limit as string || "50", 10);
       
-      // Use direct SQL query with db client
+      // Use postgres module directly
       try {
-        const sql = `SELECT * FROM user_activities ORDER BY created_at DESC LIMIT $1`;
-        const result = await db.execute(sql, [limit]);
+        const { Pool } = require('pg');
+        const pool = new Pool({
+          connectionString: process.env.DATABASE_URL,
+        });
         
-        console.log('Activity query result:', { count: result.length });
-        return res.json(result);
+        const result = await pool.query(
+          'SELECT * FROM user_activities ORDER BY created_at DESC LIMIT $1',
+          [limit]
+        );
+        
+        console.log('Activity query result:', { count: result.rows.length });
+        await pool.end();
+        return res.json(result.rows);
       } catch (dbError: any) {
         console.error('Database query error:', dbError);
         return res.status(500).json({ message: "Database error while fetching activities", error: dbError.message });
@@ -675,13 +685,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid user ID" });
       }
       
-      // Use direct SQL query with db client
+      // Use postgres module directly
       try {
-        const sql = `SELECT * FROM user_activities WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2`;
-        const result = await db.execute(sql, [userId, limit]);
+        const { Pool } = require('pg');
+        const pool = new Pool({
+          connectionString: process.env.DATABASE_URL,
+        });
         
-        console.log('User activity query result:', { userId, count: result.length });
-        return res.json(result);
+        const result = await pool.query(
+          'SELECT * FROM user_activities WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2',
+          [userId, limit]
+        );
+        
+        console.log('User activity query result:', { userId, count: result.rows.length });
+        await pool.end();
+        return res.json(result.rows);
       } catch (dbError: any) {
         console.error('Database query error:', dbError);
         return res.status(500).json({ message: "Database error while fetching user activities", error: dbError.message });
