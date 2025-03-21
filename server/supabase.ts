@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm/expressions';
 import postgres from 'postgres';
 import * as schema from '../shared/schema';
 
@@ -117,7 +117,7 @@ export const recordUserActivity = async (
     if (!resolvedUserName) {
       const userResult = await db.select({ username: schema.users.username })
         .from(schema.users)
-        .where(schema.users.id.eq(userId))
+        .where(eq(schema.users.id, userId))
         .limit(1);
       
       if (userResult.length > 0) {

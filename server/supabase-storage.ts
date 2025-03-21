@@ -410,10 +410,14 @@ export class SupabaseStorage implements IStorage {
       .values(comment)
       .returning();
     
+    // Get test for better details
+    const test = await this.getTest(comment.testId);
+    const testTitle = test ? test.title : `Test #${comment.testId}`;
+    
     await recordUserActivity(
       comment.userId, 
       'comment_test', 
-      `Yorum eklendi: "${comment.comment.substring(0, 30)}${comment.comment.length > 30 ? '...' : ''}"`,
+      `Yorum eklendi: "${comment.comment.substring(0, 30)}${comment.comment.length > 30 ? '...' : ''}" (${testTitle})`,
       comment.testId, 
       'test_comment'
     );
