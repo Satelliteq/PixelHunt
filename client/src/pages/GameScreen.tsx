@@ -2,12 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
   AlertTriangle, Heart, Share2, Trophy, Award, Clock, ThumbsUp,
-  MessageSquare, Star, ListOrdered
+  MessageSquare, Star, ListOrdered, ArrowLeft, LayoutGrid
 } from 'lucide-react';
 import type { Image, Test, TestComment, GameScore } from '@shared/schema';
 import { toast } from '@/hooks/use-toast';
@@ -15,6 +15,8 @@ import { formatTime, checkAnswer, calculateScore, playSoundEffect } from '@/lib/
 import ScoreDisplay from '@/components/game/ScoreDisplay';
 import ImageReveal from '@/components/game/ImageReveal';
 import ContentCard from '@/components/game/ContentCard';
+import { Separator } from '@/components/ui/separator';
+import { useLanguage } from '@/lib/LanguageContext';
 
 export default function GameScreen() {
   const [, setLocation] = useLocation();
@@ -35,31 +37,31 @@ export default function GameScreen() {
   const correctAnswersRef = useRef<string[]>([]);
   
   // Fetch test data
-  const { data: test, isLoading: isTestLoading } = useQuery({
+  const { data: test, isLoading: isTestLoading } = useQuery<Test>({
     queryKey: [`/api/tests/${testId}`],
     enabled: !!testId,
   });
 
   // Fetch current image data
-  const { data: currentImage, isLoading: isImageLoading } = useQuery({
+  const { data: currentImage, isLoading: isImageLoading } = useQuery<Image>({
     queryKey: [`/api/images/${test?.imageIds?.[currentImageIndex]}`],
     enabled: !!test && Array.isArray(test.imageIds) && test.imageIds.length > 0 && currentImageIndex < test.imageIds.length,
   });
   
   // Fetch similar tests (for game completion screen)
-  const { data: similarTests } = useQuery({
+  const { data: similarTests } = useQuery<Test[]>({
     queryKey: [`/api/tests/category/${test?.categoryId}`],
     enabled: !!test && gameStatus === 'finished',
   });
   
   // Fetch test comments
-  const { data: comments } = useQuery({
+  const { data: comments } = useQuery<TestComment[]>({
     queryKey: [`/api/tests/${testId}/comments`],
     enabled: !!testId && gameStatus === 'finished',
   });
   
   // Fetch top scores
-  const { data: topScores } = useQuery({
+  const { data: topScores } = useQuery<GameScore[]>({
     queryKey: [`/api/game/scores/top`],
     enabled: gameStatus === 'finished',
   });
@@ -123,8 +125,7 @@ export default function GameScreen() {
         playSoundEffect('complete', 0.7);
         
         // Save score to backend
-        apiRequest({
-          url: '/api/game/scores',
+        apiRequest('/api/game/scores', {
           method: 'POST',
           body: JSON.stringify({
             testId: Number(testId),
@@ -189,50 +190,63 @@ export default function GameScreen() {
 
   // Game content
   return (
-    <div className="max-w-4xl mx-auto pb-10">
+    <div className="container max-w-6xl mx-auto pb-12 px-4 space-y-8">
       {gameStatus === 'playing' && currentImage ? (
         <>
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold mb-4">{test?.title}</h1>
-            <div className="flex items-center justify-between">
-              <div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => window.history.back()} 
-                >
-                  ← Geri Dön
-                </Button>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 py-6">
+            <div>
+              <h1 className="text-3xl font-bold">{test?.title}</h1>
+              <p className="text-muted-foreground mt-1">{test?.description}</p>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => window.history.back()} 
+                className="h-9"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Geri Dön
+              </Button>
+              
+              <div className="flex items-center gap-1 px-3 py-2 rounded-full bg-secondary">
+                <Clock className="w-4 h-4 mr-1" />
+                <span className="text-sm font-medium">{formatTime(timeElapsed)}</span>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-zinc-800">
-                  <Clock className="w-3 h-3 mr-1" />
-                  <span className="text-sm font-medium">{formatTime(timeElapsed)}</span>
-                </div>
-                <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-zinc-800">
-                  <span className="text-sm font-medium">Aşama {currentImageIndex + 1}/{test?.imageIds?.length || 0}</span>
-                </div>
+              
+              <div className="flex items-center gap-1 px-3 py-2 rounded-full bg-secondary">
+                <LayoutGrid className="w-4 h-4 mr-1" />
+                <span className="text-sm font-medium">{currentImageIndex + 1}/{test?.imageIds?.length || 0}</span>
               </div>
             </div>
           </div>
           
+          <Separator className="my-2" />
+          
           <div className="grid grid-cols-12 gap-6">
-            <div className="col-span-12 md:col-span-8">
-              <Card className="border-muted bg-card">
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <CardTitle>Resmi Tahmin Et</CardTitle>
-                    <div className="text-lg font-bold">{score} Puan</div>
+            <div className="col-span-12 lg:col-span-8">
+              <Card className="overflow-hidden">
+                <CardHeader className="pb-0">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle>Resmi Tahmin Et</CardTitle>
+                      <CardDescription>
+                        Ne kadar az açılım ile tahmin ederseniz o kadar çok puan kazanırsınız
+                      </CardDescription>
+                    </div>
+                    <div className="text-2xl font-bold">{score} <span className="text-sm font-normal text-muted-foreground">puan</span></div>
                   </div>
                 </CardHeader>
-                <CardContent>
+                
+                <CardContent className="pt-4">
                   {/* Image Reveal */}
-                  <div className="mb-4">
+                  <div className="rounded-lg overflow-hidden border border-border">
                     <ImageReveal 
                       imageUrl={currentImage?.imageUrl || ''}
                       revealPercent={revealPercent}
                       gridSize={4}
-                      className="w-full aspect-video rounded-lg overflow-hidden"
+                      className="w-full aspect-video"
                     />
                   </div>
                   
@@ -243,9 +257,9 @@ export default function GameScreen() {
                       handleGuess(userAnswer);
                       setUserAnswer('');
                     }}
-                    className="mt-4"
+                    className="mt-6"
                   >
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2 mb-3">
                       <Input
                         value={userAnswer}
                         onChange={(e) => setUserAnswer(e.target.value)}
@@ -254,24 +268,24 @@ export default function GameScreen() {
                       />
                       <Button type="submit">Tahmin Et</Button>
                     </div>
-                    <div className="flex justify-between">
-                      <Button type="button" variant="outline" size="sm" onClick={handleSkip}>
-                        Bu resmi atla
+                    
+                    <div className="flex justify-end">
+                      <Button type="button" variant="ghost" size="sm" onClick={handleSkip} className="text-muted-foreground">
+                        Bu resmi atla →
                       </Button>
-                      <div className="text-sm text-muted-foreground">Ne kadar az açılım ile tahmin ederseniz o kadar çok puan kazanırsınız.</div>
                     </div>
                   </form>
                   
-                  {/* Tahmin Geçmişi - Aynı Card içinde ama daha kompakt */}
-                  <div className="mt-4 border-t border-border pt-4">
-                    <h3 className="text-sm font-semibold mb-2">TAHMİNLER</h3>
-                    <div className="max-h-32 overflow-y-auto">
+                  {/* Tahmin Geçmişi - Daha kompakt ve modern */}
+                  <div className="mt-4 pt-4 border-t border-border">
+                    <h3 className="text-sm font-semibold mb-2 text-muted-foreground">SON TAHMİNLER</h3>
+                    <div className="max-h-32 overflow-y-auto scrollbar-thin">
                       {guessHistory.length > 0 ? (
-                        <div className="space-y-1">
+                        <div className="space-y-2">
                           {guessHistory.map((item, index) => (
                             <div 
                               key={index} 
-                              className={`p-2 text-sm rounded-md flex items-center ${
+                              className={`p-2 px-3 text-sm rounded-md flex items-center ${
                                 item.isCorrect 
                                   ? 'bg-green-500/10 border-l-2 border-green-500 dark:bg-green-700/20' 
                                   : item.isClose 
@@ -284,7 +298,7 @@ export default function GameScreen() {
                           ))}
                         </div>
                       ) : (
-                        <div className="text-center text-muted-foreground py-2">
+                        <div className="text-center text-muted-foreground py-3 bg-muted/40 rounded-md">
                           <p className="text-sm">Tahminleriniz burada görünecek</p>
                         </div>
                       )}
@@ -294,7 +308,7 @@ export default function GameScreen() {
               </Card>
             </div>
             
-            <div className="col-span-12 md:col-span-4">
+            <div className="col-span-12 lg:col-span-4 space-y-4">
               <ScoreDisplay
                 score={score}
                 mode="test"
@@ -306,25 +320,29 @@ export default function GameScreen() {
                 }}
               />
               
-              <Card className="border-muted bg-card mt-4">
+              <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle>Test Bilgileri</CardTitle>
+                  <CardTitle className="flex items-center">
+                    <Trophy className="w-4 h-4 mr-2 text-yellow-500" />
+                    Test Bilgileri
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    {test?.description || "Bu test hakkında bilgiler..."}
-                  </p>
-                  <div className="text-sm">
-                    <div className="flex justify-between py-1 border-b border-border">
-                      <span>Toplam Görsel:</span>
+                  <div className="text-sm space-y-2">
+                    <div className="flex justify-between py-2 border-b border-border">
+                      <span className="text-muted-foreground">Kategori:</span>
+                      <span className="font-medium">{test?.category?.name || "Genel"}</span>
+                    </div>
+                    <div className="flex justify-between py-2 border-b border-border">
+                      <span className="text-muted-foreground">Toplam Görsel:</span>
                       <span className="font-medium">{test?.imageIds?.length || 0}</span>
                     </div>
-                    <div className="flex justify-between py-1 border-b border-border">
-                      <span>Mevcut Aşama:</span>
+                    <div className="flex justify-between py-2 border-b border-border">
+                      <span className="text-muted-foreground">Mevcut Aşama:</span>
                       <span className="font-medium">{currentImageIndex + 1}</span>
                     </div>
-                    <div className="flex justify-between py-1">
-                      <span>Açılım Oranı:</span>
+                    <div className="flex justify-between py-2">
+                      <span className="text-muted-foreground">Açılım Oranı:</span>
                       <span className="font-medium">{revealPercent}%</span>
                     </div>
                   </div>
