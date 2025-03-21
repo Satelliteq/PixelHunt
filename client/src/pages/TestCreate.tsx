@@ -415,8 +415,9 @@ export default function TestCreate() {
                     <div className="flex-1">
                       <FormControl>
                         <div className="flex items-center gap-2">
-                          <label className="flex items-center justify-center cursor-pointer w-full py-2 px-3 border border-dashed rounded text-sm text-muted-foreground hover:bg-muted/50 transition-colors">
+                          <label htmlFor="thumbnail-upload" className="flex items-center justify-center cursor-pointer w-full py-2 px-3 border border-dashed rounded text-sm text-muted-foreground hover:bg-muted/50 transition-colors">
                             <input
+                              id="thumbnail-upload"
                               type="file"
                               accept="image/*"
                               className="hidden"
@@ -526,8 +527,9 @@ export default function TestCreate() {
                           />
                         </div>
                         <div className="flex items-center gap-2">
-                          <label className="flex items-center justify-center cursor-pointer w-full py-2 px-3 border border-dashed rounded text-sm text-muted-foreground hover:bg-muted/50 transition-colors">
+                          <label htmlFor={`image-upload-${index}`} className="flex items-center justify-center cursor-pointer w-full py-2 px-3 border border-dashed rounded text-sm text-muted-foreground hover:bg-muted/50 transition-colors">
                             <input
+                              id={`image-upload-${index}`}
                               type="file"
                               accept="image/*"
                               className="hidden"
