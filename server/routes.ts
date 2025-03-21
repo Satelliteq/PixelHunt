@@ -9,8 +9,10 @@ import {
   insertTestSchema,
   insertTestCommentSchema,
   insertGameScoreSchema,
-  gameModesEnum
+  gameModesEnum,
+  userActivities
 } from "@shared/schema";
+import { db } from './supabase';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Route to safely expose environment variables to the client
@@ -646,25 +648,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const limit = parseInt(req.query.limit as string || "50", 10);
       
-      // Try direct SQL query 
-      const { Client } = require('pg');
-      const client = new Client({
-        connectionString: process.env.DATABASE_URL,
-      });
-      
-      await client.connect();
-      
+      // Use direct SQL query with db client
       try {
-        const query = 'SELECT * FROM user_activities ORDER BY created_at DESC LIMIT $1';
-        const result = await client.query(query, [limit]);
-        console.log('Activity query result:', { rows: result.rows.length, sample: result.rows[0] });
-        return res.json(result.rows);
-      } catch (dbError) {
+        const sql = `SELECT * FROM user_activities ORDER BY created_at DESC LIMIT $1`;
+        const result = await db.execute(sql, [limit]);
+        
+        console.log('Activity query result:', { count: result.length });
+        return res.json(result);
+      } catch (dbError: any) {
         console.error('Database query error:', dbError);
-        // If direct query fails, return empty array rather than error
-        return res.json([]);
-      } finally {
-        await client.end();
+        return res.status(500).json({ message: "Database error while fetching activities", error: dbError.message });
       }
     } catch (error) {
       console.error("Error fetching activities:", error);
@@ -682,25 +675,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid user ID" });
       }
       
-      // Try direct SQL query
-      const { Client } = require('pg');
-      const client = new Client({
-        connectionString: process.env.DATABASE_URL,
-      });
-      
-      await client.connect();
-      
+      // Use direct SQL query with db client
       try {
-        const query = 'SELECT * FROM user_activities WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2';
-        const result = await client.query(query, [userId, limit]);
-        console.log('User activity query result:', { userId, rows: result.rows.length });
-        return res.json(result.rows);
-      } catch (dbError) {
+        const sql = `SELECT * FROM user_activities WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2`;
+        const result = await db.execute(sql, [userId, limit]);
+        
+        console.log('User activity query result:', { userId, count: result.length });
+        return res.json(result);
+      } catch (dbError: any) {
         console.error('Database query error:', dbError);
-        // If direct query fails, return empty array rather than error
-        return res.json([]);
-      } finally {
-        await client.end();
+        return res.status(500).json({ message: "Database error while fetching user activities", error: dbError.message });
       }
     } catch (error) {
       console.error("Error fetching user activities:", error);
