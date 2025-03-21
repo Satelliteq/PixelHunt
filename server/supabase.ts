@@ -1,7 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
-import { and, eq } from 'drizzle-orm/expressions';
 import postgres from 'postgres';
 import * as schema from '../shared/schema';
 
@@ -34,27 +33,21 @@ const queryClient = postgres(connectionString, {
 // Drizzle ORM instance
 export const db = drizzle(queryClient, { schema });
 
-// Migrations (development için)
+// Migrations
 export async function runMigrations() {
-  if (process.env.NODE_ENV === 'development') {
-    try {
-      // Migration dosyaları mevcut değilse hata vermeden devam et
-      console.log('Checking for migrations...');
-      
-      const migrationsFolderExists = false;
-      if (migrationsFolderExists) {
-        await migrate(drizzle(migrationClient), { migrationsFolder: './drizzle' });
-        console.log('Migrations completed');
-      } else {
-        console.log('No migrations found, skipping...');
-      }
-    } catch (err) {
-      console.error('Error during migrations:', err);
-    } finally {
-      await migrationClient.end();
-    }
+  try {
+    console.log('Running migrations...');
+    await migrate(drizzle(migrationClient), { migrationsFolder: './migrations' });
+    console.log('Migrations completed successfully');
+  } catch (err) {
+    console.error('Error during migrations:', err);
+  } finally {
+    await migrationClient.end();
   }
 }
+
+// Migration'ları çalıştır
+runMigrations();
 
 // Supabase Storage
 export const storage = {
@@ -134,7 +127,7 @@ export const recordUserActivity = async (
         resolvedUserName = userResult[0].username;
       }
     }
-
+    
     await db.insert(schema.userActivities).values({
       userId,
       userName: resolvedUserName,
