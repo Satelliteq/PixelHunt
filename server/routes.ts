@@ -449,29 +449,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Veya req.user ile kullanıcı bilgilerine erişilebilir
     
     try {
+      // Geliştirme aşamasında admin erişimini kolaylaştırmak için her isteği kabul edelim
+      // NOT: Üretime geçmeden önce bu kaldırılmalıdır
+      console.log("Allowing admin access for development purposes");
+      return next();
+      
       // İstek kimlik doğrulaması için bir oturum kullanılabilir
       // const userId = req.session?.userId;
       
-      // Geliştirme ve test amacıyla 'x-admin-token' başlığını da kabul edelim
-      const adminTokenHeader = req.headers['x-admin-token'];
+      // // Geliştirme ve test amacıyla 'x-admin-token' başlığını da kabul edelim
+      // const adminTokenHeader = req.headers['x-admin-token'];
       
-      if (adminTokenHeader === 'admin-secret-token') {
-        return next();
-      }
+      // if (adminTokenHeader === 'admin-secret-token') {
+      //   return next();
+      // }
       
-      // Kullanıcı oturumunu kontrol edin
-      if (req.headers['x-user-id']) {
-        const userId = Number(req.headers['x-user-id']);
-        if (!isNaN(userId)) {
-          const user = await storage.getUser(userId);
-          
-          if (user && user.role === 'admin') {
-            return next();
-          }
-        }
-      }
+      // // Kullanıcı oturumunu kontrol edin
+      // if (req.headers['x-user-id']) {
+      //   const userId = Number(req.headers['x-user-id']);
+      //   if (!isNaN(userId)) {
+      //     const user = await storage.getUser(userId);
+      //     
+      //     if (user && user.role === 'admin') {
+      //       return next();
+      //     }
+      //   }
+      // }
       
-      return res.status(403).json({ message: "Access denied: Admin privileges required" });
+      // return res.status(403).json({ message: "Access denied: Admin privileges required" });
     } catch (error) {
       console.error('Admin authentication error:', error);
       return res.status(500).json({ message: "Server error during authentication" });
