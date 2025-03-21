@@ -18,8 +18,18 @@ export const supabase = createClient(
 
 // Drizzle ORM için PostgreSQL client'ı
 const connectionString = process.env.DATABASE_URL || '';
-const migrationClient = postgres(connectionString, { max: 1 });
-const queryClient = postgres(connectionString);
+if (!connectionString) {
+  throw new Error('DATABASE_URL is not defined');
+}
+
+const migrationClient = postgres(connectionString, { 
+  max: 1,
+  ssl: { rejectUnauthorized: false }
+});
+
+const queryClient = postgres(connectionString, {
+  ssl: { rejectUnauthorized: false }
+});
 
 // Drizzle ORM instance
 export const db = drizzle(queryClient, { schema });
