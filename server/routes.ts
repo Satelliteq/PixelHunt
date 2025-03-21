@@ -1,6 +1,6 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { supabaseStorage } from "./supabase-storage";
 import { z } from "zod";
 import pkg from 'pg';
 const { Pool } = pkg;
@@ -33,13 +33,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/users/register", async (req: Request, res: Response) => {
     try {
       const userInput = insertUserSchema.parse(req.body);
-      const existingUser = await storage.getUserByUsername(userInput.username);
+      const existingUser = await supabaseStorage.getUserByUsername(userInput.username);
       
       if (existingUser) {
         return res.status(409).json({ message: "Username already exists" });
       }
       
-      const newUser = await storage.createUser(userInput);
+      const newUser = await supabaseStorage.createUser(userInput);
       const { password, ...userWithoutPassword } = newUser;
       
       res.status(201).json(userWithoutPassword);
@@ -59,7 +59,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Username and password are required" });
       }
       
-      const user = await storage.getUserByUsername(username);
+      const user = await supabaseStorage.getUserByUsername(username);
       
       if (!user || user.password !== password) {
         return res.status(401).json({ message: "Invalid credentials" });
@@ -76,7 +76,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Category routes
   app.get("/api/categories", async (_req: Request, res: Response) => {
     try {
-      const categories = await storage.getAllCategories();
+      const categories = await supabaseStorage.getAllCategories();
       res.json(categories);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -91,7 +91,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid category ID" });
       }
       
-      const category = await storage.getCategory(id);
+      const category = await supabaseStorage.getCategory(id);
       
       if (!category) {
         return res.status(404).json({ message: "Category not found" });
@@ -106,7 +106,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Image routes
   app.get("/api/images", async (_req: Request, res: Response) => {
     try {
-      const images = await storage.getAllImages();
+      const images = await supabaseStorage.getAllImages();
       res.json(images);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -121,7 +121,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid category ID" });
       }
       
-      const images = await storage.getImagesByCategory(categoryId);
+      const images = await supabaseStorage.getImagesByCategory(categoryId);
       res.json(images);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -136,7 +136,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid image ID" });
       }
       
-      const image = await storage.getImage(id);
+      const image = await supabaseStorage.getImage(id);
       
       if (!image) {
         return res.status(404).json({ message: "Image not found" });
@@ -151,7 +151,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/images/popular", async (_req: Request, res: Response) => {
     try {
       const limit = 5;
-      const topPlayedImages = await storage.getTopPlayedImages(limit);
+      const topPlayedImages = await supabaseStorage.getTopPlayedImages(limit);
       res.json(topPlayedImages);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -161,7 +161,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/images/favorites", async (_req: Request, res: Response) => {
     try {
       const limit = 5;
-      const topLikedImages = await storage.getTopLikedImages(limit);
+      const topLikedImages = await supabaseStorage.getTopLikedImages(limit);
       res.json(topLikedImages);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -176,14 +176,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid image ID" });
       }
       
-      const image = await storage.getImage(id);
+      const image = await supabaseStorage.getImage(id);
       
       if (!image) {
         return res.status(404).json({ message: "Image not found" });
       }
       
-      await storage.incrementLikeCount(id);
-      const updatedImage = await storage.getImage(id);
+      await supabaseStorage.incrementLikeCount(id);
+      const updatedImage = await supabaseStorage.getImage(id);
       
       res.json(updatedImage);
     } catch (error) {
@@ -206,7 +206,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid image ID" });
       }
       
-      const image = await storage.getImage(id);
+      const image = await supabaseStorage.getImage(id);
       
       if (!image) {
         return res.status(404).json({ message: "Image not found" });
@@ -227,7 +227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const gameScoreInput = insertGameScoreSchema.parse(req.body);
       
-      const newScore = await storage.saveGameScore(gameScoreInput);
+      const newScore = await supabaseStorage.saveGameScore(gameScoreInput);
       res.status(201).json(newScore);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -240,7 +240,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/game/scores/top", async (req: Request, res: Response) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
-      const topScores = await storage.getTopScores(limit);
+      const topScores = await supabaseStorage.getTopScores(limit);
       res.json(topScores);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -255,7 +255,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid user ID" });
       }
       
-      const userScores = await storage.getUserScores(userId);
+      const userScores = await supabaseStorage.getUserScores(userId);
       res.json(userScores);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -267,10 +267,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const categoryId = req.query.categoryId ? parseInt(req.query.categoryId as string) : undefined;
       
-      let images = await storage.getAllImages();
+      let images = await supabaseStorage.getAllImages();
       
       if (categoryId && !isNaN(categoryId)) {
-        images = await storage.getImagesByCategory(categoryId);
+        images = await supabaseStorage.getImagesByCategory(categoryId);
       }
       
       if (images.length === 0) {
@@ -289,7 +289,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Test routes
   app.get("/api/tests", async (_req: Request, res: Response) => {
     try {
-      const tests = await storage.getAllTests();
+      const tests = await supabaseStorage.getAllTests();
       res.json(tests);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -299,7 +299,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/tests/popular", async (req: Request, res: Response) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
-      const popularTests = await storage.getPopularTests(limit);
+      const popularTests = await supabaseStorage.getPopularTests(limit);
       res.json(popularTests);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -309,7 +309,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/tests/newest", async (req: Request, res: Response) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
-      const newestTests = await storage.getNewestTests(limit);
+      const newestTests = await supabaseStorage.getNewestTests(limit);
       res.json(newestTests);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -319,7 +319,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/tests/featured", async (req: Request, res: Response) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
-      const featuredTests = await storage.getFeaturedTests(limit);
+      const featuredTests = await supabaseStorage.getFeaturedTests(limit);
       res.json(featuredTests);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -334,7 +334,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid category ID" });
       }
       
-      const tests = await storage.getTestsByCategory(categoryId);
+      const tests = await supabaseStorage.getTestsByCategory(categoryId);
       res.json(tests);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -349,7 +349,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid test ID" });
       }
       
-      const test = await storage.getTest(id);
+      const test = await supabaseStorage.getTest(id);
       
       if (!test) {
         return res.status(404).json({ message: "Test not found" });
@@ -364,7 +364,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/tests", async (req: Request, res: Response) => {
     try {
       const testInput = insertTestSchema.parse(req.body);
-      const newTest = await storage.createTest(testInput);
+      const newTest = await supabaseStorage.createTest(testInput);
       res.status(201).json(newTest);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -382,14 +382,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid test ID" });
       }
       
-      const test = await storage.getTest(id);
+      const test = await supabaseStorage.getTest(id);
       
       if (!test) {
         return res.status(404).json({ message: "Test not found" });
       }
       
-      await storage.incrementTestLikeCount(id);
-      const updatedTest = await storage.getTest(id);
+      await supabaseStorage.incrementTestLikeCount(id);
+      const updatedTest = await supabaseStorage.getTest(id);
       
       res.json(updatedTest);
     } catch (error) {
@@ -406,7 +406,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid test ID" });
       }
       
-      const comments = await storage.getTestComments(testId);
+      const comments = await supabaseStorage.getTestComments(testId);
       res.json(comments);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -421,7 +421,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid test ID" });
       }
       
-      const test = await storage.getTest(testId);
+      const test = await supabaseStorage.getTest(testId);
       
       if (!test) {
         return res.status(404).json({ message: "Test not found" });
@@ -432,7 +432,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         testId
       });
       
-      const comment = await storage.createTestComment(commentInput);
+      const comment = await supabaseStorage.createTestComment(commentInput);
       res.status(201).json(comment);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -468,7 +468,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // if (req.headers['x-user-id']) {
       //   const userId = Number(req.headers['x-user-id']);
       //   if (!isNaN(userId)) {
-      //     const user = await storage.getUser(userId);
+      //     const user = await supabaseStorage.getUser(userId);
       //     
       //     if (user && user.role === 'admin') {
       //       return next();
@@ -486,7 +486,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all users (admin only)
   app.get("/api/admin/users", isAdmin, async (_req: Request, res: Response) => {
     try {
-      const users = await storage.getAllUsers();
+      const users = await supabaseStorage.getAllUsers();
       // Remove passwords from the response
       const safeUsers = users.map(user => {
         const { password, ...userWithoutPassword } = user;
@@ -513,13 +513,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Valid role (admin or user) is required" });
       }
       
-      const user = await storage.getUser(userId);
+      const user = await supabaseStorage.getUser(userId);
       
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
       
-      const updatedUser = await storage.updateUserRole(userId, role);
+      const updatedUser = await supabaseStorage.updateUserRole(userId, role);
       
       if (!updatedUser) {
         return res.status(404).json({ message: "User not found" });
@@ -547,13 +547,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Banned status (true/false) is required" });
       }
       
-      const user = await storage.getUser(userId);
+      const user = await supabaseStorage.getUser(userId);
       
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
       
-      const updatedUser = await storage.updateUserBanStatus(userId, banned);
+      const updatedUser = await supabaseStorage.updateUserBanStatus(userId, banned);
       
       if (!updatedUser) {
         return res.status(404).json({ message: "User not found" });
@@ -571,7 +571,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/categories", isAdmin, async (req: Request, res: Response) => {
     try {
       const categoryInput = insertCategorySchema.parse(req.body);
-      const newCategory = await storage.createCategory(categoryInput);
+      const newCategory = await supabaseStorage.createCategory(categoryInput);
       res.status(201).json(newCategory);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -590,7 +590,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const categoryInput = insertCategorySchema.parse(req.body);
-      const updatedCategory = await storage.updateCategory(id, categoryInput);
+      const updatedCategory = await supabaseStorage.updateCategory(id, categoryInput);
       
       if (!updatedCategory) {
         return res.status(404).json({ message: "Category not found" });
@@ -615,7 +615,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const testInput = insertTestSchema.parse(req.body);
-      const updatedTest = await storage.updateTest(id, testInput);
+      const updatedTest = await supabaseStorage.updateTest(id, testInput);
       
       if (!updatedTest) {
         return res.status(404).json({ message: "Test not found" });
@@ -638,7 +638,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid test ID" });
       }
       
-      const deleted = await storage.deleteTest(id);
+      const deleted = await supabaseStorage.deleteTest(id);
       
       if (!deleted) {
         return res.status(404).json({ message: "Test not found" });
@@ -658,15 +658,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Access user activities through the storage interface
       try {
         // Use supabaseStorage if it has the method, otherwise fall back to memory storage
-        if (typeof storage.getLatestActivities === 'function') {
-          const activities = await storage.getLatestActivities(limit);
-          console.log('Activity query result:', { count: activities.length });
-          return res.json(activities);
-        } else {
-          // Return empty array if not implemented
-          console.log('getLatestActivities not implemented in storage, returning empty array');
-          return res.json([]);
-        }
+        const activities = await supabaseStorage.getLatestActivities(limit);
+        console.log('Activity query result:', { count: activities.length });
+        return res.json(activities);
       } catch (dbError: any) {
         console.error('Database query error:', dbError);
         return res.status(500).json({ message: "Database error while fetching activities", error: dbError.message });
@@ -691,7 +685,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         // Use supabaseStorage if it has the method, otherwise fall back to memory storage
         if (typeof storage.getUserActivities === 'function') {
-          const activities = await storage.getUserActivities(userId, limit);
+          const activities = await supabaseStorage.getUserActivities(userId, limit);
           console.log('User activity query result:', { userId, count: activities.length });
           return res.json(activities);
         } else {
