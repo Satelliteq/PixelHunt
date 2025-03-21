@@ -282,6 +282,45 @@ function AdminPanel() {
     });
     setIsCategoryDialogOpen(true);
   };
+  
+  // Kullanıcı etkinliklerini yükle ve popüler testleri göster
+  const fetchActivitiesAndPopularTests = async () => {
+    setIsLoading(true);
+    try {
+      // Aktiviteleri yükle
+      const data = await apiRequest("/api/admin/activities");
+      setActivities(data || []);
+      
+      // Popüler testleri yükle
+      const popularData = await apiRequest("/api/tests/popular?limit=3");
+      setPopularTests(popularData || []);
+    } catch (error) {
+      console.error("Etkinlikler yüklenirken hata:", error);
+      toast({
+        title: "Hata",
+        description: "Kullanıcı etkinlikleri yüklenirken bir hata oluştu.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Kullanıcı etkinliklerini göster
+  const showUserActivities = async (userId: number) => {
+    try {
+      const data = await apiRequest(`/api/admin/users/${userId}/activities`);
+      setActivities(data);
+      setActiveTab("activities");
+    } catch (error) {
+      console.error("Kullanıcı etkinlikleri yüklenirken hata:", error);
+      toast({
+        title: "Hata",
+        description: "Kullanıcı etkinlikleri yüklenirken bir hata oluştu.",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Test silme
   const handleDeleteTest = async (testId: number) => {
@@ -388,32 +427,7 @@ function AdminPanel() {
     }
   };
 
-  // Aktivite ve popüler testleri yükleme
-  const fetchActivities = async () => {
-    setIsLoading(true);
-    try {
-      // Aktiviteleri yükle
-      const activityData = await apiRequest("/api/admin/activities", {
-        headers: {
-          "x-admin-token": "admin-secret-token", // Geliştirme amacıyla
-        }
-      });
-      setActivities(activityData || []);
-      
-      // Popüler testleri yükle
-      const popularData = await apiRequest("/api/tests/popular?limit=3");
-      setPopularTests(popularData || []);
-    } catch (error) {
-      console.error("Aktiviteler yüklenirken hata:", error);
-      toast({
-        title: "Hata",
-        description: "Aktiviteler yüklenirken bir hata oluştu.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+
 
   // Sayfa açıldığında ilgili verileri yükle
   useEffect(() => {

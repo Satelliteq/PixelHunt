@@ -124,15 +124,95 @@ export default function TestCreate() {
 
   const onSubmit = async (values: TestFormValues) => {
     try {
-      // Allow anonymous test creation
-      // Transform the image inputs into the correct format for the API
+      setUploading(true);
+      
+      // Base64 formatındaki görselleri işleyin ve URL'leri kaydedin
+      const processedImages = await Promise.all(
+        imageInputs.map(async (img, index) => {
+          let finalImageUrl = img.imageUrl;
+          
+          // Eğer görsel URL'si base64 formatındaysa, Supabase'e yükleme işlemi yapılacak
+          if (finalImageUrl && finalImageUrl.startsWith('data:image/')) {
+            try {
+              // Base64'ü blob'a çevir
+              const res = await fetch(finalImageUrl);
+              const blob = await res.blob();
+              
+              // Dosya adı oluştur
+              const fileExt = finalImageUrl.split(';')[0].split('/')[1];
+              const fileName = `${Date.now()}-${index}.${fileExt}`;
+              const filePath = `test-images/${fileName}`;
+              
+              // Supabase REST API üzerinden dosya yükleme
+              const uploadRes = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/images/${filePath}`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+                  'Content-Type': blob.type,
+                  'x-upsert': 'true'
+                },
+                body: blob
+              });
+              
+              if (uploadRes.ok) {
+                // Yükleme başarılı, public URL'yi kullan
+                finalImageUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/images/${filePath}`;
+              } else {
+                console.error('Görsel yükleme hatası:', await uploadRes.text());
+                // Hata durumunda orijinal URL'yi kullan
+              }
+            } catch (error) {
+              console.error('Görsel işleme hatası:', error);
+              // Hata durumunda orijinal URL'yi kullan
+            }
+          }
+          
+          return {
+            imageUrl: finalImageUrl,
+            answers: img.answers,
+          };
+        })
+      );
+      
+      // Thumbnail işlemi
+      let finalThumbnail = thumbnail;
+      if (thumbnail && thumbnail.startsWith('data:image/')) {
+        try {
+          // Base64'ü blob'a çevir
+          const res = await fetch(thumbnail);
+          const blob = await res.blob();
+          
+          // Dosya adı oluştur
+          const fileExt = thumbnail.split(';')[0].split('/')[1];
+          const fileName = `thumbnail-${Date.now()}.${fileExt}`;
+          const filePath = `test-thumbnails/${fileName}`;
+          
+          // Supabase REST API üzerinden dosya yükleme
+          const uploadRes = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/images/${filePath}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              'Content-Type': blob.type,
+              'x-upsert': 'true'
+            },
+            body: blob
+          });
+          
+          if (uploadRes.ok) {
+            // Yükleme başarılı, public URL'yi kullan
+            finalThumbnail = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/images/${filePath}`;
+          }
+        } catch (error) {
+          console.error('Thumbnail işleme hatası:', error);
+        }
+      }
+      
+      // API'ye gönderilecek dönüştürülmüş değerler
       const transformedValues = {
         ...values,
-        creatorId: isAnonymous ? null : user?.id, // Allow null for anonymous tests
-        images: imageInputs.map((img) => ({
-          imageUrl: img.imageUrl,
-          answers: img.answers,
-        })),
+        creatorId: isAnonymous ? null : user?.id, // Anonim testler için null
+        thumbnail: finalThumbnail,
+        images: processedImages,
       };
 
       const response = await apiRequest("/api/tests", {
