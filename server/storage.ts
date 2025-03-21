@@ -20,6 +20,10 @@ export interface IStorage {
   updateUserRole(id: number, role: string): Promise<User | undefined>;
   updateUserBanStatus(id: number, banned: boolean): Promise<User | undefined>;
   
+  // User activity operations (optional)
+  getUserActivities?(userId: number, limit?: number): Promise<any[]>;
+  getLatestActivities?(limit?: number): Promise<any[]>;
+  
   // Category operations
   getAllCategories(): Promise<Category[]>;
   getCategory(id: number): Promise<Category | undefined>;
@@ -526,6 +530,19 @@ export class MemStorage implements IStorage {
     return scores
       .sort((a, b) => b.score - a.score)
       .slice(0, limit);
+  }
+  
+  // User activity operations (optional)
+  async getUserActivities(userId: number, limit: number = 50): Promise<any[]> {
+    // In memory implementation returns an empty array
+    console.log('MemStorage getUserActivities called');
+    return [];
+  }
+  
+  async getLatestActivities(limit: number = 50): Promise<any[]> {
+    // In memory implementation returns an empty array
+    console.log('MemStorage getLatestActivities called');
+    return [];
   }
 }
 
