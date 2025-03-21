@@ -1,8 +1,6 @@
--- Supabase için SQL fonksiyonlar
-
--- execute_sql fonksiyonu
+-- execute_sql
 CREATE OR REPLACE FUNCTION execute_sql(sql_query TEXT)
-RETURNS void
+RETURNS VOID
 LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
@@ -11,9 +9,9 @@ BEGIN
 END;
 $$;
 
--- Users tablosu oluşturma fonksiyonu
+-- create_users_table_if_not_exists
 CREATE OR REPLACE FUNCTION create_users_table_if_not_exists()
-RETURNS void
+RETURNS VOID
 LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
@@ -36,9 +34,9 @@ BEGIN
 END;
 $$;
 
--- Categories tablosu oluşturma fonksiyonu
+-- create_categories_table_if_not_exists
 CREATE OR REPLACE FUNCTION create_categories_table_if_not_exists()
-RETURNS void
+RETURNS VOID
 LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
@@ -60,9 +58,9 @@ BEGIN
 END;
 $$;
 
--- Images tablosu oluşturma fonksiyonu
+-- create_images_table_if_not_exists
 CREATE OR REPLACE FUNCTION create_images_table_if_not_exists()
-RETURNS void
+RETURNS VOID
 LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
@@ -88,9 +86,9 @@ BEGIN
 END;
 $$;
 
--- Tests tablosu oluşturma fonksiyonu
+-- create_tests_table_if_not_exists
 CREATE OR REPLACE FUNCTION create_tests_table_if_not_exists()
-RETURNS void
+RETURNS VOID
 LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
@@ -119,9 +117,9 @@ BEGIN
 END;
 $$;
 
--- Test Comments tablosu oluşturma fonksiyonu
+-- create_test_comments_table_if_not_exists
 CREATE OR REPLACE FUNCTION create_test_comments_table_if_not_exists()
-RETURNS void
+RETURNS VOID
 LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
@@ -138,9 +136,9 @@ BEGIN
 END;
 $$;
 
--- Game Scores tablosu oluşturma fonksiyonu
+-- create_game_scores_table_if_not_exists
 CREATE OR REPLACE FUNCTION create_game_scores_table_if_not_exists()
-RETURNS void
+RETURNS VOID
 LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
@@ -158,9 +156,9 @@ BEGIN
 END;
 $$;
 
--- User Activities tablosu oluşturma fonksiyonu
+-- create_user_activities_table_if_not_exists
 CREATE OR REPLACE FUNCTION create_user_activities_table_if_not_exists()
-RETURNS void
+RETURNS VOID
 LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
@@ -178,5 +176,28 @@ BEGIN
             created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
         );
     END IF;
+END;
+$$;
+
+-- record_user_activity
+CREATE OR REPLACE FUNCTION record_user_activity(
+    p_user_id INTEGER,
+    p_user_name TEXT,
+    p_activity_type TEXT,
+    p_details TEXT DEFAULT NULL,
+    p_entity_id INTEGER DEFAULT NULL,
+    p_entity_type TEXT DEFAULT NULL,
+    p_metadata JSONB DEFAULT NULL
+)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    INSERT INTO user_activities (
+        user_id, user_name, activity_type, details, entity_id, entity_type, metadata
+    ) VALUES (
+        p_user_id, p_user_name, p_activity_type, p_details, p_entity_id, p_entity_type, p_metadata
+    );
 END;
 $$;
