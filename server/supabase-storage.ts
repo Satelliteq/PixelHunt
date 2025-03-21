@@ -42,7 +42,14 @@ export class SupabaseStorage implements IStorage {
       .returning();
 
     if (scoreToAdd > 0) {
-      await recordUserActivity(id, 'score_update', undefined, undefined, { scoreAdded: scoreToAdd });
+      await recordUserActivity(
+        id, 
+        'score_update', 
+        `Skor güncellendi: +${scoreToAdd} puan`,
+        undefined, 
+        undefined, 
+        { scoreAdded: scoreToAdd }
+      );
     }
 
     return updatedUser[0];
@@ -158,6 +165,7 @@ export class SupabaseStorage implements IStorage {
       await recordUserActivity(
         image.createdBy, 
         'create_image', 
+        `Yeni resim oluşturuldu: ${image.title}`,
         newImage[0].id, 
         'image'
       );
@@ -273,6 +281,7 @@ export class SupabaseStorage implements IStorage {
       await recordUserActivity(
         test.creatorId, 
         'create_test', 
+        `Yeni test oluşturuldu: ${test.title}`,
         newTest[0].id, 
         'test'
       );
@@ -404,6 +413,7 @@ export class SupabaseStorage implements IStorage {
     await recordUserActivity(
       comment.userId, 
       'comment_test', 
+      `Yorum eklendi: "${comment.comment.substring(0, 30)}${comment.comment.length > 30 ? '...' : ''}"`,
       comment.testId, 
       'test_comment'
     );
@@ -419,9 +429,14 @@ export class SupabaseStorage implements IStorage {
       .returning();
     
     if (score.userId) {
+      // Get test for better details
+      const test = await this.getTest(score.testId);
+      const testTitle = test ? test.title : `Test #${score.testId}`;
+      
       await recordUserActivity(
         score.userId, 
         'game_score', 
+        `Oyun skoru: ${score.score} puan (${testTitle})`,
         score.testId, 
         'game'
       );

@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
+import { eq } from 'drizzle-orm';
 import postgres from 'postgres';
 import * as schema from '../shared/schema';
 
@@ -104,14 +105,31 @@ export const storage = {
 export const recordUserActivity = async (
   userId: number,
   activityType: string,
+  details?: string,
   entityId?: number,
   entityType?: string,
-  metadata?: any
+  metadata?: any,
+  userName?: string
 ): Promise<void> => {
   try {
+    // Eğer userName verilmediyse, kullanıcı bilgilerini al
+    let resolvedUserName = userName;
+    if (!resolvedUserName) {
+      const userResult = await db.select({ username: schema.users.username })
+        .from(schema.users)
+        .where(schema.users.id.eq(userId))
+        .limit(1);
+      
+      if (userResult.length > 0) {
+        resolvedUserName = userResult[0].username;
+      }
+    }
+
     await db.insert(schema.userActivities).values({
       userId,
+      userName: resolvedUserName,
       activityType,
+      details,
       entityId: entityId || null,
       entityType: entityType || null,
       metadata: metadata ? JSON.stringify(metadata) : null

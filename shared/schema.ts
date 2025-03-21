@@ -111,7 +111,9 @@ export const insertUserSchema = createInsertSchema(users).pick({
 
 export const insertUserActivitySchema = createInsertSchema(userActivities).pick({
   userId: true,
+  userName: true,
   activityType: true,
+  details: true,
   entityId: true,
   entityType: true,
   metadata: true,
