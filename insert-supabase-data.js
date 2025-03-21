@@ -18,9 +18,11 @@ const supabase = createClient(
 async function addSampleCategories() {
   try {
     // Önce mevcut kategorileri kontrol et
-    const { data: existingCategories } = await supabase
+    const { data: existingCategories, error: selectError } = await supabase
       .from('categories')
       .select('name');
+    
+    console.log('Categories check result:', { data: existingCategories, error: selectError });
     
     if (existingCategories && existingCategories.length > 0) {
       console.log('Categories already exist. Skipping insertion.');

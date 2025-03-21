@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import pg from 'pg';
 
 // Load environment variables
 dotenv.config();
@@ -23,7 +24,7 @@ async function runSql(query) {
     const connectionString = process.env.DATABASE_URL;
     
     // Create a PostgreSQL client and connect
-    const { Pool } = await import('pg');
+    const { Pool } = pg;
     const pool = new Pool({
       connectionString,
     });
