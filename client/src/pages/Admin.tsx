@@ -392,13 +392,17 @@ function AdminPanel() {
   const fetchActivities = async () => {
     setIsLoading(true);
     try {
-      // Bu endpoint henüz yoksa, geçici veri döndürebiliriz
-      // const data = await apiRequest("/api/admin/activities");
-      // setActivities(data);
+      // Aktiviteleri yükle
+      const activityData = await apiRequest("/api/admin/activities", {
+        headers: {
+          "x-admin-token": "admin-secret-token", // Geliştirme amacıyla
+        }
+      });
+      setActivities(activityData || []);
       
       // Popüler testleri yükle
       const popularData = await apiRequest("/api/tests/popular?limit=3");
-      setPopularTests(popularData);
+      setPopularTests(popularData || []);
     } catch (error) {
       console.error("Aktiviteler yüklenirken hata:", error);
       toast({
@@ -837,37 +841,26 @@ function AdminPanel() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {/* Örnek aktivite girdileri */}
-                        <TableRow>
-                          <TableCell>user123</TableCell>
-                          <TableCell>
-                            <Badge variant="outline">Test Oluşturma</Badge>
-                          </TableCell>
-                          <TableCell>Sanat Testi</TableCell>
-                          <TableCell>
-                            {new Date().toLocaleString('tr-TR')}
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>admin</TableCell>
-                          <TableCell>
-                            <Badge variant="outline">Kategori Güncelleme</Badge>
-                          </TableCell>
-                          <TableCell>Tarih Kategorisi</TableCell>
-                          <TableCell>
-                            {new Date().toLocaleString('tr-TR')}
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>user456</TableCell>
-                          <TableCell>
-                            <Badge variant="outline">Oyun Puanı</Badge>
-                          </TableCell>
-                          <TableCell>450 puan</TableCell>
-                          <TableCell>
-                            {new Date().toLocaleString('tr-TR')}
-                          </TableCell>
-                        </TableRow>
+                        {activities.length > 0 ? (
+                          activities.map((activity, index) => (
+                            <TableRow key={activity.id || index}>
+                              <TableCell>{activity.userName || activity.userId || 'Bilinmeyen Kullanıcı'}</TableCell>
+                              <TableCell>
+                                <Badge variant="outline">{activity.activityType}</Badge>
+                              </TableCell>
+                              <TableCell>{activity.details || '-'}</TableCell>
+                              <TableCell>
+                                {new Date(activity.createdAt).toLocaleString('tr-TR')}
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
+                              Henüz kayıtlı aktivite bulunmuyor.
+                            </TableCell>
+                          </TableRow>
+                        )}
                       </TableBody>
                     </Table>
                   </div>

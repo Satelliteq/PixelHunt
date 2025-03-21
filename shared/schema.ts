@@ -19,7 +19,9 @@ export const users = pgTable("users", {
 export const userActivities = pgTable("user_activities", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
+  userName: text("user_name"), // Optional cached username for better display
   activityType: text("activity_type").notNull(),  // login, create_test, play_test, like_test, comment
+  details: text("details"), // Human-readable description of the activity
   entityId: integer("entity_id"), // ID of the related entity (test, image, etc.)
   entityType: text("entity_type"), // Type of the related entity (test, image, etc.)
   metadata: jsonb("metadata"), // Additional context data
