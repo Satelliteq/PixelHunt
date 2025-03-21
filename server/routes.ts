@@ -646,13 +646,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const limit = parseInt(req.query.limit as string || "50", 10);
       
-      // Check if the storage implementation has the required method
+      // Try to use the storage implementation first if available
       if (typeof (storage as any).getLatestActivities === 'function') {
         const activities = await (storage as any).getLatestActivities(limit);
-        res.json(activities);
-      } else {
-        // Fallback for storage implementations without activity tracking
-        res.json([]);
+        return res.json(activities);
+      }
+      
+      // Direct database query as fallback
+      try {
+        // Use raw SQL query to get activities directly from the database
+        const { Pool } = require('pg');
+        const pool = new Pool({
+          connectionString: process.env.DATABASE_URL,
+        });
+        
+        const result = await pool.query(
+          'SELECT * FROM user_activities ORDER BY created_at DESC LIMIT $1',
+          [limit]
+        );
+        
+        return res.json(result.rows);
+      } catch (dbError) {
+        console.error('Database query error:', dbError);
+        // If direct query fails, return empty array rather than error
+        return res.json([]);
       }
     } catch (error) {
       console.error("Error fetching activities:", error);
@@ -670,13 +687,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid user ID" });
       }
       
-      // Check if the storage implementation has the required method
+      // Try to use the storage implementation first if available
       if (typeof (storage as any).getUserActivities === 'function') {
         const activities = await (storage as any).getUserActivities(userId, limit);
-        res.json(activities);
-      } else {
-        // Fallback for storage implementations without activity tracking
-        res.json([]);
+        return res.json(activities);
+      }
+      
+      // Direct database query as fallback
+      try {
+        // Use raw SQL query to get user-specific activities directly from the database
+        const { Pool } = require('pg');
+        const pool = new Pool({
+          connectionString: process.env.DATABASE_URL,
+        });
+        
+        const result = await pool.query(
+          'SELECT * FROM user_activities WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2',
+          [userId, limit]
+        );
+        
+        return res.json(result.rows);
+      } catch (dbError) {
+        console.error('Database query error:', dbError);
+        // If direct query fails, return empty array rather than error
+        return res.json([]);
       }
     } catch (error) {
       console.error("Error fetching user activities:", error);
