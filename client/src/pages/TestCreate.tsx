@@ -516,7 +516,7 @@ export default function TestCreate() {
                   
                   <div className="flex flex-col md:flex-row gap-4">
                     <div className="flex-1">
-                      <div className="text-sm font-medium leading-none mb-2">Görsel URL veya Dosya Yükle</div>
+                      <FormLabel className="block mb-2">Görsel URL veya Dosya Yükle</FormLabel>
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
                           <Input
@@ -564,7 +564,7 @@ export default function TestCreate() {
                 </div>
 
                 <div>
-                  <div className="text-sm font-medium leading-none mb-2">Kabul Edilebilir Cevaplar</div>
+                  <FormLabel className="block mb-2">Kabul Edilebilir Cevaplar</FormLabel>
                   <div className="flex gap-2 mb-2">
                     <Input
                       placeholder="Cevap ekle"
