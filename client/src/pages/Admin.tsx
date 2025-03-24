@@ -609,7 +609,7 @@ function AdminPanel() {
                                     <SelectItem key={icon.name} value={icon.name}>
                                       <div className="flex items-center gap-2">
                                         <span className="inline-block mr-2">
-                                          {createElement(icon.component, { className: "w-4 h-4" })}
+                                          {React.createElement(icon.component, { className: "w-4 h-4" })}
                                         </span>
                                         {icon.name}
                                       </div>

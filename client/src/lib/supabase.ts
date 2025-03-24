@@ -1,22 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Use environment variables - try to get them from window.__ENV__
-const getSupabaseCredentials = () => {
-  let supabaseUrl = '';
-  let supabaseAnonKey = '';
-  
-  if (typeof window !== 'undefined' && (window as any).__ENV__) {
-    supabaseUrl = (window as any).__ENV__.SUPABASE_URL || '';
-    supabaseAnonKey = (window as any).__ENV__.SUPABASE_ANON_KEY || '';
-  }
-  
-  return { supabaseUrl, supabaseAnonKey };
-};
+// Supabase URL ve API key'i doğrudan kullan (Vite bunları çevre değişkenlerine dönüştürüyor)
+const supabaseUrl = 'https://amikewcdxjzqrpoqwizr.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFtaWtld2NkeGp6cXJwb3F3aXpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIwMzk5NjksImV4cCI6MjA1NzYxNTk2OX0.MZWorujMKcfZJr86q8N5s83SeReIbXjfOQdfISBcO54';
 
-// Initialize and export Supabase client
-const { supabaseUrl, supabaseAnonKey } = getSupabaseCredentials();
-
-export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '', {
+// Supabase bağlantısını yarat
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
@@ -26,5 +15,5 @@ export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '', {
 
 // Function to check if Supabase is properly configured
 export const isSupabaseConfigured = () => {
-  return Boolean(supabaseUrl && supabaseAnonKey);
+  return true; // Şimdi doğrudan bağlantıyı sağlıyoruz
 };
