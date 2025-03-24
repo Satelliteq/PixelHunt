@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Loader2,
   UserX,
@@ -596,89 +597,46 @@ function AdminPanel() {
                         
                         <FormField
                           control={categoryForm.control}
-                          name="iconName"
+                          name="image_url"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>İkon</FormLabel>
+                              <FormLabel>Resim URL'si</FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  placeholder="https://example.com/image.jpg"
+                                />
+                              </FormControl>
+                              <FormDescription>
+                                Kategori için bir resim URL'si girin. Bu resim, kategori kartlarında görüntülenecektir.
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={categoryForm.control}
+                          name="active"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Durum</FormLabel>
                               <Select
-                                onValueChange={field.onChange}
-                                defaultValue={field.value || "none"}
+                                onValueChange={(value) => field.onChange(value === "true")}
+                                defaultValue={field.value ? "true" : "false"}
                               >
                                 <FormControl>
                                   <SelectTrigger>
-                                    <SelectValue placeholder="İkon seçin" />
+                                    <SelectValue placeholder="Kategori durumu" />
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  <SelectItem value="none">İkon yok</SelectItem>
-                                  {availableIcons.map((icon) => (
-                                    <SelectItem key={icon.name} value={icon.name}>
-                                      <div className="flex items-center gap-2">
-                                        <span className="inline-block mr-2">
-                                          {React.createElement(icon.component, { className: "w-4 h-4" })}
-                                        </span>
-                                        {icon.name}
-                                      </div>
-                                    </SelectItem>
-                                  ))}
+                                  <SelectItem value="true">Aktif</SelectItem>
+                                  <SelectItem value="false">Pasif</SelectItem>
                                 </SelectContent>
                               </Select>
                               <FormDescription>
-                                Kategori için bir ikon seçin. Bu ikon, kategori kartlarında görüntülenecektir.
-                              </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={categoryForm.control}
-                          name="color"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Ana Renk</FormLabel>
-                              <div className="flex items-center gap-4">
-                                <div 
-                                  className="w-10 h-10 rounded-md border" 
-                                  style={{ backgroundColor: field.value || "#4F46E5" }}
-                                />
-                                <FormControl>
-                                  <Input
-                                    {...field}
-                                    type="text"
-                                    placeholder="#4F46E5"
-                                  />
-                                </FormControl>
-                              </div>
-                              <FormDescription>
-                                Kategori için bir ana renk kodu girin (örn: #FF5733). Bu renk, kategori kartlarında kullanılacaktır.
-                              </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={categoryForm.control}
-                          name="backgroundColor"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Arka Plan Rengi</FormLabel>
-                              <div className="flex items-center gap-4">
-                                <div 
-                                  className="w-10 h-10 rounded-md border" 
-                                  style={{ backgroundColor: field.value || "#F3F4F6" }}
-                                />
-                                <FormControl>
-                                  <Input
-                                    {...field}
-                                    type="text"
-                                    placeholder="#F3F4F6"
-                                  />
-                                </FormControl>
-                              </div>
-                              <FormDescription>
-                                Kategori kartı için arka plan rengi girin (örn: #FEF2F2). Genellikle ana rengin açık bir tonu olmalıdır.
+                                Bu kategori aktif olarak kullanılsın mı?
                               </FormDescription>
                               <FormMessage />
                             </FormItem>
@@ -737,7 +695,13 @@ function AdminPanel() {
                         <TableCell>{category.id}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            {category.iconName && category.iconName !== "none" && getIconComponent(category.iconName)}
+                            {category.image_url ? (
+                              <img src={category.image_url} className="w-6 h-6 rounded-full object-cover" alt={category.name} />
+                            ) : (
+                              <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center">
+                                <Image className="w-3 h-3 text-gray-500" />
+                              </div>
+                            )}
                             <span>{category.name}</span>
                           </div>
                         </TableCell>
