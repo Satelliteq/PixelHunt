@@ -508,7 +508,7 @@ export class SupabaseStorage implements IStorage {
     const { data, error } = await supabase
       .from('tests')
       .select('*')
-      .eq('published', true)
+      .eq('is_public', true)
       .order('created_at', { ascending: false });
       
     if (error) {
@@ -562,7 +562,7 @@ export class SupabaseStorage implements IStorage {
       .from('tests')
       .select('*')
       .eq('category_id', categoryId)
-      .eq('published', true)
+      .eq('is_public', true)
       .order('created_at', { ascending: false });
       
     if (error) {
@@ -707,7 +707,7 @@ export class SupabaseStorage implements IStorage {
     const { data, error } = await supabase
       .from('tests')
       .select('*')
-      .eq('published', true)
+      .eq('is_public', true)
       .eq('approved', true)
       .order('play_count', { ascending: false })
       .limit(limit);
@@ -724,7 +724,7 @@ export class SupabaseStorage implements IStorage {
     const { data, error } = await supabase
       .from('tests')
       .select('*')
-      .eq('published', true)
+      .eq('is_public', true)
       .eq('approved', true)
       .order('created_at', { ascending: false })
       .limit(limit);
@@ -741,7 +741,7 @@ export class SupabaseStorage implements IStorage {
     const { data, error } = await supabase
       .from('tests')
       .select('*')
-      .eq('published', true)
+      .eq('is_public', true)
       .eq('approved', true)
       .eq('featured', true)
       .order('created_at', { ascending: false })
