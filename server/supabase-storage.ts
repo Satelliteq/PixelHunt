@@ -537,27 +537,51 @@ export class SupabaseStorage implements IStorage {
   }
 
   async getTest(id: number): Promise<Test | undefined> {
-    const { data, error } = await supabase
-      .from('tests')
-      .select('*')
-      .eq('id', id)
-      .limit(1)
-      .single();
+    console.log(`Fetching test by ID: ${id}`);
+    
+    try {
+      const { data, error } = await supabase
+        .from('tests')
+        .select('*, category:categories(*)')
+        .eq('id', id)
+        .limit(1)
+        .single();
+        
+      if (error) {
+        console.error('Error fetching test by ID:', error);
+        return undefined;
+      }
       
-    if (error || !data) return undefined;
-    return data as Test;
+      console.log('Test found by ID:', data ? data.id : 'None');
+      return data as Test;
+    } catch (err) {
+      console.error('Exception in getTest:', err);
+      return undefined;
+    }
   }
 
   async getTestByUuid(uuid: string): Promise<Test | undefined> {
-    const { data, error } = await supabase
-      .from('tests')
-      .select('*')
-      .eq('uuid', uuid)
-      .limit(1)
-      .single();
+    console.log(`Fetching test by UUID: ${uuid}`);
+    
+    try {
+      const { data, error } = await supabase
+        .from('tests')
+        .select('*, category:categories(*)')
+        .eq('uuid', uuid)
+        .limit(1)
+        .single();
+        
+      if (error) {
+        console.error('Error fetching test by UUID:', error);
+        return undefined;
+      }
       
-    if (error || !data) return undefined;
-    return data as Test;
+      console.log('Test found by UUID:', data ? data.id : 'None');
+      return data as Test;
+    } catch (err) {
+      console.error('Exception in getTestByUuid:', err);
+      return undefined;
+    }
   }
 
   async getTestsByCategory(categoryId: number): Promise<Test[]> {
@@ -725,7 +749,7 @@ export class SupabaseStorage implements IStorage {
   async getPopularTests(limit: number): Promise<Test[]> {
     const { data, error } = await supabase
       .from('tests')
-      .select('*')
+      .select('*, category:categories(*)')
       .eq('is_public', true)
       .eq('approved', true)
       .order('play_count', { ascending: false })
@@ -742,7 +766,7 @@ export class SupabaseStorage implements IStorage {
   async getNewestTests(limit: number): Promise<Test[]> {
     const { data, error } = await supabase
       .from('tests')
-      .select('*')
+      .select('*, category:categories(*)')
       .eq('is_public', true)
       .eq('approved', true)
       .order('created_at', { ascending: false })
@@ -759,7 +783,7 @@ export class SupabaseStorage implements IStorage {
   async getFeaturedTests(limit: number): Promise<Test[]> {
     const { data, error } = await supabase
       .from('tests')
-      .select('*')
+      .select('*, category:categories(*)')
       .eq('is_public', true)
       .eq('approved', true)
       .eq('featured', true)
