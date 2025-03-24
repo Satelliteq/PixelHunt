@@ -47,6 +47,33 @@ export default function TestCreate() {
   const { user } = useAuth();
   const [thumbnail, setThumbnail] = useState<string>("");
   const [uploading, setUploading] = useState<boolean>(false);
+  
+  // Giriş yapmamış kullanıcıları giriş sayfasına yönlendir
+  useEffect(() => {
+    if (!user) {
+      toast({
+        title: "Lütfen giriş yapın",
+        description: "Test oluşturmak için giriş yapmalısınız.",
+        variant: "destructive"
+      });
+      navigate("/login");
+    }
+  }, [user, navigate]);
+  
+  // Kullanıcı giriş yapmamışsa içeriği gösterme
+  if (!user) {
+    return (
+      <div className="container py-10 flex items-center justify-center">
+        <div className="text-center">
+          <AlertTriangle className="mx-auto h-12 w-12 text-yellow-500 mb-4" />
+          <h2 className="text-2xl font-bold mb-2">Giriş Gerekli</h2>
+          <p className="mb-4">Test oluşturmak için lütfen giriş yapın.</p>
+          <Button onClick={() => navigate("/login")}>Giriş Yap</Button>
+        </div>
+      </div>
+    );
+  }
+  
   const [imageInputs, setImageInputs] = useState<{
     imageUrl: string;
     answers: string[];
@@ -119,8 +146,6 @@ export default function TestCreate() {
       images: [],
     },
   });
-
-  const [isAnonymous, setIsAnonymous] = useState<boolean>(!user);
 
   const onSubmit = async (values: TestFormValues) => {
     try {
@@ -477,21 +502,7 @@ export default function TestCreate() {
               )}
             />
             
-            <div className="flex flex-row items-start space-x-3 space-y-0 mt-4">
-              <Checkbox
-                checked={isAnonymous}
-                onCheckedChange={(value) => setIsAnonymous(!!value)}
-                disabled={!user}
-              />
-              <div className="space-y-1 leading-none">
-                <div className="font-medium">Anonim Olarak Paylaş</div>
-                <p className="text-sm text-muted-foreground">
-                  {user 
-                    ? "Testinizi anonim olarak paylaşmak istiyorsanız işaretleyin." 
-                    : "Giriş yapmadan test oluşturduğunuzda testiniz anonim olarak kaydedilir."}
-                </p>
-              </div>
-            </div>
+
           </div>
 
           <div className="bg-card p-6 rounded-lg border shadow-sm">

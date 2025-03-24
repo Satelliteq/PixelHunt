@@ -1,22 +1,20 @@
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
-import { insertTestSchema, tests, categories } from './shared/schema';
-import dotenv from 'dotenv';
+import { createClient } from '@supabase/supabase-js';
 import { createId } from '@paralleldrive/cuid2';
-import { eq } from 'drizzle-orm';
+import dotenv from 'dotenv';
 
 // .env dosyasını yükle
 dotenv.config();
 
-// Veritabanı bağlantısı
-const connectionString = process.env.DATABASE_URL;
-if (!connectionString) {
-  console.error('DATABASE_URL bulunamadı!');
+// Supabase bağlantısı
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('SUPABASE_URL veya SUPABASE_SERVICE_ROLE_KEY bulunamadı!');
   process.exit(1);
 }
 
-const client = postgres(connectionString);
-const db = drizzle(client);
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 /**
  * Örnek test soruları JSON formatında
@@ -48,9 +46,17 @@ const createSampleQuestions = (categoryName: string, count: number = 5) => {
 async function createSampleTests() {
   try {
     console.log('Mevcut kategorileri alınıyor...');
-    const allCategories = await db.select().from(categories);
+    const { data: allCategories, error: categoriesError } = await supabase
+      .from('categories')
+      .select('*')
+      .eq('active', true);
     
-    if (allCategories.length === 0) {
+    if (categoriesError) {
+      console.error('Kategorileri alırken hata:', categoriesError);
+      return;
+    }
+    
+    if (!allCategories || allCategories.length === 0) {
       console.error('Hiç kategori bulunamadı! Önce kategorileri oluşturun.');
       return;
     }
@@ -63,14 +69,16 @@ async function createSampleTests() {
       uuid: createId(),
       title: `${firstCategory.name} Testi`,
       description: `${firstCategory.name} hakkında bilgilerinizi test edin`,
-      categoryId: firstCategory.id,
-      creatorId: 1, // Varsayılan olarak ilk kullanıcı
+      category_id: firstCategory.id,
+      creator_id: 1, // Varsayılan olarak ilk kullanıcı
       difficulty: 2,
       duration: 300, // 5 dakika
       questions: createSampleQuestions(firstCategory.name, 5),
-      isPublic: true,
+      is_public: true,
       approved: true,
-      featured: true
+      featured: true,
+      play_count: 0,
+      like_count: 0
     };
     
     // Örnek test 2 - İkinci kategori (varsa)
@@ -79,14 +87,16 @@ async function createSampleTests() {
       uuid: createId(),
       title: `${secondCategory.name} - Zorlayıcı Test`,
       description: `${secondCategory.name} konusunda kendinizi zorlayın`,
-      categoryId: secondCategory.id,
-      creatorId: 1,
+      category_id: secondCategory.id,
+      creator_id: 1,
       difficulty: 4,
       duration: 600, // 10 dakika
       questions: createSampleQuestions(secondCategory.name, 10),
-      isPublic: true,
+      is_public: true,
       approved: true,
-      featured: false
+      featured: false,
+      play_count: 0,
+      like_count: 0
     };
     
     // Örnek test 3 - Üçüncü kategori (varsa)
@@ -95,36 +105,59 @@ async function createSampleTests() {
       uuid: createId(),
       title: `${thirdCategory.name} Başlangıç Testi`,
       description: `${thirdCategory.name} hakkında temel bilgileri test edin`,
-      categoryId: thirdCategory.id,
-      creatorId: 1,
+      category_id: thirdCategory.id,
+      creator_id: 1,
       difficulty: 1,
       duration: 180, // 3 dakika
       questions: createSampleQuestions(thirdCategory.name, 3),
-      isPublic: true,
+      is_public: true,
       approved: false, // Onaylanmamış test
-      featured: false
+      featured: false,
+      play_count: 0,
+      like_count: 0
     };
     
     console.log('Testler oluşturuluyor...');
     
     // Test 1'i ekle
-    const testResult1 = await db.insert(tests).values(test1).returning();
-    console.log(`Test 1 oluşturuldu: ${testResult1[0].title}`);
+    const { data: testResult1, error: error1 } = await supabase
+      .from('tests')
+      .insert(test1)
+      .select();
+      
+    if (error1) {
+      console.error('Test 1 oluşturulurken hata:', error1);
+    } else {
+      console.log(`Test 1 oluşturuldu: ${testResult1?.[0]?.title}`);
+    }
     
     // Test 2'yi ekle
-    const testResult2 = await db.insert(tests).values(test2).returning();
-    console.log(`Test 2 oluşturuldu: ${testResult2[0].title}`);
+    const { data: testResult2, error: error2 } = await supabase
+      .from('tests')
+      .insert(test2)
+      .select();
+      
+    if (error2) {
+      console.error('Test 2 oluşturulurken hata:', error2);
+    } else {
+      console.log(`Test 2 oluşturuldu: ${testResult2?.[0]?.title}`);
+    }
     
     // Test 3'ü ekle
-    const testResult3 = await db.insert(tests).values(test3).returning();
-    console.log(`Test 3 oluşturuldu: ${testResult3[0].title}`);
+    const { data: testResult3, error: error3 } = await supabase
+      .from('tests')
+      .insert(test3)
+      .select();
+      
+    if (error3) {
+      console.error('Test 3 oluşturulurken hata:', error3);
+    } else {
+      console.log(`Test 3 oluşturuldu: ${testResult3?.[0]?.title}`);
+    }
     
-    console.log('Tüm örnek testler başarıyla oluşturuldu!');
+    console.log('Tüm örnek testler oluşturulma işlemi tamamlandı!');
   } catch (error) {
     console.error('Testler oluşturulurken hata:', error);
-  } finally {
-    // Bağlantıyı kapat
-    await client.end();
   }
 }
 
