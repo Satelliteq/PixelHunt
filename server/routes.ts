@@ -636,7 +636,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         categoryInput = {
           name: req.body.name,
           description: req.body.description || "",
-          icon_name: req.body.icon_name || req.body.iconName,
+          icon_name: req.body.iconName === "none" ? null : (req.body.icon_name || req.body.iconName),
           color: req.body.color,
           background_color: req.body.background_color || req.body.backgroundColor,
           active: req.body.active !== false // Default to true if not provided
@@ -659,7 +659,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log("Falling back to memory storage");
           
           // Final fallback to in-memory storage
-          newCategory = await storage.createCategory(categoryInput);
+          try {
+            newCategory = await storage.createCategory(categoryInput);
+          } catch (memoryError) {
+            console.error("Memory storage error:", memoryError);
+            throw new Error("Failed to create category using all available storage methods");
+          }
         }
       }
       
@@ -679,8 +684,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid category ID" });
       }
       
-      const categoryInput = insertCategorySchema.parse(req.body);
-      const updatedCategory = await supabaseStorage.updateCategory(id, categoryInput);
+      let categoryInput: any;
+      try {
+        // Try to parse with Zod schema
+        const parsedData = insertCategorySchema.parse(req.body);
+        categoryInput = {
+          ...parsedData,
+          // Handle iconName conversion to icon_name
+          icon_name: req.body.iconName === "none" ? null : req.body.iconName
+        };
+      } catch (zodError) {
+        console.log("Zod validation failed, using manual field extraction:", zodError);
+        // Fallback - manually extract fields
+        categoryInput = {
+          name: req.body.name,
+          description: req.body.description || "",
+          icon_name: req.body.iconName === "none" ? null : (req.body.icon_name || req.body.iconName),
+          color: req.body.color,
+          background_color: req.body.background_color || req.body.backgroundColor,
+          active: req.body.active !== false // Default to true if not provided
+        };
+      }
+      
+      console.log("Updating category with data:", categoryInput);
+      
+      // Try with supabase first, then fallback
+      let updatedCategory;
+      try {
+        updatedCategory = await supabaseStorage.updateCategory(id, categoryInput);
+      } catch (supabaseError) {
+        console.error("Supabase error:", supabaseError);
+        console.log("Falling back to pgStorage");
+        updatedCategory = await pgStorage.updateCategory(id, categoryInput);
+      }
       
       if (!updatedCategory) {
         return res.status(404).json({ message: "Category not found" });
@@ -688,10 +724,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(updatedCategory);
     } catch (error) {
+      console.error("Error updating category:", error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid category data", errors: error.errors });
       }
-      res.status(500).json({ message: "Server error" });
+      res.status(500).json({ message: "Server error", details: String(error) });
     }
   });
   
