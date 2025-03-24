@@ -8,9 +8,15 @@ export const supabase = createClient(
     auth: {
       persistSession: false,
       autoRefreshToken: false
+    },
+    db: {
+      schema: 'public'
     }
   }
 );
+
+// Hata yakalama için ayrı bir hata işleme mekanizması kullanın
+// Supabase istemcisi bir event emitter değil, bu nedenle .on() kullanılamaz
 
 // Drizzle ORM'den kalan db nesnesini kaldırıyoruz, 
 // artık bunu kullanmak yerine doğrudan supabase nesnesini kullanıyoruz
