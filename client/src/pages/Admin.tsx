@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { useLocation, Link } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -33,8 +33,6 @@ import {
   Map,
   Camera,
   Coffee,
-  Football,
-  Mountains,
   Trophy,
   Users,
   Heart,
@@ -156,6 +154,25 @@ function AdminAccess() {
   return <div className="flex flex-col items-center justify-center min-h-[60vh]"></div>;
 }
 
+// Kullanılabilir ikonların listesi 
+const availableIcons = [
+  { name: "star", component: Star },
+  { name: "globe", component: Globe },
+  { name: "film", component: Film },
+  { name: "palette", component: Palette },
+  { name: "image", component: Image },
+  { name: "music", component: Music },
+  { name: "book", component: Book },
+  { name: "book-open", component: BookOpen },
+  { name: "car", component: Car },
+  { name: "map", component: Map },
+  { name: "camera", component: Camera },
+  { name: "coffee", component: Coffee },
+  { name: "trophy", component: Trophy },
+  { name: "users", component: Users },
+  { name: "heart", component: Heart },
+];
+
 // Kategori yönetimi için form şeması
 const categoryFormSchema = insertCategorySchema.extend({
   description: z.string().min(10, {
@@ -167,6 +184,10 @@ const categoryFormSchema = insertCategorySchema.extend({
   color: z.string().regex(/^#([0-9A-F]{6})$/i, {
     message: "Geçerli bir hex renk kodu girin (örn: #FF5733).",
   }).default("#4F46E5"),
+  iconName: z.string().optional(),
+  backgroundColor: z.string().regex(/^#([0-9A-F]{6})$/i, {
+    message: "Geçerli bir hex renk kodu girin (örn: #FFF5F5).",
+  }).optional(),
 });
 
 type CategoryFormValues = z.infer<typeof categoryFormSchema>;
@@ -305,6 +326,8 @@ function AdminPanel() {
       name: category.name,
       description: category.description,
       color: category.color || "#4F46E5",
+      iconName: category.iconName || "",
+      backgroundColor: category.backgroundColor || "",
     });
     setIsCategoryDialogOpen(true);
   };
@@ -567,10 +590,47 @@ function AdminPanel() {
                         
                         <FormField
                           control={categoryForm.control}
+                          name="iconName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>İkon</FormLabel>
+                              <Select
+                                onValueChange={field.onChange}
+                                defaultValue={field.value || ""}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="İkon seçin" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="">İkon yok</SelectItem>
+                                  {availableIcons.map((icon) => (
+                                    <SelectItem key={icon.name} value={icon.name}>
+                                      <div className="flex items-center gap-2">
+                                        <span className="inline-block mr-2">
+                                          {createElement(icon.component, { className: "w-4 h-4" })}
+                                        </span>
+                                        {icon.name}
+                                      </div>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormDescription>
+                                Kategori için bir ikon seçin. Bu ikon, kategori kartlarında görüntülenecektir.
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={categoryForm.control}
                           name="color"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Renk</FormLabel>
+                              <FormLabel>Ana Renk</FormLabel>
                               <div className="flex items-center gap-4">
                                 <div 
                                   className="w-10 h-10 rounded-md border" 
@@ -585,7 +645,34 @@ function AdminPanel() {
                                 </FormControl>
                               </div>
                               <FormDescription>
-                                Kategori için bir renk kodu girin (örn: #FF5733). Bu renk, kategori kartlarında kullanılacaktır.
+                                Kategori için bir ana renk kodu girin (örn: #FF5733). Bu renk, kategori kartlarında kullanılacaktır.
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={categoryForm.control}
+                          name="backgroundColor"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Arka Plan Rengi</FormLabel>
+                              <div className="flex items-center gap-4">
+                                <div 
+                                  className="w-10 h-10 rounded-md border" 
+                                  style={{ backgroundColor: field.value || "#F3F4F6" }}
+                                />
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    type="text"
+                                    placeholder="#F3F4F6"
+                                  />
+                                </FormControl>
+                              </div>
+                              <FormDescription>
+                                Kategori kartı için arka plan rengi girin (örn: #FEF2F2). Genellikle ana rengin açık bir tonu olmalıdır.
                               </FormDescription>
                               <FormMessage />
                             </FormItem>
