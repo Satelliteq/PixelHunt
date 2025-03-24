@@ -20,6 +20,25 @@ import {
   Plus,
   Check,
   X,
+  Star,
+  Globe,
+  Film,
+  Palette,
+  Gamepad,
+  Image,
+  Music,
+  Book,
+  BookOpen,
+  Car,
+  Map,
+  Camera,
+  Coffee,
+  Football,
+  Mountains,
+  Trophy,
+  Users,
+  Heart,
+  LucideIcon,
 } from "lucide-react";
 import {
   Table,
@@ -55,6 +74,13 @@ import { z } from "zod";
 import { apiRequest } from "@/lib/queryClient";
 import { insertCategorySchema, insertTestSchema } from "@/../../shared/schema";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 // Admin Sayfasına Giriş Kontrolü
 function AdminAccess() {
   const { user, loading } = useAuth();
