@@ -1,5 +1,6 @@
 import { IStorage } from './storage';
-import { Pool } from 'pg';
+import pkg from 'pg';
+const { Pool } = pkg;
 import {
   User, InsertUser,
   Category, InsertCategory,

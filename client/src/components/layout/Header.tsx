@@ -72,6 +72,11 @@ export default function Header() {
     try {
       await signOut();
       navigate('/');
+      // Local storage'dan token ve user bilgilerini de temizle
+      localStorage.removeItem('supabase.auth.token');
+      localStorage.removeItem('supabase.auth.user');
+      // Sayfayı yenileme eklendi - session temizleme için
+      window.location.href = '/';
     } catch (error) {
       console.error('Çıkış yapılırken hata oluştu:', error);
     }
