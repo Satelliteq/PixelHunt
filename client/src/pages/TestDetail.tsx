@@ -299,7 +299,12 @@ export default function TestDetail() {
               <div className="flex items-center gap-2 mb-4">
                 <UserCircle2 className="h-5 w-5 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">
-                  {test.creatorId ? "Kullanıcı tarafından oluşturuldu" : "Anonim kullanıcı tarafından oluşturuldu"}
+                  {test.isAnonymous || !test.creatorId 
+                    ? "Anonim kullanıcı tarafından oluşturuldu" 
+                    : (test.createdBy?.username 
+                        ? `${test.createdBy.username} tarafından oluşturuldu` 
+                        : "Kullanıcı tarafından oluşturuldu")
+                  }
                 </span>
               </div>
               
@@ -388,7 +393,9 @@ export default function TestDetail() {
                             </Avatar>
                             <div className="space-y-1">
                               <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium">Kullanıcı</span>
+                                <span className="text-sm font-medium">
+                                  {test.isAnonymous ? "Anonim" : (comment.user?.username || "Kullanıcı")}
+                                </span>
                                 <span className="text-xs text-muted-foreground">
                                   {formatDistance(
                                     new Date(comment.createdAt || ""), 
