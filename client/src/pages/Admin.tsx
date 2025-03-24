@@ -613,7 +613,7 @@ function AdminPanel() {
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  <SelectItem value="">İkon yok</SelectItem>
+                                  <SelectItem value="none">İkon yok</SelectItem>
                                   {availableIcons.map((icon) => (
                                     <SelectItem key={icon.name} value={icon.name}>
                                       <div className="flex items-center gap-2">
