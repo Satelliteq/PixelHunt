@@ -690,7 +690,7 @@ export class SupabaseStorage implements IStorage {
   async updateTestPublishedStatus(id: number, published: boolean): Promise<Test | undefined> {
     const { data, error } = await supabase
       .from('tests')
-      .update({ published })
+      .update({ is_public: published })
       .eq('id', id)
       .select('*')
       .single();

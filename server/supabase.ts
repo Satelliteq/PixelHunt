@@ -7,9 +7,16 @@ export const supabase = createClient(
   {
     auth: {
       persistSession: false
+    },
+    db: {
+      schema: 'public'
     }
   }
 );
+
+// Drizzle ORM'den kalan db nesnesini kaldırıyoruz, 
+// artık bunu kullanmak yerine doğrudan supabase nesnesini kullanıyoruz
+export const db = supabase;
 
 // Supabase Storage
 export const storage = {
