@@ -82,13 +82,21 @@ export default function Categories() {
   const CategoryCard = ({ category }: { category: Category }) => (
     <Link href={`/categories/${category.id}`}>
       <div className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-4 text-center cursor-pointer">
-        <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center mx-auto mb-3">
+        <div 
+          className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3`}
+          style={{ 
+            backgroundColor: category.color || '#6366f1',
+            background: category.backgroundColor ? `linear-gradient(135deg, ${category.color || '#6366f1'}, ${category.backgroundColor})` : undefined
+          }}
+        >
           {category.iconUrl ? (
             <img 
               src={category.iconUrl} 
               alt={category.name} 
               className="w-6 h-6 object-contain"
             />
+          ) : category.iconName ? (
+            <span className="text-xl text-white">{category.iconName}</span>
           ) : (
             React.cloneElement(getCategoryIcon(category.name) as React.ReactElement, { className: "h-6 w-6 text-white" })
           )}
@@ -103,13 +111,21 @@ export default function Categories() {
   const CategoryListItem = ({ category }: { category: Category }) => (
     <Link href={`/categories/${category.id}`}>
       <div className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-4 flex items-center cursor-pointer">
-        <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center mr-4">
+        <div 
+          className={`w-12 h-12 rounded-full flex items-center justify-center mr-4`}
+          style={{ 
+            backgroundColor: category.color || '#6366f1',
+            background: category.backgroundColor ? `linear-gradient(135deg, ${category.color || '#6366f1'}, ${category.backgroundColor})` : undefined
+          }}
+        >
           {category.iconUrl ? (
             <img 
               src={category.iconUrl} 
               alt={category.name} 
               className="w-6 h-6 object-contain"
             />
+          ) : category.iconName ? (
+            <span className="text-xl text-white">{category.iconName}</span>
           ) : (
             React.cloneElement(getCategoryIcon(category.name) as React.ReactElement, { className: "h-6 w-6 text-white" })
           )}

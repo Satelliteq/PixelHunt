@@ -190,7 +190,7 @@ export default function GameScreen() {
 
   // Game content
   return (
-    <div className="container max-w-6xl mx-auto pb-12 px-4 space-y-8">
+    <div className="max-w-content mx-auto pb-12 px-4 space-y-8">
       {gameStatus === 'playing' && currentImage ? (
         <>
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 py-6">
@@ -199,7 +199,7 @@ export default function GameScreen() {
               <p className="text-muted-foreground mt-1">{test?.description}</p>
             </div>
             
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap justify-end">
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -224,9 +224,9 @@ export default function GameScreen() {
           
           <Separator className="my-2" />
           
-          <div className="grid grid-cols-12 gap-6">
-            <div className="col-span-12 lg:col-span-8">
-              <Card className="overflow-hidden">
+          <div className="flex flex-col lg:flex-row gap-6">
+            <div className="w-full lg:w-3/4">
+              <Card className="overflow-hidden shadow-md">
                 <CardHeader className="pb-0">
                   <div className="flex justify-between items-center">
                     <div>
@@ -245,8 +245,8 @@ export default function GameScreen() {
                     <ImageReveal 
                       imageUrl={currentImage?.imageUrl || ''}
                       revealPercent={revealPercent}
-                      gridSize={4}
-                      className="w-full aspect-video"
+                      gridSize={5}
+                      className="w-full aspect-[4/3] object-cover object-center"
                     />
                   </div>
                   
@@ -259,14 +259,15 @@ export default function GameScreen() {
                     }}
                     className="mt-6"
                   >
-                    <div className="flex items-center gap-2 mb-3">
+                    <div className="flex flex-col sm:flex-row items-center gap-2 mb-3">
                       <Input
                         value={userAnswer}
                         onChange={(e) => setUserAnswer(e.target.value)}
                         placeholder="Bu nedir? Tahmin et..."
                         className="flex-1"
+                        autoFocus
                       />
-                      <Button type="submit">Tahmin Et</Button>
+                      <Button type="submit" className="w-full sm:w-auto">Tahmin Et</Button>
                     </div>
                     
                     <div className="flex justify-end">
@@ -276,7 +277,7 @@ export default function GameScreen() {
                     </div>
                   </form>
                   
-                  {/* Tahmin Geçmişi - Daha kompakt ve modern */}
+                  {/* Tahmin Geçmişi */}
                   <div className="mt-4 pt-4 border-t border-border">
                     <h3 className="text-sm font-semibold mb-2 text-muted-foreground">SON TAHMİNLER</h3>
                     <div className="max-h-32 overflow-y-auto scrollbar-thin">
@@ -308,7 +309,7 @@ export default function GameScreen() {
               </Card>
             </div>
             
-            <div className="col-span-12 lg:col-span-4 space-y-4">
+            <div className="w-full lg:w-1/4 space-y-4">
               <ScoreDisplay
                 score={score}
                 mode="test"
@@ -320,9 +321,9 @@ export default function GameScreen() {
                 }}
               />
               
-              <Card>
+              <Card className="shadow-md">
                 <CardHeader className="pb-2">
-                  <CardTitle className="flex items-center">
+                  <CardTitle className="flex items-center text-lg">
                     <Trophy className="w-4 h-4 mr-2 text-yellow-500" />
                     Test Bilgileri
                   </CardTitle>
