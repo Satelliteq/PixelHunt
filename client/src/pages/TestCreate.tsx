@@ -219,7 +219,7 @@ export default function TestCreate() {
         title,
         description,
         category_id: categoryId,
-        creator_id: user?.id,
+        creator_id: 1, // Sabit bir değer kullanıyoruz, çünkü UUID değil sayısal bir değer bekleniyor
         is_public: isPublic,
         is_anonymous: isAnonymous,
         questions: processedImages,
@@ -385,7 +385,7 @@ export default function TestCreate() {
       // API'ye gönderilecek dönüştürülmüş değerler
       const transformedValues = {
         ...values,
-        creator_id: user?.id, // Kullanıcı ID'sini ekle (değişken ismi düzeltildi, creatorId yerine creator_id)
+        creator_id: 1, // Sabit bir değer kullanıyoruz, çünkü UUID değil sayısal bir değer bekleniyor
         thumbnail: finalThumbnail,
         images: processedImages,
       };

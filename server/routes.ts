@@ -397,7 +397,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         title: req.body.title,
         description: req.body.description || "",
         category_id: req.body.categoryId || req.body.category_id,
-        creator_id: req.body.creatorId || req.body.creator_id || 1, // Default to user ID 1
+        creator_id: typeof req.body.creator_id === 'string' ? 1 : (req.body.creator_id || req.body.creatorId || 1), // Ensure creator_id is not a string/UUID
         difficulty: req.body.difficulty || 3, // Default to medium difficulty
         duration: req.body.duration || null,
         image_url: req.body.thumbnail || req.body.image_url || null,
