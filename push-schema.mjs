@@ -1,68 +1,43 @@
-// Push schema script
-// Alternatif olarak interaktif olmayan bir şekilde schema değişikliklerini veritabanına uygular
-
+import { drizzle } from 'drizzle-orm/postgres-js';
+import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
-import dotenv from 'dotenv';
+import { exec } from 'child_process';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-// PostgreSQL bağlantısı
-const connectionString = process.env.DATABASE_URL;
-
-if (!connectionString) {
-  console.error("DATABASE_URL çevre değişkeni bulunamadı.");
+// Veritabanı bağlantısı oluştur
+const DATABASE_URL = process.env.DATABASE_URL;
+if (!DATABASE_URL) {
+  console.error("DATABASE_URL ortam değişkeni bulunamadı");
   process.exit(1);
 }
 
+const sql = postgres(DATABASE_URL, { max: 1 });
+const db = drizzle(sql);
+
 async function pushSchema() {
-  console.log("Şema değişiklikleri veritabanına uygulanıyor...");
-  
   try {
-    // Bağlantı kurma
-    const sql = postgres(connectionString, { max: 1 });
+    console.log("Şema değişikliklerini SQL'e dönüştürüyor...");
     
-    // image_url alanını kategori tablosuna ekle (yoksa)
-    await sql`
-      DO $$ 
-      BEGIN 
-        BEGIN
-          ALTER TABLE categories ADD COLUMN image_url TEXT;
-          EXCEPTION WHEN duplicate_column THEN 
-          RAISE NOTICE 'image_url column already exists in categories table';
-        END;
-      END $$;
-    `;
-    
-    // order alanını sil eğer varsa (kullanılmıyor)
-    await sql`
-      DO $$ 
-      BEGIN 
-        BEGIN
-          ALTER TABLE categories DROP COLUMN IF EXISTS "order";
-          RAISE NOTICE 'order column dropped from categories table if it existed';
-        END;
-      END $$;
-    `;
-    
-    // updated_at alanını ekle (yoksa)
-    await sql`
-      DO $$ 
-      BEGIN 
-        BEGIN
-          ALTER TABLE categories ADD COLUMN updated_at TIMESTAMP;
-          EXCEPTION WHEN duplicate_column THEN 
-          RAISE NOTICE 'updated_at column already exists in categories table';
-        END;
-      END $$;
-    `;
-    
-    console.log("Şema başarıyla güncellendi!");
-    await sql.end();
-    process.exit(0);
+    // drizzle-kit komutunu çalıştır, ancak interactive mod olmadan
+    exec("npx drizzle-kit push:pg", (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Hata oluştu: ${error.message}`);
+        return;
+      }
+      if (stderr) {
+        console.log(`stderr: ${stderr}`);
+      }
+      
+      console.log(`stdout: ${stdout}`);
+      console.log("Şema başarıyla güncellendi!");
+    });
   } catch (error) {
-    console.error("Şema güncellenirken hata oluştu:", error);
-    process.exit(1);
+    console.error("Şema güncellenirken hata:", error);
   }
 }
 
-pushSchema();
+await pushSchema();

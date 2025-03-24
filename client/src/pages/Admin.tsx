@@ -191,9 +191,6 @@ const categoryFormSchema = z.object({
   description: z.string().min(10, {
     message: "Açıklama en az 10 karakter olmalıdır.",
   }),
-  image_url: z.string().url({
-    message: "Geçerli bir resim URL'si girin."
-  }).optional(),
   active: z.boolean().default(true)
 });
 
@@ -332,7 +329,6 @@ function AdminPanel() {
     categoryForm.reset({
       name: category.name,
       description: category.description,
-      image_url: category.image_url || "",
       active: category.active
     });
     setIsCategoryDialogOpen(true);
@@ -532,7 +528,6 @@ function AdminPanel() {
                         categoryForm.reset({
                           name: "",
                           description: "",
-                          image_url: "",
                           active: true
                         });
                       }}
@@ -595,25 +590,7 @@ function AdminPanel() {
                           )}
                         />
                         
-                        <FormField
-                          control={categoryForm.control}
-                          name="image_url"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Resim URL'si</FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  placeholder="https://example.com/image.jpg"
-                                />
-                              </FormControl>
-                              <FormDescription>
-                                Kategori için bir resim URL'si girin. Bu resim, kategori kartlarında görüntülenecektir.
-                              </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+
                         
                         <FormField
                           control={categoryForm.control}
@@ -695,13 +672,9 @@ function AdminPanel() {
                         <TableCell>{category.id}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            {category.image_url ? (
-                              <img src={category.image_url} className="w-6 h-6 rounded-full object-cover" alt={category.name} />
-                            ) : (
-                              <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center">
-                                <Image className="w-3 h-3 text-gray-500" />
-                              </div>
-                            )}
+                            <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center">
+                              <Image className="w-3 h-3 text-gray-500" />
+                            </div>
                             <span>{category.name}</span>
                           </div>
                         </TableCell>

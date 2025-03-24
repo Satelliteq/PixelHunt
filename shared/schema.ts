@@ -32,12 +32,6 @@ export const categories = pgTable("categories", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
-  // Aşağıdaki alanlar basitleştirilmiş yapı için opsiyonel
-  iconUrl: text("icon_url"),
-  iconName: text("icon_name"), // Opsiyonel - sadece eski kod uyumluluğu için
-  color: text("color"), // Opsiyonel - sadece eski kod uyumluluğu için
-  backgroundColor: text("background_color"), // Opsiyonel - sadece eski kod uyumluluğu için
-  image_url: text("image_url"), // Kategori resmi - yeni arayüz için
   active: boolean("active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at"),
