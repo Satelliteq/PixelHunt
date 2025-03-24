@@ -31,6 +31,7 @@ const testFormSchema = z.object({
   description: z.string().min(10, "Açıklama en az 10 karakter olmalıdır").nullable(),
   categoryId: z.number().min(1, "Lütfen bir kategori seçin"),
   isPublic: z.boolean().default(true),
+  isAnonymous: z.boolean().default(false),
   thumbnail: z.string().optional(),
   images: z.array(
     z.object({
@@ -142,6 +143,7 @@ export default function TestCreate() {
       description: "",
       categoryId: 0,
       isPublic: true,
+      isAnonymous: false,
       thumbnail: "",
       images: [],
     },
@@ -496,6 +498,27 @@ export default function TestCreate() {
                     <FormLabel>Herkese Açık</FormLabel>
                     <FormDescription>
                       Testinizin diğer kullanıcılar tarafından görüntülenebilmesini istiyorsanız işaretleyin.
+                    </FormDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="isAnonymous"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>Anonim Paylaşım</FormLabel>
+                    <FormDescription>
+                      Testinizin anonim olarak paylaşılmasını istiyorsanız işaretleyin. Bu durumda kullanıcı bilgileriniz gizlenir.
                     </FormDescription>
                   </div>
                 </FormItem>
