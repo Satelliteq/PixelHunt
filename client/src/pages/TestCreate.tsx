@@ -149,10 +149,118 @@ export default function TestCreate() {
     },
   });
 
+  // Form değerlerini görevlerde imageInputs ile güncelle
+  useEffect(() => {
+    // Geçerli görsel verileri var ve form hazırsa, form "images" alanını imageInputs ile güncelle
+    if (imageInputs.length > 0 && form) {
+      const formattedImages = imageInputs.map(img => ({
+        imageUrl: img.imageUrl,
+        answers: img.answers
+      }));
+      
+      // Form değerini güncelle
+      form.setValue("images", formattedImages);
+      console.log("Form images değeri güncellendi:", formattedImages);
+    }
+  }, [imageInputs, form]);
+  
+  const handleSubmitDirectly = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Form doğrudan gönderim");
+    
+    // Form değerlerini manuel olarak hazırla
+    const title = form.getValues("title");
+    const description = form.getValues("description") || "";
+    const categoryId = form.getValues("categoryId");
+    const isPublic = form.getValues("isPublic");
+    const isAnonymous = form.getValues("isAnonymous");
+    
+    if (!title || title.length < 5) {
+      toast({
+        title: "Hata",
+        description: "Başlık en az 5 karakter olmalıdır",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!categoryId || categoryId <= 0) {
+      toast({
+        title: "Hata",
+        description: "Lütfen bir kategori seçin",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Görsel ve cevapları hazırla
+    if (imageInputs.length === 0 || !imageInputs[0].imageUrl || imageInputs[0].answers.length === 0) {
+      toast({
+        title: "Hata",
+        description: "En az bir görsel ve cevap eklemelisiniz",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      setUploading(true);
+      
+      // Görselleri işle
+      const processedImages = await Promise.all(
+        imageInputs.map(async (img, index) => ({
+          imageUrl: img.imageUrl,
+          answers: img.answers
+        }))
+      );
+      
+      // API'ye gönderilecek veri
+      const formData = {
+        title,
+        description,
+        category_id: categoryId,
+        creator_id: user?.id,
+        is_public: isPublic,
+        is_anonymous: isAnonymous,
+        questions: processedImages,
+        thumbnail
+      };
+      
+      console.log("Manuel olarak hazırlanan form verileri:", formData);
+      
+      // API isteği
+      const response = await apiRequest("/api/tests", {
+        method: "POST",
+        data: formData,
+      });
+      
+      console.log("API yanıtı:", response);
+      
+      toast({
+        title: "Test başarıyla oluşturuldu",
+        description: "Testiniz başarıyla oluşturuldu ve yayınlandı.",
+        variant: "default",
+      });
+      
+      // Test sayfasına yönlendir
+      navigate(`/test/${response.id}`);
+    } catch (error) {
+      console.error("Test oluşturma hatası:", error);
+      toast({
+        title: "Hata",
+        description: "Test oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+  
   const onSubmit = async (values: TestFormValues) => {
     try {
       setUploading(true);
       console.log("Form gönderim başladı - formValues:", values);
+      console.log("Görsel adedi:", imageInputs.length, "Form görsel adedi:", values.images?.length);
       
       // Form verilerini kontrol et
       if (imageInputs.length === 0) {
@@ -412,7 +520,7 @@ export default function TestCreate() {
       <h1 className="text-3xl font-bold mb-8">Yeni Test Oluştur</h1>
       
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <form onSubmit={handleSubmitDirectly} className="space-y-8">
           <div className="bg-card p-6 rounded-lg border shadow-sm">
             <h2 className="text-xl font-semibold mb-4">Test Bilgileri</h2>
             
