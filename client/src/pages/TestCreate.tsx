@@ -254,7 +254,7 @@ export default function TestCreate() {
       });
 
       // Navigate to the test page
-      navigate(`/play/${response.id}`);
+      navigate(`/test/${response.id}`);
     } catch (error) {
       console.error("Test oluşturma hatası:", error);
       toast({
