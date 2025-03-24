@@ -95,7 +95,7 @@ export interface Test {
   play_count: number;
   like_count: number;
   approved: boolean;
-  published: boolean;
+  is_public: boolean;
   featured: boolean;
   created_at: string;
   updated_at?: string;
@@ -115,7 +115,7 @@ export interface InsertTest {
   play_count?: number;
   like_count?: number;
   approved?: boolean;
-  published?: boolean;
+  is_public?: boolean;
   featured?: boolean;
 }
 

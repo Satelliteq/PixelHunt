@@ -6,10 +6,8 @@ export const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY || '',
   {
     auth: {
-      persistSession: false
-    },
-    db: {
-      schema: 'public'
+      persistSession: false,
+      autoRefreshToken: false
     }
   }
 );
