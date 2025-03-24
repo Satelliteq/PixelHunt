@@ -235,7 +235,7 @@ export default function TestCreate() {
       // API'ye gönderilecek dönüştürülmüş değerler
       const transformedValues = {
         ...values,
-        creatorId: isAnonymous ? null : user?.id, // Anonim testler için null
+        creatorId: user?.id, // Kullanıcı ID'sini ekle
         thumbnail: finalThumbnail,
         images: processedImages,
       };

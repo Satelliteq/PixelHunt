@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Heart, Trophy, BookOpen, Filter, Clock, Users, Sparkles, Award, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { Heart, Trophy, BookOpen, Filter, Clock, Users, Sparkles, Award, ChevronLeft, ChevronRight, Plus, Search, X, Loader2 } from "lucide-react";
 import { Test } from "@shared/schema";
 import { useLanguage } from "@/lib/LanguageContext";
 
 import ContentCard from "@/components/game/ContentCard";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Home() {
@@ -18,6 +19,37 @@ export default function Home() {
   
   // Hero carousel state
   const [activeHeroSlide, setActiveHeroSlide] = useState(0);
+  
+  // Arama durumu
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<Test[]>([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  
+  // Arama fonksiyonu
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) {
+      setShowSearchResults(false);
+      return;
+    }
+    
+    setIsSearching(true);
+    setShowSearchResults(true);
+    
+    try {
+      // API'ye arama sorgusu gönder
+      const response = await fetch(`/api/tests?q=${encodeURIComponent(searchQuery)}`);
+      const data = await response.json();
+      setSearchResults(data);
+    } catch (error) {
+      console.error("Arama hatası:", error);
+      // Hata durumunda boş sonuç göster
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
   
   // Define hero slides using translation function
   const heroSlides = [
@@ -327,6 +359,88 @@ export default function Home() {
         ))}
       </section>
 
+      {/* Search Box */}
+      <section className="max-w-content mx-auto mb-8">
+        <form onSubmit={handleSearch} className="relative">
+          <div className="flex items-center">
+            <Input
+              type="text"
+              placeholder="Test ara..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pr-10"
+            />
+            <div className="absolute right-3 flex items-center space-x-1">
+              {searchQuery && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setShowSearchResults(false);
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+              <Button type="submit" variant="ghost" size="icon" className="h-6 w-6">
+                {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+              </Button>
+            </div>
+          </div>
+        </form>
+        
+        {/* Search Results */}
+        {showSearchResults && (
+          <div className="mt-6">
+            <h2 className="text-xl font-semibold mb-4 flex items-center">
+              <Search className="w-5 h-5 mr-2" />
+              Arama Sonuçları
+              {searchResults.length > 0 && <span className="text-sm ml-2 text-muted-foreground">({searchResults.length} sonuç)</span>}
+            </h2>
+            
+            {isSearching ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : searchResults.length === 0 ? (
+              <div className="text-center p-8 bg-muted/30 rounded-lg">
+                <p className="text-muted-foreground mb-2">"{searchQuery}" için sonuç bulunamadı</p>
+                <p className="text-sm text-muted-foreground">Farklı anahtar kelimelerle aramayı deneyin.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {searchResults.map((test) => (
+                  <ContentCard
+                    key={test.id}
+                    title={test.title}
+                    imageUrl={test.imageUrl || '/default-test-thumb.jpg'}
+                    playCount={test.playCount}
+                    likeCount={test.likeCount}
+                    duration={`${test.questions && Array.isArray(test.questions) ? test.questions.length : 0} ${t('question')}`}
+                    onClick={() => handleTestClick(test.id)}
+                  />
+                ))}
+              </div>
+            )}
+            
+            {searchResults.length > 0 && (
+              <div className="flex justify-center mt-6">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowSearchResults(false)}
+                >
+                  Sonuçları Kapat
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+      </section>
+      
       {/* Main Content */}
       <section className="max-w-content mx-auto">
         <Tabs defaultValue="featured" onValueChange={setActiveTab} className="w-full">
