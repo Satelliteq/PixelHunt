@@ -78,9 +78,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Category routes
   app.get("/api/categories", async (_req: Request, res: Response) => {
     try {
-      const categories = await supabaseStorage.getAllCategories();
+      // Supabase yerine memory storage kullanarak kategorileri getir
+      console.log("Fetching categories using memStorage");
+      const categories = await memStorage.getAllCategories();
       res.json(categories);
     } catch (error) {
+      console.error("Error fetching categories:", error);
       res.status(500).json({ message: "Server error" });
     }
   });
@@ -301,9 +304,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/tests/popular", async (req: Request, res: Response) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
-      const popularTests = await supabaseStorage.getPopularTests(limit);
+      // Geçici olarak memStorage kullanıyoruz
+      console.log("Fetching popular tests using memStorage");
+      const popularTests = await memStorage.getPopularTests(limit);
       res.json(popularTests);
     } catch (error) {
+      console.error("Error fetching popular tests:", error);
       res.status(500).json({ message: "Server error" });
     }
   });
@@ -311,9 +317,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/tests/newest", async (req: Request, res: Response) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
-      const newestTests = await supabaseStorage.getNewestTests(limit);
+      // Geçici olarak memStorage kullanıyoruz
+      console.log("Fetching newest tests using memStorage");
+      const newestTests = await memStorage.getNewestTests(limit);
       res.json(newestTests);
     } catch (error) {
+      console.error("Error fetching newest tests:", error);
       res.status(500).json({ message: "Server error" });
     }
   });
@@ -321,9 +330,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/tests/featured", async (req: Request, res: Response) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
-      const featuredTests = await supabaseStorage.getFeaturedTests(limit);
+      // Geçici olarak memStorage kullanıyoruz
+      console.log("Fetching featured tests using memStorage");
+      const featuredTests = await memStorage.getFeaturedTests(limit);
       res.json(featuredTests);
     } catch (error) {
+      console.error("Error fetching featured tests:", error);
       res.status(500).json({ message: "Server error" });
     }
   });

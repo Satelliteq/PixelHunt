@@ -403,7 +403,7 @@ export default function Home() {
         </div>
         
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-          {/* Category cards - hardcoded for now */}
+          {/* Category cards - Hardcoded for now until we add categories component */}
           <div 
             className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-4 text-center cursor-pointer"
             onClick={() => navigate("/categories")}
