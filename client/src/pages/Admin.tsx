@@ -493,15 +493,15 @@ function AdminPanel() {
   }, [activeTab]);
 
   return (
-    <div className="container py-8">
+    <div className="max-w-content mx-auto py-8 px-4">
       <h1 className="text-3xl font-bold mb-6">Admin Paneli</h1>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-4 mb-8">
-          <TabsTrigger value="categories">Kategoriler</TabsTrigger>
-          <TabsTrigger value="tests">Testler</TabsTrigger>
-          <TabsTrigger value="users">Kullanıcılar</TabsTrigger>
-          <TabsTrigger value="activities">Aktiviteler</TabsTrigger>
+        <TabsList className="grid grid-cols-4 mb-8 custom-tab-bg">
+          <TabsTrigger value="categories" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Kategoriler</TabsTrigger>
+          <TabsTrigger value="tests" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Testler</TabsTrigger>
+          <TabsTrigger value="users" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Kullanıcılar</TabsTrigger>
+          <TabsTrigger value="activities" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Aktiviteler</TabsTrigger>
         </TabsList>
 
         {/* Kategoriler Tab */}
