@@ -437,11 +437,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Test created (ID: ${createdTest.id}), now setting anonymous status...`);
         
         try {
-          // Call our custom SQL function to set anonymous status
-          const { error } = await db.rpc('set_anonymous_from_param', { 
-            test_id: createdTest.id,
-            should_be_anonymous: true
-          });
+          // Try to update is_anonymous directly first instead of using RPC
+          try {
+            // Direct approach is more reliable
+            const { data, error: directError } = await db
+              .from('tests')
+              .update({ is_anonymous: true })
+              .eq('id', createdTest.id)
+              .select()
+              .single();
+              
+            if (directError) {
+              console.error("Direct SQL update error:", directError);
+              throw new Error("Direct SQL update failed");
+            } else if (data) {
+              console.log("Successfully marked test as anonymous via direct update");
+              createdTest = data; // Update the test data for return later
+            }
+          } catch (directError) {
+            console.error("Failed direct SQL update:", directError);
+            // Try using RPC as fallback
+            const { error } = await db.rpc('set_anonymous_from_param', { 
+              test_id: createdTest.id,
+              should_be_anonymous: true
+            });
           
           if (error) {
             console.error("RPC error while setting anonymous status:", error);
