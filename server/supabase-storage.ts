@@ -508,32 +508,48 @@ export class SupabaseStorage implements IStorage {
 
   // Test işlemleri
   async getAllTests(): Promise<Test[]> {
-    const { data, error } = await supabase
-      .from('tests')
-      .select('*')
-      .eq('is_public', true)
-      .order('created_at', { ascending: false });
+    console.log('Fetching all tests');
+    
+    try {
+      const { data, error } = await supabase
+        .from('tests')
+        .select('*, category:categories(*)')
+        .eq('is_public', true)
+        .order('created_at', { ascending: false });
+        
+      if (error) {
+        console.error('Error fetching all tests:', error);
+        return [];
+      }
       
-    if (error) {
-      console.error('Error fetching tests:', error);
+      console.log(`Found ${data?.length || 0} tests`);
+      return data as Test[];
+    } catch (err) {
+      console.error('Exception in getAllTests:', err);
       return [];
     }
-    
-    return data as Test[];
   }
 
   async getAllTestsAdmin(): Promise<Test[]> {
-    const { data, error } = await supabase
-      .from('tests')
-      .select('*')
-      .order('created_at', { ascending: false });
+    console.log('Fetching all tests for admin');
+    
+    try {
+      const { data, error } = await supabase
+        .from('tests')
+        .select('*, category:categories(*)')
+        .order('created_at', { ascending: false });
+        
+      if (error) {
+        console.error('Error fetching all tests for admin:', error);
+        return [];
+      }
       
-    if (error) {
-      console.error('Error fetching all tests for admin:', error);
+      console.log(`Found ${data?.length || 0} tests for admin`);
+      return data as Test[];
+    } catch (err) {
+      console.error('Exception in getAllTestsAdmin:', err);
       return [];
     }
-    
-    return data as Test[];
   }
 
   async getTest(id: number): Promise<Test | undefined> {
@@ -585,19 +601,27 @@ export class SupabaseStorage implements IStorage {
   }
 
   async getTestsByCategory(categoryId: number): Promise<Test[]> {
-    const { data, error } = await supabase
-      .from('tests')
-      .select('*')
-      .eq('category_id', categoryId)
-      .eq('is_public', true)
-      .order('created_at', { ascending: false });
+    console.log(`Fetching tests by category ID: ${categoryId}`);
+    
+    try {
+      const { data, error } = await supabase
+        .from('tests')
+        .select('*, category:categories(*)')
+        .eq('category_id', categoryId)
+        .eq('is_public', true)
+        .order('created_at', { ascending: false });
+        
+      if (error) {
+        console.error('Error fetching tests by category:', error);
+        return [];
+      }
       
-    if (error) {
-      console.error('Error fetching tests by category:', error);
+      console.log(`Found ${data?.length || 0} tests for category ${categoryId}`);
+      return data as Test[];
+    } catch (err) {
+      console.error('Exception in getTestsByCategory:', err);
       return [];
     }
-    
-    return data as Test[];
   }
 
   async createTest(test: InsertTest): Promise<Test> {
