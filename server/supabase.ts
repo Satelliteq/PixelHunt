@@ -1,8 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import { migrate } from 'drizzle-orm/postgres-js/migrator';
-import postgres from 'postgres';
-import * as schema from '../shared/schema';
 
 // Supabase Bağlantısı
 export const supabase = createClient(
@@ -14,40 +10,6 @@ export const supabase = createClient(
     }
   }
 );
-
-// Drizzle ORM için PostgreSQL client'ı
-const connectionString = process.env.DATABASE_URL || '';
-if (!connectionString) {
-  throw new Error('DATABASE_URL is not defined');
-}
-
-const migrationClient = postgres(connectionString, { 
-  max: 1,
-  ssl: { rejectUnauthorized: false }
-});
-
-const queryClient = postgres(connectionString, {
-  ssl: { rejectUnauthorized: false }
-});
-
-// Drizzle ORM instance
-export const db = drizzle(queryClient, { schema });
-
-// Migrations
-export async function runMigrations() {
-  try {
-    console.log('Running migrations...');
-    await migrate(drizzle(migrationClient), { migrationsFolder: './migrations' });
-    console.log('Migrations completed successfully');
-  } catch (err) {
-    console.error('Error during migrations:', err);
-  } finally {
-    await migrationClient.end();
-  }
-}
-
-// Migration'ları çalıştır
-runMigrations();
 
 // Supabase Storage
 export const storage = {
@@ -117,26 +79,34 @@ export const recordUserActivity = async (
   try {
     // Eğer userName verilmediyse, kullanıcı bilgilerini al
     let resolvedUserName = userName;
-    if (!resolvedUserName) {
-      const userResult = await db.select({ username: schema.users.username })
-        .from(schema.users)
-        .where(eq(schema.users.id, userId))
-        .limit(1);
+    if (!resolvedUserName && userId) {
+      const { data: userData, error } = await supabase
+        .from('users')
+        .select('username')
+        .eq('id', userId)
+        .limit(1)
+        .single();
       
-      if (userResult.length > 0) {
-        resolvedUserName = userResult[0].username;
+      if (!error && userData) {
+        resolvedUserName = userData.username;
       }
     }
     
-    await db.insert(schema.userActivities).values({
-      userId,
-      userName: resolvedUserName,
-      activityType,
-      details,
-      entityId: entityId || null,
-      entityType: entityType || null,
-      metadata: metadata ? JSON.stringify(metadata) : null
-    });
+    const { error } = await supabase
+      .from('user_activities')
+      .insert({
+        user_id: userId,
+        user_name: resolvedUserName,
+        activity_type: activityType,
+        details,
+        entity_id: entityId || null,
+        entity_type: entityType || null,
+        metadata: metadata ? JSON.stringify(metadata) : null
+      });
+      
+    if (error) {
+      console.error('Error inserting user activity:', error);
+    }
   } catch (error) {
     console.error('Error recording user activity:', error);
   }

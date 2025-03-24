@@ -1,33 +1,218 @@
 import { IStorage } from './storage';
-import { db, recordUserActivity, storage } from './supabase';
-import * as schema from '../shared/schema';
-import { and, count, desc, eq, gt, lt, gte, lte, isNull, like, asc } from 'drizzle-orm';
-import type {
-  User, InsertUser,
-  Category, InsertCategory,
-  Image, InsertImage,
-  Test, InsertTest,
-  TestComment, InsertTestComment,
-  GameScore, InsertGameScore,
-  UserActivity, InsertUserActivity
-} from '../shared/schema';
+import { supabase, recordUserActivity, storage } from './supabase';
 import { createId } from '@paralleldrive/cuid2';
+
+// Tipler için interfaceler (Drizzle ORM yerine doğrudan Supabase tiplerini kullanacağız)
+export interface User {
+  id: number;
+  username: string;
+  email: string;
+  password_hash?: string;
+  role: string;
+  score: number;
+  profile_image_url?: string;
+  banned: boolean;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface InsertUser {
+  username: string;
+  email: string;
+  password_hash?: string;
+  role?: string;
+  score?: number;
+  profile_image_url?: string;
+  banned?: boolean;
+}
+
+export interface Category {
+  id: number;
+  name: string;
+  description: string;
+  icon_name?: string;
+  color?: string;
+  background_color?: string;
+  image_url?: string;
+  active: boolean;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface InsertCategory {
+  name: string;
+  description: string;
+  icon_name?: string;
+  color?: string;
+  background_color?: string;
+  image_url?: string;
+  active?: boolean;
+}
+
+export interface Image {
+  id: number;
+  title: string;
+  image_url: string;
+  storage_key?: string;
+  category_id: number;
+  answers: string[];
+  hints?: string[];
+  difficulty: number;
+  play_count: number;
+  like_count: number;
+  active: boolean;
+  created_at: string;
+  created_by?: number;
+  updated_at?: string;
+  category?: Category;
+}
+
+export interface InsertImage {
+  title: string;
+  image_url: string;
+  storage_key?: string;
+  category_id: number;
+  answers: string[];
+  hints?: string[];
+  difficulty: number;
+  play_count?: number;
+  like_count?: number;
+  active?: boolean;
+  created_by?: number;
+}
+
+export interface Test {
+  id: number;
+  uuid: string;
+  title: string;
+  description: string;
+  category_id: number;
+  creator_id: number;
+  difficulty: number;
+  duration?: number;
+  image_url?: string;
+  questions: any[];
+  play_count: number;
+  like_count: number;
+  approved: boolean;
+  published: boolean;
+  featured: boolean;
+  created_at: string;
+  updated_at?: string;
+  category?: Category;
+  createdBy?: User;
+}
+
+export interface InsertTest {
+  title: string;
+  description: string;
+  category_id: number;
+  creator_id: number;
+  difficulty: number;
+  duration?: number;
+  image_url?: string;
+  questions: any[];
+  play_count?: number;
+  like_count?: number;
+  approved?: boolean;
+  published?: boolean;
+  featured?: boolean;
+}
+
+export interface TestComment {
+  id: number;
+  test_id: number;
+  user_id: number;
+  content: string;
+  created_at: string;
+  updated_at?: string;
+  user?: User;
+}
+
+export interface InsertTestComment {
+  test_id: number;
+  user_id: number;
+  content: string;
+}
+
+export interface GameScore {
+  id: number;
+  user_id: number;
+  game_mode: string;
+  score: number;
+  details?: any;
+  created_at: string;
+  user?: User;
+}
+
+export interface InsertGameScore {
+  user_id: number;
+  game_mode: string;
+  score: number;
+  details?: any;
+}
+
+export interface UserActivity {
+  id: number;
+  user_id: number;
+  user_name?: string;
+  activity_type: string;
+  details?: string;
+  entity_id?: number;
+  entity_type?: string;
+  metadata?: any;
+  created_at: string;
+}
+
+export interface InsertUserActivity {
+  user_id: number;
+  user_name?: string;
+  activity_type: string;
+  details?: string;
+  entity_id?: number;
+  entity_type?: string;
+  metadata?: any;
+}
 
 export class SupabaseStorage implements IStorage {
   // Kullanıcı işlemleri
   async getUser(id: number): Promise<User | undefined> {
-    const users = await db.select().from(schema.users).where(eq(schema.users.id, id)).limit(1);
-    return users[0];
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', id)
+      .limit(1)
+      .single();
+      
+    if (error || !data) return undefined;
+    return data as User;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const users = await db.select().from(schema.users).where(eq(schema.users.username, username)).limit(1);
-    return users[0];
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('username', username)
+      .limit(1)
+      .single();
+      
+    if (error || !data) return undefined;
+    return data as User;
   }
 
   async createUser(user: InsertUser): Promise<User> {
-    const newUser = await db.insert(schema.users).values(user).returning();
-    return newUser[0];
+    const { data, error } = await supabase
+      .from('users')
+      .insert(user)
+      .select('*')
+      .single();
+      
+    if (error) {
+      console.error('Error creating user:', error);
+      throw new Error(`User creation failed: ${error.message}`);
+    }
+    
+    return data as User;
   }
 
   async updateUserScore(id: number, scoreToAdd: number): Promise<User | undefined> {
@@ -35,12 +220,20 @@ export class SupabaseStorage implements IStorage {
     if (!user) return undefined;
 
     const currentScore = user.score || 0;
-    const updatedUser = await db
-      .update(schema.users)
-      .set({ score: currentScore + scoreToAdd })
-      .where(eq(schema.users.id, id))
-      .returning();
-
+    const newScore = currentScore + scoreToAdd;
+    
+    const { data, error } = await supabase
+      .from('users')
+      .update({ score: newScore })
+      .eq('id', id)
+      .select('*')
+      .single();
+      
+    if (error) {
+      console.error('Error updating user score:', error);
+      return undefined;
+    }
+    
     if (scoreToAdd > 0) {
       await recordUserActivity(
         id, 
@@ -52,217 +245,332 @@ export class SupabaseStorage implements IStorage {
       );
     }
 
-    return updatedUser[0];
+    return data as User;
   }
 
   // Admin kullanıcı işlemleri
   async getAllUsers(): Promise<User[]> {
-    return await db.select().from(schema.users).orderBy(desc(schema.users.createdAt));
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .order('created_at', { ascending: false });
+      
+    if (error) {
+      console.error('Error fetching users:', error);
+      return [];
+    }
+    
+    return data as User[];
   }
 
   async updateUserRole(id: number, role: string): Promise<User | undefined> {
-    const updatedUser = await db
-      .update(schema.users)
-      .set({ role })
-      .where(eq(schema.users.id, id))
-      .returning();
+    const { data, error } = await supabase
+      .from('users')
+      .update({ role })
+      .eq('id', id)
+      .select('*')
+      .single();
+      
+    if (error) {
+      console.error('Error updating user role:', error);
+      return undefined;
+    }
     
-    return updatedUser[0];
+    return data as User;
   }
 
   async updateUserBanStatus(id: number, banned: boolean): Promise<User | undefined> {
-    const updatedUser = await db
-      .update(schema.users)
-      .set({ banned })
-      .where(eq(schema.users.id, id))
-      .returning();
+    const { data, error } = await supabase
+      .from('users')
+      .update({ banned })
+      .eq('id', id)
+      .select('*')
+      .single();
+      
+    if (error) {
+      console.error('Error updating user ban status:', error);
+      return undefined;
+    }
     
-    return updatedUser[0];
+    return data as User;
   }
 
   // Kategori işlemleri
   async getAllCategories(): Promise<Category[]> {
-    return await db
-      .select()
-      .from(schema.categories)
-      .where(eq(schema.categories.active, true))
-      .orderBy(asc(schema.categories.order), asc(schema.categories.name));
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .eq('active', true)
+      .order('name', { ascending: true });
+      
+    if (error) {
+      console.error('Error fetching categories:', error);
+      return [];
+    }
+    
+    return data as Category[];
   }
 
   async getAllCategoriesAdmin(): Promise<Category[]> {
-    return await db
-      .select()
-      .from(schema.categories)
-      .orderBy(asc(schema.categories.order), asc(schema.categories.name));
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .order('name', { ascending: true });
+      
+    if (error) {
+      console.error('Error fetching all categories for admin:', error);
+      return [];
+    }
+    
+    return data as Category[];
   }
 
   async getCategory(id: number): Promise<Category | undefined> {
-    const categories = await db
-      .select()
-      .from(schema.categories)
-      .where(eq(schema.categories.id, id))
-      .limit(1);
-    
-    return categories[0];
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .eq('id', id)
+      .limit(1)
+      .single();
+      
+    if (error || !data) return undefined;
+    return data as Category;
   }
 
   async createCategory(category: InsertCategory): Promise<Category> {
-    const newCategory = await db
-      .insert(schema.categories)
-      .values(category)
-      .returning();
+    const { data, error } = await supabase
+      .from('categories')
+      .insert(category)
+      .select('*')
+      .single();
+      
+    if (error) {
+      console.error('Error creating category:', error);
+      throw new Error(`Category creation failed: ${error.message}`);
+    }
     
-    return newCategory[0];
+    return data as Category;
   }
 
   async updateCategory(id: number, category: InsertCategory): Promise<Category | undefined> {
-    const updatedCategory = await db
-      .update(schema.categories)
-      .set(category)
-      .where(eq(schema.categories.id, id))
-      .returning();
+    const { data, error } = await supabase
+      .from('categories')
+      .update(category)
+      .eq('id', id)
+      .select('*')
+      .single();
+      
+    if (error) {
+      console.error('Error updating category:', error);
+      return undefined;
+    }
     
-    return updatedCategory[0];
+    return data as Category;
   }
 
   // Görüntü işlemleri
   async getAllImages(): Promise<Image[]> {
-    return await db
-      .select()
-      .from(schema.images)
-      .where(eq(schema.images.active, true))
-      .orderBy(desc(schema.images.createdAt));
+    const { data, error } = await supabase
+      .from('images')
+      .select('*')
+      .eq('active', true)
+      .order('created_at', { ascending: false });
+      
+    if (error) {
+      console.error('Error fetching images:', error);
+      return [];
+    }
+    
+    return data as Image[];
   }
 
   async getImage(id: number): Promise<Image | undefined> {
-    const images = await db
-      .select()
-      .from(schema.images)
-      .where(eq(schema.images.id, id))
-      .limit(1);
-    
-    return images[0];
+    const { data, error } = await supabase
+      .from('images')
+      .select('*')
+      .eq('id', id)
+      .limit(1)
+      .single();
+      
+    if (error || !data) return undefined;
+    return data as Image;
   }
 
   async getImagesByCategory(categoryId: number): Promise<Image[]> {
-    return await db
-      .select()
-      .from(schema.images)
-      .where(and(
-        eq(schema.images.categoryId, categoryId),
-        eq(schema.images.active, true)
-      ))
-      .orderBy(desc(schema.images.createdAt));
+    const { data, error } = await supabase
+      .from('images')
+      .select('*')
+      .eq('category_id', categoryId)
+      .eq('active', true)
+      .order('created_at', { ascending: false });
+      
+    if (error) {
+      console.error('Error fetching images by category:', error);
+      return [];
+    }
+    
+    return data as Image[];
   }
 
   async createImage(image: InsertImage): Promise<Image> {
-    const newImage = await db
-      .insert(schema.images)
-      .values(image)
-      .returning();
+    const { data, error } = await supabase
+      .from('images')
+      .insert(image)
+      .select('*')
+      .single();
+      
+    if (error) {
+      console.error('Error creating image:', error);
+      throw new Error(`Image creation failed: ${error.message}`);
+    }
     
-    if (image.createdBy) {
+    if (image.created_by) {
       await recordUserActivity(
-        image.createdBy, 
+        image.created_by, 
         'create_image', 
         `Yeni resim oluşturuldu: ${image.title}`,
-        newImage[0].id, 
+        data.id, 
         'image'
       );
     }
     
-    return newImage[0];
+    return data as Image;
   }
 
   async incrementPlayCount(id: number): Promise<void> {
     const image = await this.getImage(id);
     if (!image) return;
     
-    const currentPlayCount = image.playCount || 0;
-    await db
-      .update(schema.images)
-      .set({ 
-        playCount: currentPlayCount + 1
+    const currentPlayCount = image.play_count || 0;
+    const { error } = await supabase
+      .from('images')
+      .update({ 
+        play_count: currentPlayCount + 1 
       })
-      .where(eq(schema.images.id, id));
+      .eq('id', id);
+      
+    if (error) {
+      console.error('Error incrementing play count:', error);
+    }
   }
 
   async incrementLikeCount(id: number): Promise<void> {
     const image = await this.getImage(id);
     if (!image) return;
     
-    const currentLikeCount = image.likeCount || 0;
-    await db
-      .update(schema.images)
-      .set({ 
-        likeCount: currentLikeCount + 1
+    const currentLikeCount = image.like_count || 0;
+    const { error } = await supabase
+      .from('images')
+      .update({ 
+        like_count: currentLikeCount + 1 
       })
-      .where(eq(schema.images.id, id));
+      .eq('id', id);
+      
+    if (error) {
+      console.error('Error incrementing like count:', error);
+    }
   }
 
   async getTopPlayedImages(limit: number): Promise<Image[]> {
-    return await db
-      .select()
-      .from(schema.images)
-      .where(eq(schema.images.active, true))
-      .orderBy(desc(schema.images.playCount))
+    const { data, error } = await supabase
+      .from('images')
+      .select('*')
+      .eq('active', true)
+      .order('play_count', { ascending: false })
       .limit(limit);
+      
+    if (error) {
+      console.error('Error fetching top played images:', error);
+      return [];
+    }
+    
+    return data as Image[];
   }
 
   async getTopLikedImages(limit: number): Promise<Image[]> {
-    return await db
-      .select()
-      .from(schema.images)
-      .where(eq(schema.images.active, true))
-      .orderBy(desc(schema.images.likeCount))
+    const { data, error } = await supabase
+      .from('images')
+      .select('*')
+      .eq('active', true)
+      .order('like_count', { ascending: false })
       .limit(limit);
+      
+    if (error) {
+      console.error('Error fetching top liked images:', error);
+      return [];
+    }
+    
+    return data as Image[];
   }
 
   // Test işlemleri
   async getAllTests(): Promise<Test[]> {
-    return await db
-      .select()
-      .from(schema.tests)
-      .where(eq(schema.tests.isPublic, true))
-      .orderBy(desc(schema.tests.createdAt));
+    const { data, error } = await supabase
+      .from('tests')
+      .select('*')
+      .eq('published', true)
+      .order('created_at', { ascending: false });
+      
+    if (error) {
+      console.error('Error fetching tests:', error);
+      return [];
+    }
+    
+    return data as Test[];
   }
 
   async getAllTestsAdmin(): Promise<Test[]> {
-    return await db
-      .select()
-      .from(schema.tests)
-      .orderBy(desc(schema.tests.createdAt));
+    const { data, error } = await supabase
+      .from('tests')
+      .select('*')
+      .order('created_at', { ascending: false });
+      
+    if (error) {
+      console.error('Error fetching all tests for admin:', error);
+      return [];
+    }
+    
+    return data as Test[];
   }
 
   async getTest(id: number): Promise<Test | undefined> {
-    const tests = await db
-      .select()
-      .from(schema.tests)
-      .where(eq(schema.tests.id, id))
-      .limit(1);
-    
-    return tests[0];
+    const { data, error } = await supabase
+      .from('tests')
+      .select('*')
+      .eq('id', id)
+      .limit(1)
+      .single();
+      
+    if (error || !data) return undefined;
+    return data as Test;
   }
 
   async getTestByUuid(uuid: string): Promise<Test | undefined> {
-    const tests = await db
-      .select()
-      .from(schema.tests)
-      .where(eq(schema.tests.uuid, uuid))
-      .limit(1);
-    
-    return tests[0];
+    const { data, error } = await supabase
+      .from('tests')
+      .select('*')
+      .eq('uuid', uuid)
+      .limit(1)
+      .single();
+      
+    if (error || !data) return undefined;
+    return data as Test;
   }
 
   async getTestsByCategory(categoryId: number): Promise<Test[]> {
-    return await db
-      .select()
-      .from(schema.tests)
-      .where(and(
-        eq(schema.tests.categoryId, categoryId),
-        eq(schema.tests.isPublic, true)
-      ))
-      .orderBy(desc(schema.tests.createdAt));
+    const { data, error } = await supabase
+      .from('tests')
+      .select('*')
+      .eq('category_id', categoryId)
+      .eq('published', true)
+      .order('created_at', { ascending: false });
+      
+    if (error) {
+      console.error('Error fetching tests by category:', error);
+      return [];
+    }
+    
+    return data as Test[];
   }
 
   async createTest(test: InsertTest): Promise<Test> {
@@ -272,220 +580,321 @@ export class SupabaseStorage implements IStorage {
       uuid: createId()
     };
 
-    const newTest = await db
-      .insert(schema.tests)
-      .values(testWithUuid)
-      .returning();
+    const { data, error } = await supabase
+      .from('tests')
+      .insert(testWithUuid)
+      .select('*')
+      .single();
+      
+    if (error) {
+      console.error('Error creating test:', error);
+      throw new Error(`Test creation failed: ${error.message}`);
+    }
     
-    if (test.creatorId) {
+    if (test.creator_id) {
       await recordUserActivity(
-        test.creatorId, 
+        test.creator_id, 
         'create_test', 
         `Yeni test oluşturuldu: ${test.title}`,
-        newTest[0].id, 
+        data.id, 
         'test'
       );
     }
     
-    return newTest[0];
+    return data as Test;
   }
 
   async updateTest(id: number, test: Partial<InsertTest>): Promise<Test | undefined> {
-    const updatedTest = await db
-      .update(schema.tests)
-      .set({
+    const { data, error } = await supabase
+      .from('tests')
+      .update({
         ...test,
-        updatedAt: new Date()
+        updated_at: new Date()
       })
-      .where(eq(schema.tests.id, id))
-      .returning();
+      .eq('id', id)
+      .select('*')
+      .single();
+      
+    if (error) {
+      console.error('Error updating test:', error);
+      return undefined;
+    }
     
-    return updatedTest[0];
+    return data as Test;
   }
 
   async deleteTest(id: number): Promise<boolean> {
-    const testResult = await db
-      .delete(schema.tests)
-      .where(eq(schema.tests.id, id))
-      .returning({ id: schema.tests.id });
+    const { error } = await supabase
+      .from('tests')
+      .delete()
+      .eq('id', id);
+      
+    if (error) {
+      console.error('Error deleting test:', error);
+      return false;
+    }
     
-    return testResult.length > 0;
+    return true;
   }
 
   async incrementTestPlayCount(id: number): Promise<void> {
     const test = await this.getTest(id);
     if (!test) return;
     
-    const currentPlayCount = test.playCount || 0;
-    await db
-      .update(schema.tests)
-      .set({ 
-        playCount: currentPlayCount + 1 
+    const currentPlayCount = test.play_count || 0;
+    const { error } = await supabase
+      .from('tests')
+      .update({ 
+        play_count: currentPlayCount + 1 
       })
-      .where(eq(schema.tests.id, id));
+      .eq('id', id);
+      
+    if (error) {
+      console.error('Error incrementing test play count:', error);
+    }
   }
 
   async incrementTestLikeCount(id: number): Promise<void> {
     const test = await this.getTest(id);
     if (!test) return;
     
-    const currentLikeCount = test.likeCount || 0;
-    await db
-      .update(schema.tests)
-      .set({ 
-        likeCount: currentLikeCount + 1 
+    const currentLikeCount = test.like_count || 0;
+    const { error } = await supabase
+      .from('tests')
+      .update({ 
+        like_count: currentLikeCount + 1 
       })
-      .where(eq(schema.tests.id, id));
+      .eq('id', id);
+      
+    if (error) {
+      console.error('Error incrementing test like count:', error);
+    }
   }
 
   async updateTestApproval(id: number, approved: boolean): Promise<Test | undefined> {
-    const updatedTest = await db
-      .update(schema.tests)
-      .set({ approved })
-      .where(eq(schema.tests.id, id))
-      .returning();
+    const { data, error } = await supabase
+      .from('tests')
+      .update({ approved })
+      .eq('id', id)
+      .select('*')
+      .single();
+      
+    if (error) {
+      console.error('Error updating test approval:', error);
+      return undefined;
+    }
     
-    return updatedTest[0];
+    return data as Test;
   }
 
   async updateTestPublishedStatus(id: number, published: boolean): Promise<Test | undefined> {
-    const updatedTest = await db
-      .update(schema.tests)
-      .set({ isPublic: published })
-      .where(eq(schema.tests.id, id))
-      .returning();
+    const { data, error } = await supabase
+      .from('tests')
+      .update({ published })
+      .eq('id', id)
+      .select('*')
+      .single();
+      
+    if (error) {
+      console.error('Error updating test published status:', error);
+      return undefined;
+    }
     
-    return updatedTest[0];
+    return data as Test;
   }
 
   async getPopularTests(limit: number): Promise<Test[]> {
-    return await db
-      .select()
-      .from(schema.tests)
-      .where(and(
-        eq(schema.tests.isPublic, true),
-        eq(schema.tests.approved, true)
-      ))
-      .orderBy(desc(schema.tests.playCount))
+    const { data, error } = await supabase
+      .from('tests')
+      .select('*')
+      .eq('published', true)
+      .eq('approved', true)
+      .order('play_count', { ascending: false })
       .limit(limit);
+      
+    if (error) {
+      console.error('Error fetching popular tests:', error);
+      return [];
+    }
+    
+    return data as Test[];
   }
 
   async getNewestTests(limit: number): Promise<Test[]> {
-    return await db
-      .select()
-      .from(schema.tests)
-      .where(and(
-        eq(schema.tests.isPublic, true),
-        eq(schema.tests.approved, true)
-      ))
-      .orderBy(desc(schema.tests.createdAt))
+    const { data, error } = await supabase
+      .from('tests')
+      .select('*')
+      .eq('published', true)
+      .eq('approved', true)
+      .order('created_at', { ascending: false })
       .limit(limit);
+      
+    if (error) {
+      console.error('Error fetching newest tests:', error);
+      return [];
+    }
+    
+    return data as Test[];
   }
 
   async getFeaturedTests(limit: number): Promise<Test[]> {
-    return await db
-      .select()
-      .from(schema.tests)
-      .where(and(
-        eq(schema.tests.isPublic, true),
-        eq(schema.tests.approved, true),
-        eq(schema.tests.featured, true)
-      ))
-      .orderBy(desc(schema.tests.createdAt))
+    const { data, error } = await supabase
+      .from('tests')
+      .select('*')
+      .eq('published', true)
+      .eq('approved', true)
+      .eq('featured', true)
+      .order('created_at', { ascending: false })
       .limit(limit);
+      
+    if (error) {
+      console.error('Error fetching featured tests:', error);
+      return [];
+    }
+    
+    return data as Test[];
   }
 
   // Test yorumları
   async getTestComments(testId: number): Promise<TestComment[]> {
-    return await db
-      .select()
-      .from(schema.testComments)
-      .where(eq(schema.testComments.testId, testId))
-      .orderBy(desc(schema.testComments.createdAt));
+    const { data, error } = await supabase
+      .from('test_comments')
+      .select('*, user:users(id, username, profile_image_url)')
+      .eq('test_id', testId)
+      .order('created_at', { ascending: false });
+      
+    if (error) {
+      console.error('Error fetching test comments:', error);
+      return [];
+    }
+    
+    return data as TestComment[];
   }
 
   async createTestComment(comment: InsertTestComment): Promise<TestComment> {
-    const newComment = await db
-      .insert(schema.testComments)
-      .values(comment)
-      .returning();
+    const { data, error } = await supabase
+      .from('test_comments')
+      .insert(comment)
+      .select('*')
+      .single();
+      
+    if (error) {
+      console.error('Error creating test comment:', error);
+      throw new Error(`Test comment creation failed: ${error.message}`);
+    }
     
     // Get test for better details
-    const test = await this.getTest(comment.testId);
-    const testTitle = test ? test.title : `Test #${comment.testId}`;
+    const test = await this.getTest(comment.test_id);
+    const testTitle = test ? test.title : `Test #${comment.test_id}`;
     
     await recordUserActivity(
-      comment.userId, 
+      comment.user_id, 
       'comment_test', 
-      `Yorum eklendi: "${comment.comment.substring(0, 30)}${comment.comment.length > 30 ? '...' : ''}" (${testTitle})`,
-      comment.testId, 
+      `Yorum eklendi: "${comment.content.substring(0, 30)}${comment.content.length > 30 ? '...' : ''}" (${testTitle})`,
+      comment.test_id, 
       'test_comment'
     );
     
-    return newComment[0];
+    return data as TestComment;
   }
 
   // Oyun puanları
   async saveGameScore(score: InsertGameScore): Promise<GameScore> {
-    const newScore = await db
-      .insert(schema.gameScores)
-      .values(score)
-      .returning();
-    
-    if (score.userId) {
-      // Get test for better details
-      const test = await this.getTest(score.testId);
-      const testTitle = test ? test.title : `Test #${score.testId}`;
+    const { data, error } = await supabase
+      .from('game_scores')
+      .insert(score)
+      .select('*')
+      .single();
       
-      await recordUserActivity(
-        score.userId, 
-        'game_score', 
-        `Oyun skoru: ${score.score} puan (${testTitle})`,
-        score.testId, 
-        'game'
-      );
-
-      // Kullanıcı puanını artır
-      await this.updateUserScore(score.userId, score.score);
+    if (error) {
+      console.error('Error saving game score:', error);
+      throw new Error(`Game score saving failed: ${error.message}`);
     }
     
-    return newScore[0];
+    if (score.user_id) {
+      // Kullanıcı puanını artır
+      await this.updateUserScore(score.user_id, score.score);
+      
+      await recordUserActivity(
+        score.user_id, 
+        'game_score', 
+        `Oyun skoru: ${score.score} puan, mod: ${score.game_mode}`,
+        null, 
+        'game'
+      );
+    }
+    
+    return data as GameScore;
   }
 
   async getUserScores(userId: number): Promise<GameScore[]> {
-    return await db
-      .select()
-      .from(schema.gameScores)
-      .where(eq(schema.gameScores.userId, userId))
-      .orderBy(desc(schema.gameScores.createdAt));
+    const { data, error } = await supabase
+      .from('game_scores')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+      
+    if (error) {
+      console.error('Error fetching user scores:', error);
+      return [];
+    }
+    
+    return data as GameScore[];
   }
 
   async getTopScores(limit: number, gameMode?: string): Promise<GameScore[]> {
-    // Burada gameMode'u filtrelemek için gerekli koşulları ekleyebiliriz
-    // Şu an için sadece genel sıralamayı alıyoruz
-    return await db
-      .select()
-      .from(schema.gameScores)
-      .orderBy(desc(schema.gameScores.score))
+    // Supabase sorgusu oluştur
+    let query = supabase
+      .from('game_scores')
+      .select('*, user:users(id, username, profile_image_url)')
+      .order('score', { ascending: false })
       .limit(limit);
+      
+    // Eğer oyun modu belirtilmişse filtrele
+    if (gameMode) {
+      query = query.eq('game_mode', gameMode);
+    }
+    
+    const { data, error } = await query;
+    
+    if (error) {
+      console.error('Error fetching top scores:', error);
+      return [];
+    }
+    
+    return data as GameScore[];
   }
 
   // Kullanıcı aktivitelerini listeleme (admin için)
   async getUserActivities(userId: number, limit: number = 50): Promise<UserActivity[]> {
-    return await db
-      .select()
-      .from(schema.userActivities)
-      .where(eq(schema.userActivities.userId, userId))
-      .orderBy(desc(schema.userActivities.createdAt))
+    const { data, error } = await supabase
+      .from('user_activities')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
       .limit(limit);
+      
+    if (error) {
+      console.error('Error fetching user activities:', error);
+      return [];
+    }
+    
+    return data as UserActivity[];
   }
 
   async getLatestActivities(limit: number = 50): Promise<UserActivity[]> {
-    return await db
-      .select()
-      .from(schema.userActivities)
-      .orderBy(desc(schema.userActivities.createdAt))
+    const { data, error } = await supabase
+      .from('user_activities')
+      .select('*')
+      .order('created_at', { ascending: false })
       .limit(limit);
+      
+    if (error) {
+      console.error('Error fetching latest activities:', error);
+      return [];
+    }
+    
+    return data as UserActivity[];
   }
 }
 

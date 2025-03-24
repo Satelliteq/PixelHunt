@@ -1,11 +1,13 @@
+// Import supabase type definitions
 import {
-  users, type User, type InsertUser,
-  categories, type Category, type InsertCategory,
-  images, type Image, type InsertImage,
-  tests, type Test, type InsertTest,
-  testComments, type TestComment, type InsertTestComment,
-  gameScores, type GameScore, type InsertGameScore
-} from "@shared/schema";
+  User, InsertUser,
+  Category, InsertCategory,
+  Image, InsertImage,
+  Test, InsertTest,
+  TestComment, InsertTestComment,
+  GameScore, InsertGameScore,
+  UserActivity, InsertUserActivity
+} from "./supabase-storage";
 
 // Interface for all storage operations
 export interface IStorage {
