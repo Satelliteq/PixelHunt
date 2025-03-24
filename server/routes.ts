@@ -79,8 +79,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/categories", async (_req: Request, res: Response) => {
     try {
       // Supabase yerine memory storage kullanarak kategorileri getir
-      console.log("Fetching categories using memStorage");
-      const categories = await memStorage.getAllCategories();
+      console.log("Fetching categories using supabaseStorage");
+      const categories = await supabaseStorage.getAllCategories();
       res.json(categories);
     } catch (error) {
       console.error("Error fetching categories:", error);
