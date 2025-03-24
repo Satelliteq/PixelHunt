@@ -2,6 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { supabaseStorage } from "./supabase-storage";
 import { pgStorage } from "./db-storage";
+import { storage as memStorage } from "./storage"; // Memory storage'ı ekleyelim
 import { z } from "zod";
 import pkg from 'pg';
 const { Pool } = pkg;
