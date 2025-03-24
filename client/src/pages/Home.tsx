@@ -194,13 +194,7 @@ export default function Home() {
     navigate(`/tests/${testId}`);
   };
 
-  // Helper function to get the number of questions from imageIds
-  const getQuestionCount = (imageIds: unknown): number => {
-    if (Array.isArray(imageIds)) {
-      return imageIds.length;
-    }
-    return 0;
-  };
+  // Helper functions were refactored directly into the component rendering
 
   return (
     <div className="space-y-12">
@@ -289,14 +283,14 @@ export default function Home() {
                     {/* Farklı içerikler için karousel bazında farklı veriler gösterme */}
                     {index === 0 && featuredTests && featuredTests[0] && (
                       <img 
-                        src={featuredTests[0].thumbnail || '/default-test-thumb.jpg'} 
+                        src={featuredTests[0].imageUrl || '/default-test-thumb.jpg'} 
                         alt={featuredTests[0].title}
                         className="w-full h-full object-cover" 
                       />
                     )}
                     {index === 1 && popularTests && popularTests[0] && (
                       <img 
-                        src={popularTests[0].thumbnail || '/default-test-thumb.jpg'} 
+                        src={popularTests[0].imageUrl || '/default-test-thumb.jpg'} 
                         alt={popularTests[0].title}
                         className="w-full h-full object-cover" 
                       />
@@ -482,10 +476,10 @@ export default function Home() {
                   <ContentCard
                     key={test.id}
                     title={test.title}
-                    imageUrl={test.thumbnail || '/default-test-thumb.jpg'}
-                    playCount={test.playCount}
-                    likeCount={test.likeCount}
-                    duration={`${getQuestionCount(test.imageIds)} ${t('question')}`}
+                    imageUrl={test.imageUrl || '/default-test-thumb.jpg'}
+                    playCount={test.playCount || 0}
+                    likeCount={test.likeCount || 0}
+                    duration={`${test.questions && Array.isArray(test.questions) ? test.questions.length : 0} ${t('question')}`}
                     onClick={() => handleTestClick(test.id)}
                   />
                 ))
@@ -504,10 +498,10 @@ export default function Home() {
                   <ContentCard
                     key={test.id}
                     title={test.title}
-                    imageUrl={test.thumbnail || '/default-test-thumb.jpg'}
-                    playCount={test.playCount}
-                    likeCount={test.likeCount}
-                    duration={`${getQuestionCount(test.imageIds)} ${t('question')}`}
+                    imageUrl={test.imageUrl || '/default-test-thumb.jpg'}
+                    playCount={test.playCount || 0}
+                    likeCount={test.likeCount || 0}
+                    duration={`${test.questions && Array.isArray(test.questions) ? test.questions.length : 0} ${t('question')}`}
                     onClick={() => handleTestClick(test.id)}
                   />
                 ))
@@ -526,10 +520,10 @@ export default function Home() {
                   <ContentCard
                     key={test.id}
                     title={test.title}
-                    imageUrl={test.thumbnail || '/default-test-thumb.jpg'}
-                    playCount={test.playCount}
-                    likeCount={test.likeCount}
-                    duration={`${getQuestionCount(test.imageIds)} ${t('question')}`}
+                    imageUrl={test.imageUrl || '/default-test-thumb.jpg'}
+                    playCount={test.playCount || 0}
+                    likeCount={test.likeCount || 0}
+                    duration={`${test.questions && Array.isArray(test.questions) ? test.questions.length : 0} ${t('question')}`}
                     onClick={() => handleTestClick(test.id)}
                   />
                 ))
