@@ -152,8 +152,44 @@ export default function TestCreate() {
   const onSubmit = async (values: TestFormValues) => {
     try {
       setUploading(true);
+      console.log("Form gönderim başladı - formValues:", values);
+      
+      // Form verilerini kontrol et
+      if (imageInputs.length === 0) {
+        setUploading(false);
+        toast({
+          title: "Hata",
+          description: "En az bir görsel eklemelisiniz.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Görsel kontrolleri
+      for (let i = 0; i < imageInputs.length; i++) {
+        if (!imageInputs[i].imageUrl) {
+          setUploading(false);
+          toast({
+            title: "Hata",
+            description: `Görsel #${i+1} için bir URL girmelisiniz.`,
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        if (imageInputs[i].answers.length === 0) {
+          setUploading(false);
+          toast({
+            title: "Hata",
+            description: `Görsel #${i+1} için en az bir cevap eklemelisiniz.`,
+            variant: "destructive",
+          });
+          return;
+        }
+      }
       
       // Base64 formatındaki görselleri işleyin ve URL'leri kaydedin
+      console.log("Görseller işleniyor...");
       const processedImages = await Promise.all(
         imageInputs.map(async (img, index) => {
           let finalImageUrl = img.imageUrl;
@@ -161,6 +197,7 @@ export default function TestCreate() {
           // Eğer görsel URL'si base64 formatındaysa, Supabase'e yükleme işlemi yapılacak
           if (finalImageUrl && finalImageUrl.startsWith('data:image/')) {
             try {
+              console.log(`Görsel #${index+1} yükleniyor...`);
               // Base64'ü blob'a çevir
               const res = await fetch(finalImageUrl);
               const blob = await res.blob();
@@ -184,6 +221,7 @@ export default function TestCreate() {
               if (uploadRes.ok) {
                 // Yükleme başarılı, public URL'yi kullan
                 finalImageUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/images/${filePath}`;
+                console.log(`Görsel #${index+1} başarıyla yüklendi:`, finalImageUrl);
               } else {
                 console.error('Görsel yükleme hatası:', await uploadRes.text());
                 // Hata durumunda orijinal URL'yi kullan
@@ -202,6 +240,7 @@ export default function TestCreate() {
       );
       
       // Thumbnail işlemi
+      console.log("Thumbnail işleniyor...");
       let finalThumbnail = thumbnail;
       if (thumbnail && thumbnail.startsWith('data:image/')) {
         try {
@@ -228,6 +267,7 @@ export default function TestCreate() {
           if (uploadRes.ok) {
             // Yükleme başarılı, public URL'yi kullan
             finalThumbnail = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/images/${filePath}`;
+            console.log("Thumbnail başarıyla yüklendi:", finalThumbnail);
           }
         } catch (error) {
           console.error('Thumbnail işleme hatası:', error);
@@ -237,24 +277,39 @@ export default function TestCreate() {
       // API'ye gönderilecek dönüştürülmüş değerler
       const transformedValues = {
         ...values,
-        creatorId: user?.id, // Kullanıcı ID'sini ekle
+        creator_id: user?.id, // Kullanıcı ID'sini ekle (değişken ismi düzeltildi, creatorId yerine creator_id)
         thumbnail: finalThumbnail,
         images: processedImages,
       };
+      
+      console.log("API'ye gönderilecek veri:", transformedValues);
 
-      const response = await apiRequest("/api/tests", {
-        method: "POST",
-        data: transformedValues,
-      });
+      try {
+        const response = await apiRequest("/api/tests", {
+          method: "POST",
+          data: transformedValues,
+        });
+        
+        console.log("API yanıtı:", response);
 
-      toast({
-        title: "Test başarıyla oluşturuldu",
-        description: "Testiniz başarıyla oluşturuldu ve yayınlandı.",
-        variant: "default",
-      });
+        toast({
+          title: "Test başarıyla oluşturuldu",
+          description: "Testiniz başarıyla oluşturuldu ve yayınlandı.",
+          variant: "default",
+        });
 
-      // Navigate to the test page
-      navigate(`/test/${response.id}`);
+        // Test sayfasına yönlendir
+        navigate(`/test/${response.id}`);
+      } catch (apiError) {
+        console.error("API hatası:", apiError);
+        toast({
+          title: "API Hatası",
+          description: "Sunucu ile iletişim sırasında bir hata oluştu. Lütfen tekrar deneyin.",
+          variant: "destructive",
+        });
+      }
+      
+      setUploading(false);
     } catch (error) {
       console.error("Test oluşturma hatası:", error);
       toast({
@@ -262,6 +317,7 @@ export default function TestCreate() {
         description: "Test oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.",
         variant: "destructive",
       });
+      setUploading(false);
     }
   };
 
