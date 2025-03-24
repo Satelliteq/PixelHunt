@@ -1,7 +1,6 @@
 // Push schema script
 // Alternatif olarak interaktif olmayan bir şekilde schema değişikliklerini veritabanına uygular
 
-import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import dotenv from 'dotenv';
 
@@ -21,7 +20,6 @@ async function pushSchema() {
   try {
     // Bağlantı kurma
     const sql = postgres(connectionString, { max: 1 });
-    const db = drizzle(sql, { schema });
     
     // image_url alanını kategori tablosuna ekle (yoksa)
     await sql`
@@ -35,7 +33,31 @@ async function pushSchema() {
       END $$;
     `;
     
+    // order alanını sil eğer varsa (kullanılmıyor)
+    await sql`
+      DO $$ 
+      BEGIN 
+        BEGIN
+          ALTER TABLE categories DROP COLUMN IF EXISTS "order";
+          RAISE NOTICE 'order column dropped from categories table if it existed';
+        END;
+      END $$;
+    `;
+    
+    // updated_at alanını ekle (yoksa)
+    await sql`
+      DO $$ 
+      BEGIN 
+        BEGIN
+          ALTER TABLE categories ADD COLUMN updated_at TIMESTAMP;
+          EXCEPTION WHEN duplicate_column THEN 
+          RAISE NOTICE 'updated_at column already exists in categories table';
+        END;
+      END $$;
+    `;
+    
     console.log("Şema başarıyla güncellendi!");
+    await sql.end();
     process.exit(0);
   } catch (error) {
     console.error("Şema güncellenirken hata oluştu:", error);

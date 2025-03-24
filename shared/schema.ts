@@ -62,12 +62,14 @@ export const images = pgTable("images", {
 
 export const tests = pgTable("tests", {
   id: serial("id").primaryKey(),
-  uuid: uuid("uuid").defaultRandom().notNull().unique(), // For public sharing
+  uuid: text("uuid").notNull().unique(), // For public sharing
   title: text("title").notNull(),
   description: text("description"),
   creatorId: integer("creator_id").references(() => users.id), // null if created by system (anonymous)
   categoryId: integer("category_id").references(() => categories.id),
-  imageIds: jsonb("image_ids").notNull(), // Array of image IDs
+  imageUrl: text("image_url"), // Test kapak resmi
+  questions: jsonb("questions").notNull(), // Soru dizisi
+  duration: integer("duration"), // Test süresi (saniye olarak)
   playCount: integer("play_count").default(0),
   likeCount: integer("like_count").default(0),
   isPublic: boolean("is_public").default(true),
@@ -76,8 +78,6 @@ export const tests = pgTable("tests", {
   difficulty: integer("difficulty").default(2), // Average difficulty
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at"),
-  thumbnail: text("thumbnail"), // URL for test thumbnail
-  settings: jsonb("settings"), // Test ayarları (zaman limiti, soru sayısı vb.)
 });
 
 export const testComments = pgTable("test_comments", {
@@ -140,13 +140,13 @@ export const insertTestSchema = createInsertSchema(tests).pick({
   description: true,
   creatorId: true,
   categoryId: true,
-  imageIds: true,
+  imageUrl: true,
+  questions: true,
+  duration: true,
   isPublic: true,
   approved: true,
   featured: true,
   difficulty: true,
-  thumbnail: true,
-  settings: true,
 });
 
 export const insertTestCommentSchema = createInsertSchema(testComments).pick({
