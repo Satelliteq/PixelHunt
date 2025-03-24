@@ -32,13 +32,15 @@ export const categories = pgTable("categories", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
+  // Aşağıdaki alanlar basitleştirilmiş yapı için opsiyonel
   iconUrl: text("icon_url"),
-  iconName: text("icon_name"), // Lucide or react-icons name
-  color: text("color").default("#4F46E5"), // Varsayılan renk - indigo-600
-  backgroundColor: text("background_color"), // Arka plan rengi
-  order: integer("order").default(0), // Sıralama için
+  iconName: text("icon_name"), // Opsiyonel - sadece eski kod uyumluluğu için
+  color: text("color"), // Opsiyonel - sadece eski kod uyumluluğu için
+  backgroundColor: text("background_color"), // Opsiyonel - sadece eski kod uyumluluğu için
+  image_url: text("image_url"), // Kategori resmi - yeni arayüz için
   active: boolean("active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at"),
 });
 
 export const images = pgTable("images", {
@@ -119,16 +121,7 @@ export const insertUserActivitySchema = createInsertSchema(userActivities).pick(
   metadata: true,
 });
 
-export const insertCategorySchema = createInsertSchema(categories).pick({
-  name: true,
-  description: true,
-  iconUrl: true,
-  iconName: true,
-  color: true,
-  backgroundColor: true,
-  order: true,
-  active: true,
-});
+export const insertCategorySchema = createInsertSchema(categories);
 
 export const insertImageSchema = createInsertSchema(images).pick({
   title: true,

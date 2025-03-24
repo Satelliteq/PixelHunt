@@ -182,21 +182,18 @@ const getIconComponent = (iconName: string | null | undefined): React.ReactNode 
   return React.createElement(icon.component, { className: "w-4 h-4" });
 };
 
-// Kategori yönetimi için form şeması
-const categoryFormSchema = insertCategorySchema.extend({
-  description: z.string().min(10, {
-    message: "Açıklama en az 10 karakter olmalıdır.",
-  }),
+// Kategori yönetimi için form şeması - basitleştirilmiş model
+const categoryFormSchema = z.object({
   name: z.string().min(3, {
     message: "Kategori adı en az 3 karakter olmalıdır.",
   }),
-  color: z.string().regex(/^#([0-9A-F]{6})$/i, {
-    message: "Geçerli bir hex renk kodu girin (örn: #FF5733).",
-  }).default("#4F46E5"),
-  iconName: z.string().default("none"),
-  backgroundColor: z.string().regex(/^#([0-9A-F]{6})$/i, {
-    message: "Geçerli bir hex renk kodu girin (örn: #FFF5F5).",
+  description: z.string().min(10, {
+    message: "Açıklama en az 10 karakter olmalıdır.",
+  }),
+  image_url: z.string().url({
+    message: "Geçerli bir resim URL'si girin."
   }).optional(),
+  active: z.boolean().default(true)
 });
 
 type CategoryFormValues = z.infer<typeof categoryFormSchema>;
@@ -328,15 +325,14 @@ function AdminPanel() {
     }
   };
 
-  // Kategori düzenleme için dialog'u aç
+  // Kategori düzenleme için dialog'u aç - basitleştirilmiş model
   const openEditCategoryDialog = (category: any) => {
     setSelectedCategory(category);
     categoryForm.reset({
       name: category.name,
       description: category.description,
-      color: category.color || "#4F46E5",
-      iconName: category.iconName || "none",
-      backgroundColor: category.backgroundColor || "",
+      image_url: category.image_url || "",
+      active: category.active
     });
     setIsCategoryDialogOpen(true);
   };
@@ -535,9 +531,8 @@ function AdminPanel() {
                         categoryForm.reset({
                           name: "",
                           description: "",
-                          color: "#4F46E5",
-                          iconName: "none",
-                          backgroundColor: "#F3F4F6",
+                          image_url: "",
+                          active: true
                         });
                       }}
                     >
