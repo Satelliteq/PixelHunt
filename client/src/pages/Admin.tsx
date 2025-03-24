@@ -193,7 +193,7 @@ const categoryFormSchema = insertCategorySchema.extend({
   color: z.string().regex(/^#([0-9A-F]{6})$/i, {
     message: "Geçerli bir hex renk kodu girin (örn: #FF5733).",
   }).default("#4F46E5"),
-  iconName: z.string().optional(),
+  iconName: z.string().default("none"),
   backgroundColor: z.string().regex(/^#([0-9A-F]{6})$/i, {
     message: "Geçerli bir hex renk kodu girin (örn: #FFF5F5).",
   }).optional(),
@@ -335,7 +335,7 @@ function AdminPanel() {
       name: category.name,
       description: category.description,
       color: category.color || "#4F46E5",
-      iconName: category.iconName || "",
+      iconName: category.iconName || "none",
       backgroundColor: category.backgroundColor || "",
     });
     setIsCategoryDialogOpen(true);
@@ -536,6 +536,8 @@ function AdminPanel() {
                           name: "",
                           description: "",
                           color: "#4F46E5",
+                          iconName: "none",
+                          backgroundColor: "#F3F4F6",
                         });
                       }}
                     >
@@ -605,7 +607,7 @@ function AdminPanel() {
                               <FormLabel>İkon</FormLabel>
                               <Select
                                 onValueChange={field.onChange}
-                                defaultValue={field.value || ""}
+                                defaultValue={field.value || "none"}
                               >
                                 <FormControl>
                                   <SelectTrigger>
@@ -740,7 +742,7 @@ function AdminPanel() {
                         <TableCell>{category.id}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            {category.iconName && getIconComponent(category.iconName)}
+                            {category.iconName && category.iconName !== "none" && getIconComponent(category.iconName)}
                             <span>{category.name}</span>
                           </div>
                         </TableCell>
