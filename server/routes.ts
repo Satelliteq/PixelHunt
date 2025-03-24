@@ -366,15 +366,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get("/api/tests/:id", async (req: Request, res: Response) => {
     try {
-      const id = parseInt(req.params.id);
+      // ID'nin sayı olup olmadığını kontrol et
+      const idParam = req.params.id;
+      let test = null;
       
-      if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid test ID" });
+      if (!isNaN(parseInt(idParam))) {
+        const id = parseInt(idParam);
+        test = await supabaseStorage.getTest(id);
       }
       
-      const test = await supabaseStorage.getTest(id);
+      // Eğer ID sayı değilse veya test bulunamadıysa, UUID olarak dene
+      if (!test && idParam.length > 8) {
+        console.log("ID sayı olarak bulunamadı, UUID olarak deneniyor:", idParam);
+        test = await supabaseStorage.getTestByUuid(idParam);
+      }
       
       if (!test) {
+        console.log("Test bulunamadı - ID:", idParam);
         return res.status(404).json({ message: "Test not found" });
       }
       
