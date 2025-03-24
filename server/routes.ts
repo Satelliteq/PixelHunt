@@ -406,7 +406,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("Dönüştürülmüş veri:", transformedData);
       
-      // İlk olarak Supabase'e kaydetmeyi dene
+      // Skip Supabase if we're marking as anonymous because of schema cache issues
+      if (transformedData.is_anonymous === true) {
+        console.log("Anonymous test detected, using direct SQL insert to bypass schema cache issue");
+        try {
+          // Create a test without the is_anonymous field first
+          const testWithoutAnon = {...transformedData};
+          delete testWithoutAnon.is_anonymous;
+          // isAnonymous is already excluded since it's not in the base object
+          
+          const { data: insertedTest, error: insertError } = await db
+            .from('tests')
+            .insert(testWithoutAnon)
+            .select('*')
+            .single();
+            
+          if (insertError) {
+            console.error("Error inserting test:", insertError);
+            throw new Error(`Test creation failed: ${insertError.message}`);
+          }
+          
+          if (!insertedTest) {
+            throw new Error("No test was inserted");
+          }
+          
+          // Now update the is_anonymous field directly via raw SQL update
+          console.log(`Updating is_anonymous for test ID ${insertedTest.id}`);
+          try {
+            const { error } = await db.rpc('set_test_anonymous', { test_id: insertedTest.id });
+            
+            if (error) {
+              console.error("Error in set_test_anonymous RPC:", error);
+              // Try direct SQL next
+              try {
+                const { data, error: sqlError } = await db.from('tests')
+                  .update({ is_anonymous: true })
+                  .eq('id', insertedTest.id)
+                  .select('*')
+                  .single();
+                  
+                if (sqlError) {
+                  console.error("Error in direct SQL update:", sqlError);
+                  throw new Error(`SQL update failed: ${sqlError.message}`);
+                }
+                
+                return data;
+              } catch (sqlError) {
+                console.error("Error in SQL fallback:", sqlError);
+                throw new Error("Failed to update is_anonymous with all methods");
+              }
+            }
+            
+            // Get the updated test data
+            const { data: updatedTest, error: fetchError } = await db
+              .from('tests')
+              .select('*')
+              .eq('id', insertedTest.id)
+              .single();
+              
+            if (fetchError) {
+              console.error("Error fetching updated test:", fetchError);
+              throw new Error(`Fetching updated test failed: ${fetchError.message}`);
+            }
+            
+            return updatedTest;
+          } catch (rpcError) {
+            console.error("RPC error:", rpcError);
+            // Just continue with the original test data
+            return insertedTest;
+          }
+            
+          if (updateError) {
+            console.error("Error updating is_anonymous field:", updateError);
+            // Return the test anyway, but note the error
+            console.log("Returning test with is_anonymous=false due to update error");
+            return res.status(201).json(insertedTest);
+          }
+          
+          console.log("Successfully created anonymous test:", updatedTest);
+          return res.status(201).json(updatedTest);
+        } catch (directSqlError) {
+          console.error("Direct SQL operation error:", directSqlError);
+          // Fall through to normal flow if direct SQL failed
+        }
+      }
+      
+      // Normal flow for non-anonymous tests or if direct SQL failed
       try {
         const newTest = await supabaseStorage.createTest(transformedData);
         console.log("Test Supabase'e kaydedildi:", newTest);
@@ -416,38 +501,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Postgres'e kaydetmeyi dene
         try {
-          const newTest = await pgStorage.createTest(transformedData);
-          console.log("Test PostgreSQL'e kaydedildi:", newTest);
-          
-          // If isAnonymous was true but is_anonymous is false in the result,
-          // update it directly with SQL to fix schema cache issue
-          if (transformedData.is_anonymous === true && newTest.is_anonymous === false) {
-            try {
-              const { data, error } = await supabase
-                .from('tests')
-                .update({ is_anonymous: true })
-                .eq('id', newTest.id);
-                
-              if (!error) {
-                console.log(`Fixed is_anonymous value for test ID ${newTest.id}`);
-                newTest.is_anonymous = true;
-              } else {
-                console.error("Error fixing is_anonymous value:", error);
-              }
-            } catch (fixError) {
-              console.error("Error fixing is_anonymous value:", fixError);
-            }
-          }
-          
-          return res.status(201).json(newTest);
+          const postgresTest = await pgStorage.createTest(transformedData);
+          console.log("Test PostgreSQL'e kaydedildi:", postgresTest);
+          return res.status(201).json(postgresTest);
         } catch (pgError) {
           console.error("PostgreSQL kaydetme hatası:", pgError);
           
           // Son çare olarak memory storage'a kaydet
           console.log("Memory storage'a kaydediliyor...");
-          const newTest = await memStorage.createTest(transformedData);
+          const memTest = await memStorage.createTest(transformedData);
           console.log("Test memory storage'a kaydedildi");
-          return res.status(201).json(newTest);
+          return res.status(201).json(memTest);
         }
       }
     } catch (error) {
