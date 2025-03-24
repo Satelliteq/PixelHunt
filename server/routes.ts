@@ -400,6 +400,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         questions: req.body.images || req.body.questions || [],
         approved: true, // Geliştirme sırasında hemen onaylı olarak kaydet
         is_public: req.body.isPublic !== undefined ? req.body.isPublic : true,
+        is_anonymous: req.body.isAnonymous !== undefined ? req.body.isAnonymous : false,
         featured: false
       };
 

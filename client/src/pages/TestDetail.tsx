@@ -301,17 +301,15 @@ export default function TestDetail() {
                 <span className="text-sm text-muted-foreground">
                   {test.isAnonymous || !test.creatorId 
                     ? "Anonim kullanıcı tarafından oluşturuldu" 
-                    : (test.createdBy?.username 
-                        ? `${test.createdBy.username} tarafından oluşturuldu` 
-                        : "Kullanıcı tarafından oluşturuldu")
+                    : "Kullanıcı tarafından oluşturuldu"
                   }
                 </span>
               </div>
               
-              {test.thumbnail && (
+              {test.imageUrl && (
                 <div className="mb-4 rounded-md overflow-hidden">
                   <img 
-                    src={test.thumbnail} 
+                    src={test.imageUrl} 
                     alt={test.title} 
                     className="w-full h-48 object-cover"
                   />
@@ -394,7 +392,7 @@ export default function TestDetail() {
                             <div className="space-y-1">
                               <div className="flex items-center gap-2">
                                 <span className="text-sm font-medium">
-                                  {test.isAnonymous ? "Anonim" : (comment.user?.username || "Kullanıcı")}
+                                  {test.isAnonymous ? "Anonim" : "Kullanıcı"}
                                 </span>
                                 <span className="text-xs text-muted-foreground">
                                   {formatDistance(
@@ -444,7 +442,10 @@ export default function TestDetail() {
                             }`}>
                               {index + 1}
                             </div>
-                            <div className="font-medium">{score.userId ? "Kullanıcı" : "Anonim"}</div>
+                            <div className="font-medium">
+                              {test.isAnonymous ? "Anonim" : 
+                               (score.userId ? "Kullanıcı" : "Anonim")}
+                            </div>
                           </div>
                           <div className="flex items-center gap-2">
                             <Badge variant="outline" className="flex items-center gap-1">
