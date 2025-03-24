@@ -431,6 +431,54 @@ export default function TestCreate() {
                 )}
               />
             </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+              <FormField
+                control={form.control}
+                name="isPublic"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>
+                        Herkese Açık
+                      </FormLabel>
+                      <FormDescription>
+                        Bu test tüm kullanıcılar tarafından görülebilir
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="isAnonymous"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>
+                        Anonim Olarak Paylaş
+                      </FormLabel>
+                      <FormDescription>
+                        Testin kime ait olduğu gizlenecek
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={form.control}
@@ -483,47 +531,7 @@ export default function TestCreate() {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="isPublic"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-4">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>Herkese Açık</FormLabel>
-                    <FormDescription>
-                      Testinizin diğer kullanıcılar tarafından görüntülenebilmesini istiyorsanız işaretleyin.
-                    </FormDescription>
-                  </div>
-                </FormItem>
-              )}
-            />
 
-            <FormField
-              control={form.control}
-              name="isAnonymous"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-4">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>Anonim Paylaşım</FormLabel>
-                    <FormDescription>
-                      Testinizin anonim olarak paylaşılmasını istiyorsanız işaretleyin. Bu durumda kullanıcı bilgileriniz gizlenir.
-                    </FormDescription>
-                  </div>
-                </FormItem>
-              )}
-            />
             
 
           </div>
