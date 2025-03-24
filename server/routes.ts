@@ -292,12 +292,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Test routes
-  app.get("/api/tests", async (_req: Request, res: Response) => {
+  app.get("/api/tests", async (req: Request, res: Response) => {
     try {
+      // Eğer query parametresi varsa, arama yap
+      const searchQuery = req.query.q as string;
+      const categoryId = req.query.categoryId ? parseInt(req.query.categoryId as string) : undefined;
+      
+      if (searchQuery || categoryId) {
+        console.log(`Received search request: query="${searchQuery}", categoryId=${categoryId}`);
+        const searchResults = await supabaseStorage.searchTests(searchQuery || "", categoryId);
+        return res.json(searchResults);
+      }
+      
+      // Arama sorgusu yoksa tüm testleri getir
       const tests = await supabaseStorage.getAllTests();
       res.json(tests);
     } catch (error) {
-      res.status(500).json({ message: "Server error" });
+      console.error("Test listesi veya arama hatası:", error);
+      res.status(500).json({ message: "Server error", error: String(error) });
     }
   });
   

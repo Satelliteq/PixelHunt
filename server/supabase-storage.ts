@@ -896,6 +896,39 @@ export class SupabaseStorage implements IStorage {
     
     return data as UserActivity[];
   }
+
+  // Arama fonksiyonu
+  async searchTests(query: string, categoryId?: number, limit: number = 20): Promise<Test[]> {
+    console.log(`Searching tests with query: "${query}", categoryId: ${categoryId || 'all'}`);
+    
+    let supabaseQuery = supabase
+      .from('tests')
+      .select('*, category:categories(*), createdBy:users(id, username, profile_image_url)')
+      .filter('is_public', 'eq', true);
+      
+    // Eğer kategori ID belirtilmişse, filtreleme yap
+    if (categoryId) {
+      supabaseQuery = supabaseQuery.filter('category_id', 'eq', categoryId);
+    }
+    
+    // Arama sorgusu: başlık ve açıklamada arama yap (büyük/küçük harf duyarsız)
+    if (query && query.trim() !== '') {
+      // İTextSearch sorgusu
+      const ilike = `%${query.toLowerCase()}%`;
+      supabaseQuery = supabaseQuery.or(`title.ilike.${ilike},description.ilike.${ilike}`);
+    }
+    
+    const { data, error } = await supabaseQuery
+      .order('created_at', { ascending: false })
+      .limit(limit);
+      
+    if (error) {
+      console.error('Error searching tests:', error);
+      return [];
+    }
+    
+    return data as Test[];
+  }
 }
 
 export const supabaseStorage = new SupabaseStorage();
