@@ -353,41 +353,9 @@ export default function Home() {
         ))}
       </section>
 
-      {/* Search Box */}
-      <section className="max-w-content mx-auto mb-8">
-        <form onSubmit={handleSearch} className="relative">
-          <div className="flex items-center">
-            <Input
-              type="text"
-              placeholder="Test ara..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pr-10"
-            />
-            <div className="absolute right-3 flex items-center space-x-1">
-              {searchQuery && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={() => {
-                    setSearchQuery("");
-                    setShowSearchResults(false);
-                  }}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              )}
-              <Button type="submit" variant="ghost" size="icon" className="h-6 w-6">
-                {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-              </Button>
-            </div>
-          </div>
-        </form>
-        
-        {/* Search Results */}
-        {showSearchResults && (
+      {/* Search Results (hidden by default, shown when search is activated) */}
+      {showSearchResults && (
+        <section className="max-w-content mx-auto mb-8">
           <div className="mt-6">
             <h2 className="text-xl font-semibold mb-4 flex items-center">
               <Search className="w-5 h-5 mr-2" />
@@ -432,8 +400,8 @@ export default function Home() {
               </div>
             )}
           </div>
-        )}
-      </section>
+        </section>
+      )}
       
       {/* Main Content */}
       <section className="max-w-content mx-auto">

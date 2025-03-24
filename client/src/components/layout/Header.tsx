@@ -11,13 +11,24 @@ import {
   DropdownMenuItem, 
   DropdownMenuLabel, 
   DropdownMenuSeparator, 
-  DropdownMenuTrigger 
+  DropdownMenuTrigger,
+  DropdownMenuGroup
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import ThemeToggle from "@/components/ThemeToggle";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLanguage } from "@/lib/LanguageContext";
 import { useAuth } from "@/lib/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { 
   Grid2X2,
   Search,
@@ -29,7 +40,9 @@ import {
   Menu,
   X,
   PlayCircle,
-  Settings
+  Settings,
+  Loader2,
+  Filter
 } from "lucide-react";
 
 export default function Header() {
@@ -38,6 +51,13 @@ export default function Header() {
   const isMobile = useIsMobile();
   const { t } = useLanguage();
   const { user, loading, initialized, signOut } = useAuth();
+  const { toast } = useToast();
+  
+  // Arama işlemleri için state'ler
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   // Close mobile menu when resizing to desktop
   useEffect(() => {
@@ -80,6 +100,44 @@ export default function Header() {
     } catch (error) {
       console.error('Çıkış yapılırken hata oluştu:', error);
     }
+  };
+  
+  // Arama fonksiyonu
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) {
+      toast({
+        title: "Arama hatası",
+        description: "Lütfen aramak için bir şeyler yazın.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsSearching(true);
+    try {
+      const response = await apiRequest<any[]>({
+        url: `/api/tests?query=${encodeURIComponent(searchQuery)}`,
+        method: 'GET',
+      });
+      
+      setSearchResults(response);
+      setSearchOpen(true);
+    } catch (error) {
+      console.error("Arama hatası:", error);
+      toast({
+        title: "Arama hatası",
+        description: "Sonuçlar yüklenirken bir hata oluştu.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSearching(false);
+    }
+  };
+  
+  // Test detay sayfasına yönlendirme
+  const handleTestClick = (testId: number) => {
+    setSearchOpen(false);
+    navigate(`/tests/${testId}`);
   };
 
   return (
@@ -144,20 +202,94 @@ export default function Header() {
             <Menu className="h-5 w-5" />
           </Button>
           
-          <div className="relative hidden md:block w-64">
-            <Input
-              type="text"
-              placeholder={t('search')}
-              className="bg-muted w-full rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-            />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-theme-muted h-8 w-8 icon-hover-effect"
-            >
-              <Search className="h-4 w-4" />
-            </Button>
-          </div>
+          <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
+            <DialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full"
+              >
+                <Search className="h-5 w-5" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle>Test Ara</DialogTitle>
+                <DialogDescription>
+                  Aramak istediğiniz test veya içeriği yazıp arama yapabilirsiniz.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="mt-4 space-y-4">
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="text"
+                    placeholder="Test veya içerik ara..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="flex-1"
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                  />
+                  <Button onClick={handleSearch} disabled={isSearching}>
+                    {isSearching ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <Search className="h-4 w-4 mr-2" />
+                    )}
+                    Ara
+                  </Button>
+                </div>
+                
+                {isSearching ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : searchResults.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[400px] overflow-y-auto p-2">
+                    {searchResults.map((test) => (
+                      <div 
+                        key={test.id}
+                        className="flex flex-col bg-card rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+                        onClick={() => handleTestClick(test.id)}
+                      >
+                        <div className="aspect-video bg-muted">
+                          {test.imageUrl ? (
+                            <img 
+                              src={test.imageUrl} 
+                              alt={test.title} 
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-muted">
+                              <BookOpen className="h-10 w-10 text-muted-foreground/40" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-3">
+                          <h4 className="font-medium text-sm line-clamp-1">{test.title}</h4>
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                            {test.description || "Açıklama bulunmuyor"}
+                          </p>
+                          <div className="flex items-center justify-between mt-2">
+                            <span className="text-[11px] text-muted-foreground">
+                              {test.questions?.length || 0} soru
+                            </span>
+                            <span className="text-[11px] text-muted-foreground">
+                              {test.playCount || 0} oynanma
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : searchQuery && !isSearching ? (
+                  <div className="text-center p-8 bg-muted/30 rounded-lg">
+                    <p className="text-muted-foreground mb-2">"{searchQuery}" için sonuç bulunamadı</p>
+                    <p className="text-sm text-muted-foreground">Farklı anahtar kelimelerle aramayı deneyin.</p>
+                  </div>
+                ) : null}
+              </div>
+            </DialogContent>
+          </Dialog>
           
           <Button 
             className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded-full text-sm hidden md:flex"
@@ -237,13 +369,17 @@ export default function Header() {
             type="text"
             placeholder={t('search')}
             className="bg-muted w-full rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           />
           <Button
             variant="ghost"
             size="icon"
             className="absolute right-2 top-1/2 -translate-y-1/2 text-theme-muted h-8 w-8 icon-hover-effect"
+            onClick={handleSearch}
           >
-            <Search className="h-4 w-4" />
+            {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
           </Button>
         </div>
         
