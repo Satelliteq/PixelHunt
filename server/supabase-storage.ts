@@ -776,9 +776,10 @@ export class SupabaseStorage implements IStorage {
 
   // Test yorumları
   async getTestComments(testId: number): Promise<TestComment[]> {
+    // Profile_image_url sütunu hata veriyor, sadece id ve username alalım
     const { data, error } = await supabase
       .from('test_comments')
-      .select('*, user:users(id, username, profile_image_url)')
+      .select('*, user:users(id, username)')
       .eq('test_id', testId)
       .order('created_at', { ascending: false });
       
@@ -865,7 +866,7 @@ export class SupabaseStorage implements IStorage {
     // Supabase sorgusu oluştur
     let query = supabase
       .from('game_scores')
-      .select('*, user:users(id, username, profile_image_url)')
+      .select('*, user:users(id, username)')
       .order('score', { ascending: false })
       .limit(limit);
       
@@ -922,7 +923,7 @@ export class SupabaseStorage implements IStorage {
     
     let supabaseQuery = supabase
       .from('tests')
-      .select('*, category:categories(*), createdBy:users(id, username, profile_image_url)')
+      .select('*, category:categories(*), createdBy:users(id, username)')
       .filter('is_public', 'eq', true);
       
     // Eğer kategori ID belirtilmişse, filtreleme yap
