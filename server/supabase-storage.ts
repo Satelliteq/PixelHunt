@@ -96,6 +96,7 @@ export interface Test {
   like_count: number;
   approved: boolean;
   is_public: boolean;
+  is_anonymous: boolean;
   featured: boolean;
   created_at: string;
   updated_at?: string;
@@ -116,6 +117,8 @@ export interface InsertTest {
   like_count?: number;
   approved?: boolean;
   is_public?: boolean;
+  is_anonymous?: boolean;
+  isAnonymous?: boolean; // For compatibility with frontend
   featured?: boolean;
 }
 
@@ -580,6 +583,13 @@ export class SupabaseStorage implements IStorage {
       uuid: createId()
     };
 
+    // Schema cache sorunu nedeniyle rename ediyoruz
+    // isAnonymous -> is_anonymous dönüşümü
+    if (testWithUuid.isAnonymous !== undefined) {
+      testWithUuid.is_anonymous = testWithUuid.isAnonymous;
+      delete testWithUuid.isAnonymous;
+    }
+
     const { data, error } = await supabase
       .from('tests')
       .insert(testWithUuid)
@@ -605,10 +615,19 @@ export class SupabaseStorage implements IStorage {
   }
 
   async updateTest(id: number, test: Partial<InsertTest>): Promise<Test | undefined> {
+    // Schema cache sorunu nedeniyle rename ediyoruz
+    const testData = { ...test };
+    
+    // isAnonymous -> is_anonymous dönüşümü
+    if (testData.isAnonymous !== undefined) {
+      testData.is_anonymous = testData.isAnonymous;
+      delete testData.isAnonymous;
+    }
+    
     const { data, error } = await supabase
       .from('tests')
       .update({
-        ...test,
+        ...testData,
         updated_at: new Date()
       })
       .eq('id', id)

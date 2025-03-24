@@ -418,6 +418,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           const newTest = await pgStorage.createTest(transformedData);
           console.log("Test PostgreSQL'e kaydedildi:", newTest);
+          
+          // If isAnonymous was true but is_anonymous is false in the result,
+          // update it directly with SQL to fix schema cache issue
+          if (transformedData.is_anonymous === true && newTest.is_anonymous === false) {
+            try {
+              const { data, error } = await supabase
+                .from('tests')
+                .update({ is_anonymous: true })
+                .eq('id', newTest.id);
+                
+              if (!error) {
+                console.log(`Fixed is_anonymous value for test ID ${newTest.id}`);
+                newTest.is_anonymous = true;
+              } else {
+                console.error("Error fixing is_anonymous value:", error);
+              }
+            } catch (fixError) {
+              console.error("Error fixing is_anonymous value:", fixError);
+            }
+          }
+          
           return res.status(201).json(newTest);
         } catch (pgError) {
           console.error("PostgreSQL kaydetme hatası:", pgError);
