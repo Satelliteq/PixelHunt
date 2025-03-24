@@ -304,9 +304,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/tests/popular", async (req: Request, res: Response) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
-      // Geçici olarak memStorage kullanıyoruz
-      console.log("Fetching popular tests using memStorage");
-      const popularTests = await memStorage.getPopularTests(limit);
+      console.log("Fetching popular tests using supabaseStorage");
+      const popularTests = await supabaseStorage.getPopularTests(limit);
       res.json(popularTests);
     } catch (error) {
       console.error("Error fetching popular tests:", error);
@@ -317,9 +316,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/tests/newest", async (req: Request, res: Response) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
-      // Geçici olarak memStorage kullanıyoruz
-      console.log("Fetching newest tests using memStorage");
-      const newestTests = await memStorage.getNewestTests(limit);
+      console.log("Fetching newest tests using supabaseStorage");
+      const newestTests = await supabaseStorage.getNewestTests(limit);
       res.json(newestTests);
     } catch (error) {
       console.error("Error fetching newest tests:", error);
@@ -330,9 +328,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/tests/featured", async (req: Request, res: Response) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
-      // Geçici olarak memStorage kullanıyoruz
-      console.log("Fetching featured tests using memStorage");
-      const featuredTests = await memStorage.getFeaturedTests(limit);
+      console.log("Fetching featured tests using supabaseStorage");
+      const featuredTests = await supabaseStorage.getFeaturedTests(limit);
       res.json(featuredTests);
     } catch (error) {
       console.error("Error fetching featured tests:", error);
@@ -414,7 +411,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Son çare olarak memory storage'a kaydet
           console.log("Memory storage'a kaydediliyor...");
-          const newTest = await storage.createTest(transformedData);
+          const newTest = await memStorage.createTest(transformedData);
           console.log("Test memory storage'a kaydedildi");
           return res.status(201).json(newTest);
         }
@@ -660,7 +657,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Final fallback to in-memory storage
           try {
-            newCategory = await storage.createCategory(categoryInput);
+            newCategory = await memStorage.createCategory(categoryInput);
           } catch (memoryError) {
             console.error("Memory storage error:", memoryError);
             throw new Error("Failed to create category using all available storage methods");
