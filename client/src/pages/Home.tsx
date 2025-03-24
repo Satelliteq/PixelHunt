@@ -254,30 +254,69 @@ export default function Home() {
                     {slide.icon} {slide.cardTitle}
                   </h3>
                   <div className="mt-3 aspect-video rounded-lg overflow-hidden custom-frame">
-                    {featuredTests && featuredTests[0] && (
+                    {/* Farklı içerikler için karousel bazında farklı veriler gösterme */}
+                    {index === 0 && featuredTests && featuredTests[0] && (
                       <img 
                         src={featuredTests[0].thumbnail || '/default-test-thumb.jpg'} 
                         alt={featuredTests[0].title}
                         className="w-full h-full object-cover" 
                       />
                     )}
+                    {index === 1 && popularTests && popularTests[0] && (
+                      <img 
+                        src={popularTests[0].thumbnail || '/default-test-thumb.jpg'} 
+                        alt={popularTests[0].title}
+                        className="w-full h-full object-cover" 
+                      />
+                    )}
+                    {index === 2 && (
+                      <div className="w-full h-full flex items-center justify-center bg-primary/20">
+                        <Plus className="h-10 w-10 text-white/70" />
+                      </div>
+                    )}
                   </div>
                   <div className="mt-3">
                     <h4 className="text-white text-sm font-medium">
-                      {featuredTests && featuredTests[0] ? featuredTests[0].title : t('loading')}
+                      {index === 0 && featuredTests && featuredTests[0] 
+                        ? featuredTests[0].title 
+                        : index === 1 && popularTests && popularTests[0]
+                          ? popularTests[0].title
+                          : index === 2
+                            ? "Yeni Test Oluştur"
+                            : t('loading')}
                     </h4>
                     <div className="flex justify-between items-center mt-2">
                       <div className="flex items-center text-xs text-white/60">
-                        <Users className="h-3 w-3 mr-1" /> 
-                        <span>{featuredTests && featuredTests[0] ? (featuredTests[0].playCount || 0) : "0"} {t('players')}</span>
+                        {index !== 2 ? (
+                          <>
+                            <Users className="h-3 w-3 mr-1" /> 
+                            <span>
+                              {index === 0 && featuredTests && featuredTests[0] 
+                                ? (featuredTests[0].playCount || 0) 
+                                : index === 1 && popularTests && popularTests[0]
+                                  ? (popularTests[0].playCount || 0)
+                                  : "0"} {t('players')}
+                            </span>
+                          </>
+                        ) : (
+                          <span>Kendi testlerinizi oluşturun</span>
+                        )}
                       </div>
                       <Button 
                         variant="ghost" 
                         size="sm"
                         className="h-7 text-xs text-white bg-white/10 hover:bg-white/20"
-                        onClick={() => featuredTests && featuredTests[0] && handleTestClick(featuredTests[0].id)}
+                        onClick={() => {
+                          if (index === 0 && featuredTests && featuredTests[0]) {
+                            handleTestClick(featuredTests[0].id);
+                          } else if (index === 1 && popularTests && popularTests[0]) {
+                            handleTestClick(popularTests[0].id);
+                          } else if (index === 2) {
+                            navigate("/test-create");
+                          }
+                        }}
                       >
-                        {t('play')}
+                        {index === 2 ? 'Oluştur' : t('play')}
                       </Button>
                     </div>
                   </div>

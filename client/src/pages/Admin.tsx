@@ -171,7 +171,16 @@ const availableIcons = [
   { name: "trophy", component: Trophy },
   { name: "users", component: Users },
   { name: "heart", component: Heart },
+  { name: "gamepad", component: Gamepad },
 ];
+
+// İkon adına göre ilgili komponenti döndüren yardımcı fonksiyon
+const getIconComponent = (iconName: string | null | undefined): React.ReactNode => {
+  if (!iconName) return null;
+  const icon = availableIcons.find(icon => icon.name === iconName);
+  if (!icon) return null;
+  return React.createElement(icon.component, { className: "w-4 h-4" });
+};
 
 // Kategori yönetimi için form şeması
 const categoryFormSchema = insertCategorySchema.extend({
@@ -604,7 +613,7 @@ function AdminPanel() {
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  <SelectItem value="none">İkon yok</SelectItem>
+                                  <SelectItem value="">İkon yok</SelectItem>
                                   {availableIcons.map((icon) => (
                                     <SelectItem key={icon.name} value={icon.name}>
                                       <div className="flex items-center gap-2">
@@ -729,7 +738,12 @@ function AdminPanel() {
                     {categories.map((category) => (
                       <TableRow key={category.id}>
                         <TableCell>{category.id}</TableCell>
-                        <TableCell>{category.name}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {category.iconName && getIconComponent(category.iconName)}
+                            <span>{category.name}</span>
+                          </div>
+                        </TableCell>
                         <TableCell className="max-w-sm truncate">
                           {category.description}
                         </TableCell>
