@@ -1,6 +1,6 @@
-# İmgesel - Görsel Bilgi Testi Platformu
+# Pixelhunt
 
-İmgesel, çeşitli kategorilerdeki görselleri tahmin etmeye dayalı interaktif ve eğlenceli bir web platformudur. Kullanıcılar hem hazır testleri oynayabilir hem de kendi testlerini oluşturup paylaşabilirler.
+İmgesel, çeşitli kategorilerdeki görselleri tahmin etmeye dayalı interaktif ve eğlenceli bir web ve mobil ortak platformudur. Kullanıcılar hem hazır testleri oynayabilir hem de kendi testlerini oluşturup paylaşabilirler.
 
 ## Özellikler
 
