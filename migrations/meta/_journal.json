@@ -8,6 +8,13 @@
       "when": 1742562928609,
       "tag": "0000_burly_wild_pack",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1742934480241,
+      "tag": "0001_yummy_venus",
+      "breakpoints": true
     }
   ]
 }
