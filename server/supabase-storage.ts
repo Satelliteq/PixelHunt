@@ -894,7 +894,7 @@ export class SupabaseStorage implements IStorage {
         score.user_id, 
         'game_score', 
         `Oyun skoru: ${score.score} puan, mod: ${score.game_mode}`,
-        null, 
+        undefined, 
         'game'
       );
     }
