@@ -1,38 +1,71 @@
-# İmgesel - Görsel Bilgi Testi Platformu
+# PixelHunt - Görsel Bilgi Testi Platformu
 
-İmgesel, çeşitli kategorilerdeki görselleri tahmin etmeye dayalı interaktif ve eğlenceli bir web platformudur. Kullanıcılar hem hazır testleri oynayabilir hem de kendi testlerini oluşturup paylaşabilirler.
+PixelHunt (İmgesel), çeşitli kategorilerdeki görselleri tahmin etmeye dayalı interaktif ve eğlenceli bir web platformudur. Kullanıcılar hem hazır testleri oynayabilir hem de kendi testlerini oluşturup paylaşabilirler.
 
 ## Özellikler
 
-- **Farklı Oyun Modları**: Klasik, hızlı ve zamanlı oyun modları
-- **Test Oluşturma ve Paylaşma**: Kullanıcılar kendi testlerini oluşturabilir ve paylaşabilir
-- **Kategori Sistemi**: Farklı konularda testler oynamak için kategori seçenekleri
-- **Puan Sistemi**: Kullanıcı puanları ve liderlik tablosu
-- **Çoklu Dil Desteği**: Hem Türkçe hem İngilizce dil desteği
-- **Anonim Test Paylaşımı**: Kimlik belirtmeden test paylaşma imkanı
-- **Mobil Uyumlu Tasarım**: Tüm cihazlarda kusursuz deneyim
-- **Karanlık/Aydınlık Tema**: Farklı görünüm seçenekleri
+- **Farklı Oyun Modları**: 
+  - **Klasik Mod**: Bir görselin kademeli olarak açılmasıyla doğru tahmin yapmaya çalışın
+  - **Hızlı Mod**: En kısa sürede doğru cevabı bulmaya çalışın
+  - **Zamanlı Mod**: Belirli bir süre içinde mümkün olduğunca çok soruyu doğru cevaplayın
+  - **Test Modu**: Kullanıcılar tarafından oluşturulan özel testleri çözün
+
+- **Test Oluşturma ve Paylaşma**: 
+  - Kolay kullanımlı test oluşturma arayüzü
+  - Testleri UUID bağlantıları ile paylaşma
+  - Test sonuçlarını görüntüleme ve puanlama
+
+- **Sosyal Özellikler**:
+  - Testleri beğenme ve yorum yapma
+  - Liderlik tablosu ve kullanıcı profilleri
+  - Anonim test paylaşımı seçeneği
+
+- **Kullanıcı Dostu Tasarım**:
+  - Mobil uyumlu arayüz
+  - Karanlık/Aydınlık tema seçeneği
+  - Çoklu dil desteği (Türkçe/İngilizce)
 
 ## Teknolojiler
 
-- **Frontend**: React, TypeScript, Tailwind CSS, Shadcn UI
-- **Backend**: Node.js, Express
-- **Veritabanı**: PostgreSQL
-- **Depolama**: Supabase Storage
-- **API**: RESTful API
-- **Deployment**: Replit
+- **Frontend**: 
+  - React 18 with TypeScript
+  - Tailwind CSS & Shadcn UI bileşenleri
+  - Framer Motion animasyonları
 
-## Geliştiriciler İçin
+- **Backend**: 
+  - Node.js & Express
+  - PostgreSQL veritabanı (Drizzle ORM)
+  - RESTful API mimarisi
+
+- **Bulut Hizmetleri**:
+  - Supabase Storage (görsel depolama)
+  - Supabase Authentication (kimlik doğrulama)
+
+## Kurulum
 
 Projeyi yerel ortamınızda çalıştırmak için:
 
 ```bash
+# Projeyi klonlayın
+git clone https://github.com/Satelliteq/Pixelhunt-web-app.git
+cd Pixelhunt-web-app
+
 # Bağımlılıkları yükleyin
 npm install
 
 # Geliştirme sunucusunu başlatın
 npm run dev
 ```
+
+## Veritabanı Şeması
+
+Proje aşağıdaki temel veritabanı tablolarını kullanmaktadır:
+
+- **users**: Kullanıcı hesapları ve profil bilgileri
+- **categories**: Test kategorileri (Sanat, Coğrafya, Film/TV vb.)
+- **images**: Tüm görsel içerikler ve cevaplar
+- **tests**: Kullanıcılar tarafından oluşturulan testler
+- **game_scores**: Oyun puanları ve liderlik tablosu verileri
 
 ## Katkıda Bulunma
 
@@ -52,4 +85,4 @@ Sorularınız veya önerileriniz için lütfen bir issue açın veya doğrudan p
 
 ---
 
-&copy; 2025 İmgesel. Tüm hakları saklıdır.
+&copy; 2025 PixelHunt. Tüm hakları saklıdır.
