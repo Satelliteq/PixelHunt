@@ -39,6 +39,7 @@ function Router() {
       <Route path="/game/live" component={LiveGame} />
       <Route path="/game/test" component={TestGame} />
       <Route path="/play/:testId" component={GameScreen} />
+      <Route path="/test-game/:testId" component={GameScreen} />
       <Route path="/test/:testId" component={TestDetail} />
       <Route path="/categories" component={Categories} />
       <Route path="/tests" component={Tests} />
@@ -61,7 +62,7 @@ function Router() {
 
 function App() {
   const [location] = useLocation();
-  const isGameScreen = location.startsWith('/play/');
+  const isGameScreen = location.startsWith('/play/') || location.startsWith('/test-game/');
 
   useEffect(() => {
     // Apply dark mode by default
