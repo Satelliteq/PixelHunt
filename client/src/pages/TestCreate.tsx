@@ -242,8 +242,12 @@ export default function TestCreate() {
         variant: "default",
       });
       
-      // Test sayfasına yönlendir
-      navigate(`/test/${response.id}`);
+      // Test sayfasına UUID ile yönlendir
+      if (response.uuid) {
+        navigate(`/tests/u/${response.uuid}`);
+      } else {
+        navigate(`/tests/${response.id}`);
+      }
     } catch (error) {
       console.error("Test oluşturma hatası:", error);
       toast({
@@ -406,8 +410,12 @@ export default function TestCreate() {
           variant: "default",
         });
 
-        // Test sayfasına yönlendir
-        navigate(`/test/${response.id}`);
+        // Test sayfasına UUID ile yönlendir
+        if (response.uuid) {
+          navigate(`/tests/u/${response.uuid}`);
+        } else {
+          navigate(`/tests/${response.id}`);
+        }
       } catch (apiError) {
         console.error("API hatası:", apiError);
         toast({

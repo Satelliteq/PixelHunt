@@ -626,9 +626,12 @@ export class SupabaseStorage implements IStorage {
 
   async createTest(test: InsertTest): Promise<Test> {
     // UUID oluştur
+    console.log("Test oluşturma başlıyor:", test);
+    
+    const testUuid = createId();
     const testWithUuid = {
       ...test,
-      uuid: createId()
+      uuid: testUuid
     };
 
     // Schema cache sorunu nedeniyle rename ediyoruz
@@ -638,16 +641,20 @@ export class SupabaseStorage implements IStorage {
       delete testWithUuid.isAnonymous;
     }
 
+    console.log("Veritabanına kaydedilecek test verisi:", testWithUuid);
+
     const { data, error } = await supabase
       .from('tests')
       .insert(testWithUuid)
-      .select('*')
+      .select('*, category:categories(*)')
       .single();
       
     if (error) {
       console.error('Error creating test:', error);
       throw new Error(`Test creation failed: ${error.message}`);
     }
+    
+    console.log("Test başarıyla oluşturuldu:", data);
     
     if (test.creator_id) {
       await recordUserActivity(
