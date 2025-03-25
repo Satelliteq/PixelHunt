@@ -128,7 +128,7 @@ export default function TestDetail() {
 
   // Handle start test
   const handleStartTest = () => {
-    navigate(`/play/${testId}`);
+    navigate(`/test-game/${testId}`);
   };
 
   // Handle like test
