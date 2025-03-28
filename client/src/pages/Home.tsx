@@ -198,118 +198,46 @@ export default function Home() {
 
   return (
     <div className="space-y-12">
-      {/* Modern Hero Banner */}
-      <section className="hero-banner rounded-2xl max-w-content mx-auto overflow-hidden bg-gradient-to-r from-primary/90 to-primary">
-        <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-10"></div>
+      {/* Simple and Modern Hero Banner */}
+      <section className="hero-banner rounded-2xl max-w-content mx-auto overflow-hidden bg-gradient-to-r from-primary/90 via-primary to-primary/80">
+        <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-5"></div>
         
-        <div className="relative z-10 p-8 md:p-12 flex flex-col md:flex-row items-center">
-          {/* Left section - Main content */}
-          <div className="md:w-1/2 md:pr-6 mb-8 md:mb-0">
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-              Görsellerinizi Tahmin Etmeye <span className="text-black">Hazır mısınız?</span>
-            </h1>
-            <p className="text-white/90 text-lg mb-6">
-              Farklı kategorilerde testler oluşturun, paylaşın ve arkadaşlarınızla birlikte eğlenin!
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Button 
-                onClick={() => navigate("/create-test")}
-                className="bg-black hover:bg-black/80 text-white"
-                size="lg"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Test Oluştur
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={() => setActiveTab("popular")}
-                className="bg-transparent border-white text-white hover:bg-white/10"
-                size="lg"
-              >
-                <Trophy className="mr-2 h-4 w-4" />
-                Popüler Testler
-              </Button>
-            </div>
-          </div>
-
-          {/* Right section - Feature cards */}
-          <div className="md:w-1/2 grid grid-cols-2 gap-4">
-            {/* Featured Test Card */}
-            <div 
-              className="feature-card rounded-xl aspect-[4/3] overflow-hidden"
-              onClick={() => featuredTests && featuredTests[0] && navigate(`/tests/${featuredTests[0].id}`)}
-            >
-              <img 
-                src={featuredTests && featuredTests[0] ? featuredTests[0].imageUrl || "/default-test-thumb.jpg" : "/default-test-thumb.jpg"} 
-                alt="Featured Test"
-                className="w-full h-full object-cover"
-              />
-              <div className="feature-card-content">
-                <div className="flex items-center gap-1 text-white/80 text-xs mb-1">
-                  <Award className="h-3 w-3" />
-                  <span>Öne çıkan</span>
-                </div>
-                <h3 className="text-white font-medium text-sm line-clamp-2">
-                  {featuredTests && featuredTests[0] ? featuredTests[0].title : "Yükleniyor..."}
-                </h3>
-              </div>
-            </div>
-
-            {/* Popular Test Card */}
-            <div 
-              className="feature-card rounded-xl aspect-[4/3] overflow-hidden"
-              onClick={() => popularTests && popularTests[0] && navigate(`/tests/${popularTests[0].id}`)}
-            >
-              <img 
-                src={popularTests && popularTests[0] ? popularTests[0].imageUrl || "/default-test-thumb.jpg" : "/default-test-thumb.jpg"} 
-                alt="Popular Test"
-                className="w-full h-full object-cover"
-              />
-              <div className="feature-card-content">
-                <div className="flex items-center gap-1 text-white/80 text-xs mb-1">
-                  <Trophy className="h-3 w-3" />
-                  <span>Popüler</span>
-                </div>
-                <h3 className="text-white font-medium text-sm line-clamp-2">
-                  {popularTests && popularTests[0] ? popularTests[0].title : "Yükleniyor..."}
-                </h3>
-              </div>
-            </div>
-
-            {/* Newest Test Card */}
-            <div 
-              className="feature-card rounded-xl aspect-[4/3] overflow-hidden"
-              onClick={() => newestTests && newestTests[0] && navigate(`/tests/${newestTests[0].id}`)}
-            >
-              <img 
-                src={newestTests && newestTests[0] ? newestTests[0].imageUrl || "/default-test-thumb.jpg" : "/default-test-thumb.jpg"} 
-                alt="Newest Test"
-                className="w-full h-full object-cover" 
-              />
-              <div className="feature-card-content">
-                <div className="flex items-center gap-1 text-white/80 text-xs mb-1">
-                  <Clock className="h-3 w-3" />
-                  <span>En yeni</span>
-                </div>
-                <h3 className="text-white font-medium text-sm line-clamp-2">
-                  {newestTests && newestTests[0] ? newestTests[0].title : "Yükleniyor..."}
-                </h3>
-              </div>
-            </div>
-
-            {/* Create Test Card */}
-            <div 
-              className="feature-card rounded-xl aspect-[4/3] bg-black/20 backdrop-blur-sm hover:bg-black/30 flex flex-col items-center justify-center text-white p-4"
+        <div className="relative z-10 p-8 md:p-16 flex flex-col items-center text-center">
+          <span className="hero-badge text-white">✨ Pixel Hunt</span>
+          
+          <h1 className="hero-title text-white">
+            Görsellerinizi <span className="text-black font-extrabold">Tahmin Etmeye</span> Hazır Mısınız?
+          </h1>
+          
+          <p className="hero-description text-white/90">
+            Farklı kategorilerde testler oluşturun, paylaşın ve arkadaşlarınızla birlikte eğlenin!
+          </p>
+          
+          <div className="flex flex-wrap justify-center gap-4">
+            <Button 
               onClick={() => navigate("/create-test")}
+              className="hero-action-button bg-black hover:bg-black/90 text-white px-6"
+              size="lg"
             >
-              <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mb-2">
-                <Plus className="h-6 w-6" />
-              </div>
-              <h3 className="font-medium">Yeni Test Oluştur</h3>
-              <p className="text-xs text-white/70 mt-1">Kendi testlerinizi oluşturun</p>
-            </div>
+              <Plus className="mr-2 h-5 w-5" />
+              Test Oluştur
+            </Button>
+            
+            <Button 
+              variant="outline"
+              onClick={() => setActiveTab("popular")}
+              className="hero-action-button bg-transparent border-white text-white hover:bg-white/10 px-6"
+              size="lg"
+            >
+              <Trophy className="mr-2 h-5 w-5" />
+              Popüler Testler
+            </Button>
           </div>
         </div>
+        
+        {/* Decorative elements */}
+        <div className="absolute -bottom-8 -right-8 w-40 h-40 bg-black/10 rounded-full blur-3xl"></div>
+        <div className="absolute -top-10 -left-10 w-32 h-32 bg-white/5 rounded-full blur-2xl"></div>
       </section>
 
       {/* Search Results (hidden by default, shown when search is activated) */}
