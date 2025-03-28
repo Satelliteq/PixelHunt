@@ -424,8 +424,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         image_url: req.body.thumbnail || req.body.image_url || null,
         questions: questions,
         approved: true, // Auto-approve for now
-        is_public: req.body.isPublic !== undefined ? req.body.isPublic : true,
-        featured: false
+        is_public: req.body.isPublic !== undefined ? req.body.isPublic : (req.body.is_public !== undefined ? req.body.is_public : true),
+        featured: false,
+        is_anonymous: isAnonymous // Include is_anonymous directly in the main data
       };
       
       console.log("Dönüştürülmüş veri:", transformedData);
@@ -453,13 +454,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Now if this was supposed to be anonymous, update it using our SQL function
-      if (isAnonymous && createdTest && createdTest.id) {
-        console.log(`Test created (ID: ${createdTest.id}), now setting anonymous status...`);
+      // Bu kısım artık gerekli değil çünkü is_anonymous direkt olarak ana sorguda gönderiliyor
+      // ve veritabanına doğrudan kaydediliyor
+      console.log(`Test created (ID: ${createdTest?.id}), anonymous status: ${createdTest?.is_anonymous}`);
+      
+      // İhtiyaç halinde hata durumlarında kullanmak için korunan bir yedek yaklaşım
+      if (isAnonymous && createdTest && createdTest.id && createdTest.is_anonymous !== true) {
+        console.log(`Test anonymous status needs fixing (ID: ${createdTest.id})...`);
         
         try {
-          // Direct approach - most reliable
-          console.log("Trying direct SQL update for anonymous status");
+          // Direct approach with db
+          console.log("Fixing anonymous status via direct SQL update");
           const { data, error: directError } = await db
             .from('tests')
             .update({ is_anonymous: true })
@@ -467,60 +472,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             .select()
             .single();
             
-          if (directError) {
-            console.error("Direct SQL update error:", directError);
-            
-            // Try RPC approach as fallback
-            console.log("Falling back to RPC function");
-            const { error: rpcError } = await db.rpc('set_anonymous_from_param', { 
-              test_id: createdTest.id,
-              should_be_anonymous: true
-            });
-            
-            if (rpcError) {
-              console.error("RPC error while setting anonymous status:", rpcError);
-              
-              // Try a different direct SQL approach as final fallback
-              try {
-                console.log("Trying alternative direct SQL update for anonymous status");
-                const result = await db.from('tests')
-                  .update({ is_anonymous: true })
-                  .eq('id', createdTest.id)
-                  .select()
-                  .single();
-                  
-                if (result.error) {
-                  console.error("Alternative direct SQL update error:", result.error);
-                } else {
-                  console.log("Successfully marked test as anonymous via alternative direct SQL");
-                  createdTest = result.data;
-                }
-              } catch (sqlError) {
-                console.error("Failed to set anonymous status via alternative direct SQL:", sqlError);
-              }
-            } else {
-              console.log("Successfully marked test as anonymous via RPC");
-              
-              // Fetch the updated test
-              const { data: updatedTest, error: fetchError } = await db
-                .from('tests')
-                .select('*')
-                .eq('id', createdTest.id)
-                .single();
-                
-              if (fetchError) {
-                console.error("Error fetching updated test:", fetchError);
-              } else if (updatedTest) {
-                console.log("Test updated with anonymous status:", updatedTest.is_anonymous);
-                createdTest = updatedTest;
-              }
-            }
-          } else if (data) {
-            console.log("Successfully marked test as anonymous via direct update");
-            createdTest = data; // Update the test data for return later
+          if (!directError && data) {
+            console.log("Successfully fixed anonymous status");
+            createdTest = data;
           }
         } catch (anonymousError) {
-          console.error("Failed to set anonymous status:", anonymousError);
+          console.error("Error fixing anonymous status (non-critical):", anonymousError);
           // Continue with the created test anyway
         }
       }

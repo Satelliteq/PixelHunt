@@ -198,64 +198,94 @@ export default function Home() {
 
   return (
     <div className="space-y-12">
-      {/* Game-Style Hero Banner with Red Frame Inspired by Reference Image */}
-      <section className="relative hero-banner max-w-content mx-auto overflow-hidden rounded-2xl">
-        {/* Red Border Frame */}
-        <div className="absolute inset-0 bg-gradient-to-r from-red-600 via-red-700 to-red-600 rounded-2xl shadow-lg p-1">
-          {/* Dark Inner Content Background */}
-          <div className="absolute inset-0 bg-[#181c2a] rounded-xl">
-            {/* Noise Texture Overlay */}
-            <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-5"></div>
+      {/* Modern Gaming Hero Section with Card-style Frame */}
+      <section className="relative hero-banner max-w-content mx-auto overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+          {/* Left side main content - takes 3/5 on larger screens */}
+          <div className="md:col-span-3 bg-gradient-to-br from-red-700 via-red-600 to-red-800 rounded-2xl p-0.5 shadow-lg">
+            <div className="h-full rounded-2xl bg-gradient-to-b from-gray-900 to-gray-950 p-8 md:p-10 flex flex-col justify-center relative overflow-hidden">
+              {/* Background elements */}
+              <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-5"></div>
+              <div className="absolute -bottom-12 -right-12 w-40 h-40 bg-red-600/10 rounded-full blur-3xl"></div>
+              <div className="absolute -top-10 -left-12 w-32 h-32 bg-red-500/10 rounded-full blur-2xl"></div>
+              
+              {/* Content */}
+              <div className="relative z-10 text-center md:text-left">
+                <div className="inline-block mb-4">
+                  <span className="bg-red-600/80 text-white py-1 px-4 rounded-full text-sm font-bold shadow-lg">
+                    ✨ Pixel Hunt
+                  </span>
+                </div>
+                
+                <h1 className="text-white text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-4">
+                  Görsellerinizi <span className="text-red-400 font-extrabold">Tahmin Etmeye</span> Hazır Mısınız?
+                </h1>
+                
+                <p className="text-gray-300 max-w-xl mb-8">
+                  Farklı kategorilerde testler oluşturun, paylaşın ve arkadaşlarınızla birlikte eğlenin!
+                </p>
+                
+                <div className="flex flex-wrap gap-4 justify-center md:justify-start">
+                  <Button 
+                    onClick={() => navigate("/create-test")}
+                    className="bg-red-600 hover:bg-red-700 text-white font-medium shadow-lg"
+                    size="lg"
+                  >
+                    <Plus className="mr-2 h-5 w-5" />
+                    Test Oluştur
+                  </Button>
+                  
+                  <Button 
+                    variant="outline"
+                    onClick={() => setActiveTab("popular")}
+                    className="bg-transparent border-gray-600 text-white hover:bg-white/10"
+                    size="lg"
+                  >
+                    <Trophy className="mr-2 h-5 w-5" />
+                    Popüler Testler
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-        
-        {/* Main Content */}
-        <div className="relative z-10 p-8 md:p-12 flex flex-col items-center text-center">
-          {/* Glowing Badge */}
-          <div className="relative inline-block">
-            <span className="hero-badge text-white text-sm md:text-base font-medium py-1 px-4 rounded-full bg-red-600/80 shadow-[0_0_15px_rgba(220,38,38,0.5)]">
-              ✨ Pixel Hunt
-            </span>
-          </div>
           
-          {/* Main Title */}
-          <h1 className="hero-title text-white mt-6 mb-3 text-3xl md:text-4xl lg:text-5xl font-bold">
-            Görsellerinizi <span className="text-red-500 font-extrabold">Tahmin Etmeye</span> Hazır Mısınız?
-          </h1>
-          
-          {/* Description */}
-          <p className="hero-description text-gray-300 max-w-2xl mb-8">
-            Farklı kategorilerde testler oluşturun, paylaşın ve arkadaşlarınızla birlikte eğlenin!
-          </p>
-          
-          {/* Action Buttons */}
-          <div className="flex flex-wrap justify-center gap-4">
-            <Button 
-              onClick={() => navigate("/create-test")}
-              className="hero-action-button bg-red-600 hover:bg-red-700 text-white px-6 shadow-[0_0_10px_rgba(220,38,38,0.3)]"
-              size="lg"
-            >
-              <Plus className="mr-2 h-5 w-5" />
-              Test Oluştur
-            </Button>
+          {/* Right side featured content cards - takes 2/5 on larger screens */}
+          <div className="md:col-span-2 grid grid-cols-1 gap-4">
+            {/* Top card */}
+            <div className="bg-gradient-to-r from-gray-800 to-gray-900 rounded-2xl p-6 flex flex-col">
+              <h3 className="text-lg font-semibold text-white mb-2 flex items-center">
+                <Sparkles className="w-5 h-5 mr-2 text-yellow-500" />
+                Öne Çıkanlar
+              </h3>
+              <p className="text-gray-400 text-sm mb-4">En çok yorum alan ve beğenilen testlere göz atın!</p>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setActiveTab("featured")}
+                className="mt-auto self-start text-white border-gray-700 hover:bg-gray-800"
+              >
+                Keşfet
+              </Button>
+            </div>
             
-            <Button 
-              variant="outline"
-              onClick={() => setActiveTab("popular")}
-              className="hero-action-button bg-transparent border-white/20 text-white hover:bg-white/10 px-6"
-              size="lg"
-            >
-              <Trophy className="mr-2 h-5 w-5" />
-              Popüler Testler
-            </Button>
+            {/* Bottom card */}
+            <div className="bg-gradient-to-r from-gray-800 to-gray-900 rounded-2xl p-6 flex flex-col">
+              <h3 className="text-lg font-semibold text-white mb-2 flex items-center">
+                <Clock className="w-5 h-5 mr-2 text-blue-500" />
+                Son Eklenenler
+              </h3>
+              <p className="text-gray-400 text-sm mb-4">Platformumuza yeni eklenen testleri kaçırmayın!</p>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setActiveTab("newest")}
+                className="mt-auto self-start text-white border-gray-700 hover:bg-gray-800"
+              >
+                Keşfet
+              </Button>
+            </div>
           </div>
         </div>
-        
-        {/* Decorative elements */}
-        <div className="absolute -bottom-8 -right-8 w-40 h-40 bg-red-600/20 rounded-full blur-3xl"></div>
-        <div className="absolute -top-10 -left-10 w-32 h-32 bg-red-500/10 rounded-full blur-2xl"></div>
-        <div className="absolute top-1/4 right-10 w-20 h-20 bg-white/5 rounded-full blur-xl"></div>
-        <div className="absolute bottom-1/3 left-10 w-16 h-16 bg-red-500/10 rounded-full blur-xl"></div>
       </section>
 
       {/* Search Results (hidden by default, shown when search is activated) */}
