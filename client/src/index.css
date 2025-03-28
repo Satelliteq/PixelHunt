@@ -12,6 +12,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom styles */
+.hero-card-container {
+  position: relative;
+  z-index: 1; /* Ensure all cards in the hero section stay below navbar */
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

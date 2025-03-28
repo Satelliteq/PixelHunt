@@ -281,13 +281,13 @@ export default function Home() {
             </div>
             
             {/* Right side image */}
-            <div className="w-full md:w-1/2 h-[260px] md:h-[320px] relative">
+            <div className="w-full md:w-1/2 h-[260px] md:h-[320px] relative hero-card-container">
               {/* Decorative elements */}
-              <div className="absolute top-6 right-10 w-16 h-16 bg-primary/10 rounded-full blur-xl z-10"></div>
-              <div className="absolute bottom-10 left-20 w-20 h-20 bg-primary/10 rounded-full blur-xl z-10"></div>
+              <div className="absolute top-6 right-10 w-16 h-16 bg-primary/10 rounded-full blur-xl"></div>
+              <div className="absolute bottom-10 left-20 w-20 h-20 bg-primary/10 rounded-full blur-xl"></div>
               
               {/* Dynamic overlapping test cards - Z-index yapısı düzeltildi */}
-              <div className="absolute bottom-4 right-0 transform -rotate-6 translate-x-5 w-48 h-64 md:w-56 md:h-72 bg-gradient-to-br from-amber-500 to-yellow-600 rounded-lg shadow-lg overflow-hidden z-10">
+              <div className="absolute bottom-4 right-0 transform -rotate-6 translate-x-5 w-48 h-64 md:w-56 md:h-72 bg-gradient-to-br from-amber-500 to-yellow-600 rounded-lg shadow-lg overflow-hidden" style={{ zIndex: 1 }}>
                 <div className="absolute inset-0.5 bg-black/30 rounded-[7px] p-3 flex flex-col">
                   <div className="mt-auto">
                     <div className="bg-amber-300 w-10 h-10 rounded-full mb-2 flex items-center justify-center text-xl">
@@ -299,7 +299,7 @@ export default function Home() {
                 </div>
               </div>
               
-              <div className="absolute bottom-4 right-20 transform rotate-3 w-48 h-64 md:w-56 md:h-72 bg-gradient-to-br from-sky-500 to-blue-600 rounded-lg shadow-lg overflow-hidden z-20">
+              <div className="absolute bottom-4 right-20 transform rotate-3 w-48 h-64 md:w-56 md:h-72 bg-gradient-to-br from-sky-500 to-blue-600 rounded-lg shadow-lg overflow-hidden" style={{ zIndex: 2 }}>
                 <div className="absolute inset-0.5 bg-black/30 rounded-[7px] p-3 flex flex-col">
                   <div className="mt-auto">
                     <div className="bg-sky-300 w-10 h-10 rounded-full mb-2 flex items-center justify-center text-xl">
@@ -311,7 +311,7 @@ export default function Home() {
                 </div>
               </div>
               
-              <div className="absolute bottom-4 right-40 transform -rotate-3 w-48 h-64 md:w-56 md:h-72 bg-gradient-to-br from-emerald-500 to-green-600 rounded-lg shadow-lg overflow-hidden z-30">
+              <div className="absolute bottom-4 right-40 transform -rotate-3 w-48 h-64 md:w-56 md:h-72 bg-gradient-to-br from-emerald-500 to-green-600 rounded-lg shadow-lg overflow-hidden" style={{ zIndex: 3 }}>
                 <div className="absolute inset-0.5 bg-black/30 rounded-[7px] p-3 flex flex-col">
                   <div className="mt-auto">
                     <div className="bg-emerald-300 w-10 h-10 rounded-full mb-2 flex items-center justify-center text-xl">
