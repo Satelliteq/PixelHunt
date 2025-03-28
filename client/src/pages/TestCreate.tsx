@@ -28,7 +28,7 @@ import { AlertTriangle, Trash, Upload, Plus, Image, Loader2 } from "lucide-react
 
 const testFormSchema = z.object({
   title: z.string().min(5, "Başlık en az 5 karakter olmalıdır").max(100, "Başlık en fazla 100 karakter olabilir"),
-  description: z.string().min(10, "Açıklama en az 10 karakter olmalıdır").nullable(),
+  description: z.string().min(10, "Açıklama en az 10 karakter olmalıdır").default(""),
   categoryId: z.number().min(1, "Lütfen bir kategori seçin"),
   isPublic: z.boolean().default(true),
   isAnonymous: z.boolean().default(false),
@@ -217,13 +217,13 @@ export default function TestCreate() {
       // API'ye gönderilecek veri
       const formData = {
         title,
-        description,
+        description: description || "",
         category_id: categoryId,
         creator_id: 1, // Sabit bir değer kullanıyoruz, çünkü UUID değil sayısal bir değer bekleniyor
         is_public: isPublic,
         is_anonymous: isAnonymous,
         questions: processedImages,
-        thumbnail
+        image_url: thumbnail
       };
       
       console.log("Manuel olarak hazırlanan form verileri:", formData);
@@ -388,10 +388,14 @@ export default function TestCreate() {
       
       // API'ye gönderilecek dönüştürülmüş değerler
       const transformedValues = {
-        ...values,
+        title: values.title,
+        description: values.description || "",
+        category_id: values.categoryId,
         creator_id: 1, // Sabit bir değer kullanıyoruz, çünkü UUID değil sayısal bir değer bekleniyor
-        thumbnail: finalThumbnail,
-        images: processedImages,
+        is_public: values.isPublic,
+        is_anonymous: values.isAnonymous,
+        image_url: finalThumbnail,
+        questions: processedImages,
       };
       
       console.log("API'ye gönderilecek veri:", transformedValues);
