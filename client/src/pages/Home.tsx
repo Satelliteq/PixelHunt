@@ -9,14 +9,7 @@ import ContentCard from "@/components/game/ContentCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 export default function Home() {
@@ -204,35 +197,6 @@ export default function Home() {
     queryKey: ["/api/categories"],
   });
 
-  // Kategori iconları
-  const categoryIcons: Record<string, string> = {
-    "Film": "🎬",
-    "Müzik": "🎵",
-    "Sanat": "🎨",
-    "Oyun": "🎮",
-    "Spor": "⚽",
-    "Bilim": "🧪",
-    "Tarih": "📚",
-    "Coğrafya": "🌍",
-    "Teknoloji": "💻",
-    "Yemek": "🍕",
-    "Moda": "👕",
-    "TV": "📺"
-  };
-  
-  // Kategori simgesini belirle
-  const getCategoryIcon = (name: string): string => {
-    // Kategori adında anahtar kelime arayarak uygun simgeyi bul
-    for (const key in categoryIcons) {
-      if (name.toLowerCase().includes(key.toLowerCase())) {
-        return categoryIcons[key];
-      }
-    }
-    
-    // Varsayılan simge
-    return "🎯";
-  };
-  
   // Örnek kategoriler (API'den veri gelmezse kullanılacak)
   const defaultCategories: Array<{id?: number, name: string, iconName?: string}> = [
     { id: 1, name: "Film & TV", iconName: "🎬" },
@@ -254,56 +218,48 @@ export default function Home() {
 
   return (
     <div className="space-y-12">
-      {/* Hero Section with Card component matching project's UI structure */}
-      <section className="max-w-content mx-auto">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold tracking-tight mb-2">Pixel Hunt</h1>
-          <p className="text-muted-foreground">
-            Görsel tahmin oyunlarında yeteneklerinizi test edin ve eğlenin
-          </p>
-        </div>
-        
-        <Card className="mb-8 overflow-hidden border shadow-sm">
-          <div className="flex flex-col md:flex-row items-center">
-            {/* Left content */}
-            <div className="w-full md:w-1/2 p-6 md:p-8">
-              <CardHeader className="p-0 pb-4">
-                <Badge className="mb-2 text-sm bg-primary text-primary-foreground hover:bg-primary/80">
-                  ✨ Yeni
-                </Badge>
-                <CardTitle className="text-3xl md:text-4xl font-bold tracking-tight">
-                  Görsellerinizi <span className="text-primary">Tahmin Etmeye</span> Hazır Mısınız?
-                </CardTitle>
-                <CardDescription className="text-base mt-2">
-                  Farklı kategorilerde testler oluşturun, paylaşın ve arkadaşlarınızla birlikte eğlenin!
-                </CardDescription>
-              </CardHeader>
+      {/* Gaming Platform Hero Section with theme aware styling */}
+      <section className="relative hero-banner max-w-content mx-auto overflow-hidden">
+        {/* Hero banner with theme-aware styling */}
+        <div className="relative w-full bg-card rounded-lg mb-8 border shadow-sm">
+          <div className="flex flex-col md:flex-row items-center overflow-hidden">
+            {/* Left side content */}
+            <div className="w-full md:w-1/2 p-8 md:p-10 flex flex-col justify-center z-10">
+              <div className="inline-block mb-4">
+                <span className="bg-primary text-primary-foreground py-1 px-4 rounded-md text-sm font-bold shadow-sm">
+                  ✨ Pixel Hunt
+                </span>
+              </div>
               
-              <CardContent className="p-0 pb-6">
-                <div className="flex flex-wrap gap-3 mt-4">
-                  <Button 
-                    onClick={() => navigate("/create-test")}
-                    size="lg"
-                    className="font-medium"
-                  >
-                    <Plus className="mr-2 h-5 w-5" />
-                    Test Oluştur
-                  </Button>
-                  
-                  <Button 
-                    variant="outline"
-                    onClick={() => setActiveTab("popular")}
-                    size="lg"
-                    className="font-medium"
-                  >
-                    <Trophy className="mr-2 h-5 w-5" />
-                    Popüler Testler
-                  </Button>
-                </div>
-              </CardContent>
+              <h1 className="text-card-foreground text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-4">
+                Görsellerinizi <span className="text-primary font-extrabold">Tahmin Etmeye</span> Hazır Mısınız?
+              </h1>
+              
+              <p className="text-muted-foreground max-w-xl mb-8">
+                Farklı kategorilerde testler oluşturun, paylaşın ve arkadaşlarınızla birlikte eğlenin!
+              </p>
+              
+              <div className="flex flex-wrap gap-4">
+                <Button 
+                  onClick={() => navigate("/create-test")}
+                  size="lg"
+                >
+                  <Plus className="mr-2 h-5 w-5" />
+                  Test Oluştur
+                </Button>
+                
+                <Button 
+                  variant="outline"
+                  onClick={() => setActiveTab("popular")}
+                  size="lg"
+                >
+                  <Trophy className="mr-2 h-5 w-5" />
+                  Popüler Testler
+                </Button>
+              </div>
             </div>
             
-            {/* Right content with cards */}
+            {/* Right side image */}
             <div className="w-full md:w-1/2 h-[260px] md:h-[320px] relative">
               {/* Decorative elements */}
               <div className="absolute top-6 right-10 w-16 h-16 bg-primary/10 rounded-full blur-xl z-10"></div>
@@ -347,57 +303,40 @@ export default function Home() {
               </div>
             </div>
           </div>
-        </Card>
+        </div>
         
         {/* Category shortcuts */}
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
-            <h2 className="text-xl font-bold flex items-center">
-              <Layers className="w-5 h-5 text-primary mr-2" /> Kategoriler
-            </h2>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => navigate("/categories")} 
-              className="mt-2 sm:mt-0 self-start sm:self-auto"
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 mb-8">
+          {categories.slice(0, 6).map((category, index) => (
+            <div 
+              key={index}
+              className="bg-card border-border hover:border-primary/50 transition-colors p-3 rounded-lg text-center cursor-pointer border shadow-sm"
+              onClick={() => navigate(`/category/${category.id || index + 1}`)}
             >
-              Tüm Kategoriler
-            </Button>
-          </div>
-          
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-            {categories.slice(0, 6).map((category, index) => (
-              <Card 
-                key={index}
-                className="custom-frame hover:border-primary/50 transition-colors p-3 text-center cursor-pointer border shadow-sm"
-                onClick={() => navigate(`/category/${category.id || index + 1}`)}
-              >
-                <div className={`w-10 h-10 mx-auto rounded-full flex items-center justify-center text-lg mb-2 ${
-                  index % 6 === 0 ? "bg-amber-500" : 
-                  index % 6 === 1 ? "bg-sky-500" : 
-                  index % 6 === 2 ? "bg-emerald-500" : 
-                  index % 6 === 3 ? "bg-violet-500" : 
-                  index % 6 === 4 ? "bg-yellow-500" : "bg-orange-500"
-                }`}>
-                  {getCategoryIcon(category.name)}
-                </div>
-                <h3 className="text-card-foreground text-sm font-medium truncate">{category.name}</h3>
-              </Card>
-            ))}
-          </div>
+              <div className={`w-10 h-10 mx-auto rounded-full flex items-center justify-center text-lg mb-2 ${
+                index % 6 === 0 ? "bg-amber-500" : 
+                index % 6 === 1 ? "bg-sky-500" : 
+                index % 6 === 2 ? "bg-emerald-500" : 
+                index % 6 === 3 ? "bg-violet-500" : 
+                index % 6 === 4 ? "bg-yellow-500" : "bg-orange-500"
+              }`}>
+                {category.iconName || category.icon_name || "🎯"}
+              </div>
+              <h3 className="text-card-foreground text-sm font-medium truncate">{category.name}</h3>
+            </div>
+          ))}
         </div>
         
         {/* Featured sections */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
           {/* Popular */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center">
-                <Trophy className="w-5 h-5 mr-2 text-yellow-500" />
-                Popüler Testler
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
+          <div className="bg-card border-border rounded-lg p-5 border shadow-sm">
+            <h3 className="text-lg font-semibold text-card-foreground mb-4 flex items-center">
+              <Trophy className="w-5 h-5 mr-2 text-yellow-500" />
+              Popüler Testler
+            </h3>
+            
+            <div className="space-y-3 mb-4">
               {popularTests?.slice(0, 3).map((test, index) => (
                 <div 
                   key={index} 
@@ -413,28 +352,26 @@ export default function Home() {
                   </div>
                 </div>
               ))}
-            </CardContent>
-            <CardFooter className="pt-0">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setActiveTab("popular")}
-                className="w-full"
-              >
-                Tümünü Gör
-              </Button>
-            </CardFooter>
-          </Card>
+            </div>
+            
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setActiveTab("popular")}
+              className="w-full"
+            >
+              Tümünü Gör
+            </Button>
+          </div>
           
           {/* Featured */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center">
-                <Sparkles className="w-5 h-5 mr-2 text-primary" />
-                Öne Çıkanlar
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
+          <div className="bg-card border-border rounded-lg p-5 border shadow-sm">
+            <h3 className="text-lg font-semibold text-card-foreground mb-4 flex items-center">
+              <Sparkles className="w-5 h-5 mr-2 text-primary" />
+              Öne Çıkanlar
+            </h3>
+            
+            <div className="space-y-3 mb-4">
               {featuredTests?.slice(0, 3).map((test, index) => (
                 <div 
                   key={index}
@@ -451,28 +388,26 @@ export default function Home() {
                   </div>
                 </div>
               ))}
-            </CardContent>
-            <CardFooter className="pt-0">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setActiveTab("featured")}
-                className="w-full"
-              >
-                Tümünü Gör
-              </Button>
-            </CardFooter>
-          </Card>
+            </div>
+            
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setActiveTab("featured")}
+              className="w-full"
+            >
+              Tümünü Gör
+            </Button>
+          </div>
           
           {/* Newest */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center">
-                <Clock className="w-5 h-5 mr-2 text-blue-500" />
-                Son Eklenenler
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
+          <div className="bg-card border-border rounded-lg p-5 border shadow-sm">
+            <h3 className="text-lg font-semibold text-card-foreground mb-4 flex items-center">
+              <Clock className="w-5 h-5 mr-2 text-blue-500" />
+              Son Eklenenler
+            </h3>
+            
+            <div className="space-y-3 mb-4">
               {newestTests?.slice(0, 3).map((test, index) => (
                 <div 
                   key={index}
@@ -488,58 +423,62 @@ export default function Home() {
                   </div>
                 </div>
               ))}
-            </CardContent>
-            <CardFooter className="pt-0">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setActiveTab("newest")}
-                className="w-full"
-              >
-                Tümünü Gör
-              </Button>
-            </CardFooter>
-          </Card>
+            </div>
+            
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setActiveTab("newest")}
+              className="w-full"
+            >
+              Tümünü Gör
+            </Button>
+          </div>
         </div>
       </section>
 
       {/* Search Results (hidden by default, shown when search is activated) */}
       {showSearchResults && (
         <section className="max-w-content mx-auto mb-8">
-          <div className="mt-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center">
-              <Search className="w-5 h-5 mr-2" />
-              Arama Sonuçları
-              {searchResults.length > 0 && <span className="text-sm ml-2 text-muted-foreground">({searchResults.length} sonuç)</span>}
-            </h2>
+          <Card className="border shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center">
+                <Search className="w-5 h-5 mr-2 text-primary" />
+                Arama Sonuçları
+                {searchResults.length > 0 && <span className="text-sm ml-2 text-muted-foreground">({searchResults.length} sonuç)</span>}
+              </CardTitle>
+              {searchQuery && <CardDescription>"{searchQuery}" için sonuçlar gösteriliyor</CardDescription>}
+            </CardHeader>
             
-            {isSearching ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : searchResults.length === 0 ? (
-              <div className="text-center p-8 bg-muted/30 rounded-lg">
-                <p className="text-muted-foreground mb-2">"{searchQuery}" için sonuç bulunamadı</p>
-                <p className="text-sm text-muted-foreground">Farklı anahtar kelimelerle aramayı deneyin.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {searchResults.map((test) => (
-                  <ContentCard
-                    key={test.id}
-                    title={test.title}
-                    imageUrl={test.imageUrl || '/default-test-thumb.jpg'}
-                    playCount={test.playCount}
-                    likeCount={test.likeCount}
-                    duration={`${test.questions && Array.isArray(test.questions) ? test.questions.length : 0} ${t('question')}`}
-                    onClick={() => handleTestClick(test.id)}
-                  />
-                ))}
-              </div>
-            )}
+            <CardContent>
+              {isSearching ? (
+                <div className="flex justify-center py-12">
+                  <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                </div>
+              ) : searchResults.length === 0 ? (
+                <div className="text-center p-8 bg-muted/30 rounded-lg">
+                  <p className="text-muted-foreground mb-2">"{searchQuery}" için sonuç bulunamadı</p>
+                  <p className="text-sm text-muted-foreground">Farklı anahtar kelimelerle aramayı deneyin.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                  {searchResults.map((test) => (
+                    <ContentCard
+                      key={test.id}
+                      title={test.title}
+                      imageUrl={test.imageUrl || '/default-test-thumb.jpg'}
+                      playCount={test.playCount}
+                      likeCount={test.likeCount}
+                      duration={`${test.questions && Array.isArray(test.questions) ? test.questions.length : 0} ${t('question')}`}
+                      onClick={() => handleTestClick(test.id)}
+                    />
+                  ))}
+                </div>
+              )}
+            </CardContent>
             
             {searchResults.length > 0 && (
-              <div className="flex justify-center mt-6">
+              <CardFooter className="flex justify-center">
                 <Button 
                   variant="outline" 
                   size="sm"
@@ -547,194 +486,230 @@ export default function Home() {
                 >
                   Sonuçları Kapat
                 </Button>
-              </div>
+              </CardFooter>
             )}
-          </div>
+          </Card>
         </section>
       )}
       
       {/* Main Content */}
       <section className="max-w-content mx-auto">
-        <Tabs defaultValue="featured" onValueChange={setActiveTab} className="w-full">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
-            <TabsList className="custom-tab-bg">
-              <TabsTrigger value="featured" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                <Sparkles className="w-4 h-4 mr-2" />
-                {t('featured')}
-              </TabsTrigger>
-              <TabsTrigger value="popular" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                <Trophy className="w-4 h-4 mr-2" />
-                {t('popular')}
-              </TabsTrigger>
-              <TabsTrigger value="newest" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                <Clock className="w-4 h-4 mr-2" />
-                {t('newest')}
-              </TabsTrigger>
-            </TabsList>
-            
+        <Card className="border shadow-sm">
+          <CardHeader className="pb-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <CardTitle className="text-xl flex items-center">
+                <Filter className="w-5 h-5 mr-2 text-primary" />
+                Tüm Testler
+              </CardTitle>
+              
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex items-center gap-2 text-xs self-end sm:self-auto"
+                onClick={() => navigate("/tests")}
+              >
+                <Filter className="w-4 h-4" />
+                <span>{t('allTests')}</span>
+              </Button>
+            </div>
+          </CardHeader>
+          
+          <CardContent>
+            <Tabs defaultValue="featured" onValueChange={setActiveTab} className="w-full">
+              <TabsList className="mb-6 custom-tab-bg">
+                <TabsTrigger value="featured" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  {t('featured')}
+                </TabsTrigger>
+                <TabsTrigger value="popular" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                  <Trophy className="w-4 h-4 mr-2" />
+                  {t('popular')}
+                </TabsTrigger>
+                <TabsTrigger value="newest" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                  <Clock className="w-4 h-4 mr-2" />
+                  {t('newest')}
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="featured" className="mt-0">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                  {isFeaturedTestsLoading ? (
+                    Array(10).fill(0).map((_, index) => (
+                      <div key={index} className="animate-pulse test-card rounded-xl h-[220px]"></div>
+                    ))
+                  ) : (
+                    featuredTests?.map((test) => (
+                      <ContentCard
+                        key={test.id}
+                        title={test.title}
+                        imageUrl={test.imageUrl || '/default-test-thumb.jpg'}
+                        playCount={test.playCount || 0}
+                        likeCount={test.likeCount || 0}
+                        duration={`${test.questions && Array.isArray(test.questions) ? test.questions.length : 0} ${t('question')}`}
+                        onClick={() => handleTestClick(test.id)}
+                      />
+                    ))
+                  )}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="popular" className="mt-0">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                  {isPopularTestsLoading ? (
+                    Array(10).fill(0).map((_, index) => (
+                      <div key={index} className="animate-pulse test-card rounded-xl h-[220px]"></div>
+                    ))
+                  ) : (
+                    popularTests?.map((test) => (
+                      <ContentCard
+                        key={test.id}
+                        title={test.title}
+                        imageUrl={test.imageUrl || '/default-test-thumb.jpg'}
+                        playCount={test.playCount || 0}
+                        likeCount={test.likeCount || 0}
+                        duration={`${test.questions && Array.isArray(test.questions) ? test.questions.length : 0} ${t('question')}`}
+                        onClick={() => handleTestClick(test.id)}
+                      />
+                    ))
+                  )}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="newest" className="mt-0">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                  {isNewestTestsLoading ? (
+                    Array(10).fill(0).map((_, index) => (
+                      <div key={index} className="animate-pulse test-card rounded-xl h-[220px]"></div>
+                    ))
+                  ) : (
+                    newestTests?.map((test) => (
+                      <ContentCard
+                        key={test.id}
+                        title={test.title}
+                        imageUrl={test.imageUrl || '/default-test-thumb.jpg'}
+                        playCount={test.playCount || 0}
+                        likeCount={test.likeCount || 0}
+                        duration={`${test.questions && Array.isArray(test.questions) ? test.questions.length : 0} ${t('question')}`}
+                        onClick={() => handleTestClick(test.id)}
+                      />
+                    ))
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+          
+          <CardFooter className="flex justify-center">
             <Button 
               variant="outline" 
-              size="sm" 
-              className="flex items-center gap-2 custom-frame border-none hover:custom-frame self-end sm:self-auto"
               onClick={() => navigate("/tests")}
             >
-              <Filter className="w-4 h-4" />
-              <span>{t('allTests')}</span>
+              Tüm Testleri Gör
             </Button>
-          </div>
-          
-          <TabsContent value="featured" className="mt-0">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {isFeaturedTestsLoading ? (
-                Array(10).fill(0).map((_, index) => (
-                  <div key={index} className="animate-pulse test-card rounded-xl h-[220px]"></div>
-                ))
-              ) : (
-                featuredTests?.map((test) => (
-                  <ContentCard
-                    key={test.id}
-                    title={test.title}
-                    imageUrl={test.imageUrl || '/default-test-thumb.jpg'}
-                    playCount={test.playCount || 0}
-                    likeCount={test.likeCount || 0}
-                    duration={`${test.questions && Array.isArray(test.questions) ? test.questions.length : 0} ${t('question')}`}
-                    onClick={() => handleTestClick(test.id)}
-                  />
-                ))
-              )}
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="popular" className="mt-0">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {isPopularTestsLoading ? (
-                Array(10).fill(0).map((_, index) => (
-                  <div key={index} className="animate-pulse test-card rounded-xl h-[220px]"></div>
-                ))
-              ) : (
-                popularTests?.map((test) => (
-                  <ContentCard
-                    key={test.id}
-                    title={test.title}
-                    imageUrl={test.imageUrl || '/default-test-thumb.jpg'}
-                    playCount={test.playCount || 0}
-                    likeCount={test.likeCount || 0}
-                    duration={`${test.questions && Array.isArray(test.questions) ? test.questions.length : 0} ${t('question')}`}
-                    onClick={() => handleTestClick(test.id)}
-                  />
-                ))
-              )}
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="newest" className="mt-0">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {isNewestTestsLoading ? (
-                Array(10).fill(0).map((_, index) => (
-                  <div key={index} className="animate-pulse test-card rounded-xl h-[220px]"></div>
-                ))
-              ) : (
-                newestTests?.map((test) => (
-                  <ContentCard
-                    key={test.id}
-                    title={test.title}
-                    imageUrl={test.imageUrl || '/default-test-thumb.jpg'}
-                    playCount={test.playCount || 0}
-                    likeCount={test.likeCount || 0}
-                    duration={`${test.questions && Array.isArray(test.questions) ? test.questions.length : 0} ${t('question')}`}
-                    onClick={() => handleTestClick(test.id)}
-                  />
-                ))
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
+          </CardFooter>
+        </Card>
       </section>
 
       {/* Categories Section */}
       <section className="max-w-content mx-auto">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
-          <h2 className="text-xl font-bold flex items-center">
-            <Filter className="w-5 h-5 text-primary mr-2" /> {t('discoverByCategory')}
-          </h2>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="text-xs self-end sm:self-auto"
-            onClick={() => navigate("/categories")}
-          >
-            {t('allCategories')}
-          </Button>
-        </div>
-        
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-          {/* Category cards - Hardcoded for now until we add categories component */}
-          <div 
-            className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-4 text-center cursor-pointer"
-            onClick={() => navigate("/categories")}
-          >
-            <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
-              <BookOpen className="w-6 h-6 text-white" />
+        <Card className="border shadow-sm mb-8">
+          <CardHeader className="pb-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <CardTitle className="text-xl flex items-center">
+                <Layers className="w-5 h-5 mr-2 text-primary" /> {t('discoverByCategory')}
+              </CardTitle>
+              
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-xs self-end sm:self-auto"
+                onClick={() => navigate("/categories")}
+              >
+                {t('allCategories')}
+              </Button>
             </div>
-            <h3 className="font-medium">{t('catLiterature')}</h3>
-            <p className="text-xs text-muted-foreground mt-1">120+ {t('tests').toLowerCase()}</p>
-          </div>
+            <CardDescription>
+              Farklı kategorilerdeki içerikleri keşfedin
+            </CardDescription>
+          </CardHeader>
           
-          <div 
-            className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-4 text-center cursor-pointer"
-            onClick={() => navigate("/categories")}
-          >
-            <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
-              <span className="text-xl text-white">🌎</span>
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {/* Category cards - Featured categories */}
+              <Card
+                className="hover:border-primary/50 transition-colors p-4 text-center cursor-pointer border shadow-sm"
+                onClick={() => navigate("/categories")}
+              >
+                <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <BookOpen className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="font-medium">{t('catLiterature')}</h3>
+                <p className="text-xs text-muted-foreground mt-1">120+ {t('tests').toLowerCase()}</p>
+              </Card>
+              
+              <Card
+                className="hover:border-primary/50 transition-colors p-4 text-center cursor-pointer border shadow-sm"
+                onClick={() => navigate("/categories")}
+              >
+                <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-xl text-white">🌎</span>
+                </div>
+                <h3 className="font-medium">{t('catGeography')}</h3>
+                <p className="text-xs text-muted-foreground mt-1">86 {t('tests').toLowerCase()}</p>
+              </Card>
+              
+              <Card
+                className="hover:border-primary/50 transition-colors p-4 text-center cursor-pointer border shadow-sm"
+                onClick={() => navigate("/categories")}
+              >
+                <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-xl text-white">🎬</span>
+                </div>
+                <h3 className="font-medium">{t('catFilmTV')}</h3>
+                <p className="text-xs text-muted-foreground mt-1">214 {t('tests').toLowerCase()}</p>
+              </Card>
+              
+              <Card
+                className="hover:border-primary/50 transition-colors p-4 text-center cursor-pointer border shadow-sm"
+                onClick={() => navigate("/categories")}
+              >
+                <div className="w-12 h-12 bg-yellow-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-xl text-white">🎨</span>
+                </div>
+                <h3 className="font-medium">{t('catArt')}</h3>
+                <p className="text-xs text-muted-foreground mt-1">73 {t('tests').toLowerCase()}</p>
+              </Card>
+              
+              <Card
+                className="hover:border-primary/50 transition-colors p-4 text-center cursor-pointer border shadow-sm"
+                onClick={() => navigate("/categories")}
+              >
+                <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-xl text-white">🎮</span>
+                </div>
+                <h3 className="font-medium">{t('catGames')}</h3>
+                <p className="text-xs text-muted-foreground mt-1">95 {t('tests').toLowerCase()}</p>
+              </Card>
+              
+              <Card
+                className="hover:border-primary/50 transition-colors p-4 text-center cursor-pointer border shadow-sm"
+                onClick={() => navigate("/categories")}
+              >
+                <div className="w-12 h-12 bg-orange-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-xl text-white">+</span>
+                </div>
+                <h3 className="font-medium">{t('catMore')}</h3>
+                <p className="text-xs text-muted-foreground mt-1">300+ {t('tests').toLowerCase()}</p>
+              </Card>
             </div>
-            <h3 className="font-medium">{t('catGeography')}</h3>
-            <p className="text-xs text-muted-foreground mt-1">86 {t('tests').toLowerCase()}</p>
-          </div>
+          </CardContent>
           
-          <div 
-            className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-4 text-center cursor-pointer"
-            onClick={() => navigate("/categories")}
-          >
-            <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
-              <span className="text-xl text-white">🎬</span>
-            </div>
-            <h3 className="font-medium">{t('catFilmTV')}</h3>
-            <p className="text-xs text-muted-foreground mt-1">214 {t('tests').toLowerCase()}</p>
-          </div>
-          
-          <div 
-            className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-4 text-center cursor-pointer"
-            onClick={() => navigate("/categories")}
-          >
-            <div className="w-12 h-12 bg-yellow-600 rounded-full flex items-center justify-center mx-auto mb-3">
-              <span className="text-xl text-white">🎨</span>
-            </div>
-            <h3 className="font-medium">{t('catArt')}</h3>
-            <p className="text-xs text-muted-foreground mt-1">73 {t('tests').toLowerCase()}</p>
-          </div>
-          
-          <div 
-            className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-4 text-center cursor-pointer"
-            onClick={() => navigate("/categories")}
-          >
-            <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-3">
-              <span className="text-xl text-white">🎮</span>
-            </div>
-            <h3 className="font-medium">{t('catGames')}</h3>
-            <p className="text-xs text-muted-foreground mt-1">95 {t('tests').toLowerCase()}</p>
-          </div>
-          
-          <div 
-            className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-4 text-center cursor-pointer"
-            onClick={() => navigate("/categories")}
-          >
-            <div className="w-12 h-12 bg-orange-600 rounded-full flex items-center justify-center mx-auto mb-3">
-              <span className="text-xl text-white">+</span>
-            </div>
-            <h3 className="font-medium">{t('catMore')}</h3>
-            <p className="text-xs text-muted-foreground mt-1">300+ {t('tests').toLowerCase()}</p>
-          </div>
-        </div>
+          <CardFooter className="flex justify-center">
+            <Button onClick={() => navigate("/categories")}>
+              Tüm Kategorileri Görüntüle
+            </Button>
+          </CardFooter>
+        </Card>
       </section>
     </div>
   );
