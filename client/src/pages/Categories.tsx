@@ -25,44 +25,27 @@ export default function Categories() {
     (category.description && category.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
   
-  // Custom icon for each category based on name
-  const getCategoryIcon = (name: string) => {
-    const icons: { [key: string]: React.ReactNode } = {
-      "Sanat": <Layers className="h-10 w-10" />,
-      "Müzik": <BookOpen className="h-10 w-10" />,
-      "Sinema": <BookOpen className="h-10 w-10" />,
-      "Spor": <Grid3X3 className="h-10 w-10" />,
-      "Tarih": <Layers className="h-10 w-10" />,
-      "Bilim": <BookOpen className="h-10 w-10" />,
-    };
+  // Kategori adına göre emoji döndüren yardımcı fonksiyon
+  const getCategoryEmoji = (categoryName: string, index: number): string => {
+    const name = categoryName.toLowerCase();
     
-    for (const key in icons) {
-      if (name.toLowerCase().includes(key.toLowerCase())) {
-        return icons[key];
-      }
-    }
+    if (name.includes("film") || name.includes("tv") || name.includes("dizi") || name.includes("sinema")) return "🎬";
+    if (name.includes("oyun") || name.includes("game")) return "🎮";
+    if (name.includes("müzik") || name.includes("music")) return "🎵";
+    if (name.includes("sanat") || name.includes("art")) return "🎨";
+    if (name.includes("spor") || name.includes("sport")) return "⚽";
+    if (name.includes("bilim") || name.includes("science")) return "🧪";
+    if (name.includes("tarih") || name.includes("history")) return "📜";
+    if (name.includes("coğrafya") || name.includes("geography")) return "🌍";
+    if (name.includes("yemek") || name.includes("food")) return "🍕";
+    if (name.includes("hayvan") || name.includes("animal")) return "🐱";
+    if (name.includes("eğitim") || name.includes("education")) return "📚";
+    if (name.includes("edebiyat") || name.includes("literature")) return "📖";
+    if (name.includes("teknoloji") || name.includes("technology")) return "💻";
     
-    return <Grid3X3 className="h-10 w-10" />;
-  };
-
-  // Get background gradient based on category name
-  const getCategoryGradient = (name: string) => {
-    const gradients: { [key: string]: string } = {
-      "Sanat": "from-blue-500/30 to-blue-600/10",
-      "Müzik": "from-purple-500/30 to-purple-600/10",
-      "Sinema": "from-red-500/30 to-red-600/10",
-      "Spor": "from-green-500/30 to-green-600/10",
-      "Tarih": "from-amber-500/30 to-amber-600/10",
-      "Bilim": "from-indigo-500/30 to-indigo-600/10",
-    };
-    
-    for (const key in gradients) {
-      if (name.toLowerCase().includes(key.toLowerCase())) {
-        return gradients[key];
-      }
-    }
-    
-    return "from-primary/30 to-primary/10";
+    // Varsayılan emojiler
+    const defaultEmojis = ["🔍", "💡", "🎯", "📊", "🔮", "🌟", "💎"];
+    return defaultEmojis[index % defaultEmojis.length];
   };
 
   // Loading state for cards
@@ -78,72 +61,57 @@ export default function Categories() {
     </div>
   );
 
-  // Category card component
-  const CategoryCard = ({ category }: { category: Category }) => (
-    <Link href={`/categories/${category.id}`}>
-      <div className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-4 text-center cursor-pointer">
-        <div 
-          className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3`}
-          style={{ 
-            backgroundColor: category.color || '#6366f1',
-            background: category.backgroundColor ? `linear-gradient(135deg, ${category.color || '#6366f1'}, ${category.backgroundColor})` : undefined
-          }}
-        >
-          {category.iconUrl ? (
-            <img 
-              src={category.iconUrl} 
-              alt={category.name} 
-              className="w-6 h-6 object-contain"
-            />
-          ) : category.iconName ? (
-            <span className="text-xl text-white">{category.iconName}</span>
-          ) : (
-            React.cloneElement(getCategoryIcon(category.name) as React.ReactElement, { className: "h-6 w-6 text-white" })
-          )}
-        </div>
-        <h3 className="font-medium">{category.name}</h3>
-        <p className="text-xs text-muted-foreground mt-1">0+ test</p>
-      </div>
+  // İyileştirilmiş kategori kartı bileşeni
+  const CategoryCard = ({ category, index = 0 }: { category: Category, index?: number }) => (
+    <Link href={`/category/${category.id}`}>
+      <Card className="cursor-pointer hover:border-primary/50 transition-all duration-300 overflow-hidden">
+        <CardContent className="p-4 flex flex-col items-center text-center">
+          <div className={`w-14 h-14 rounded-full flex items-center justify-center text-2xl mb-3 mt-2 ${
+            index % 6 === 0 ? "bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400" : 
+            index % 6 === 1 ? "bg-sky-100 text-sky-600 dark:bg-sky-950 dark:text-sky-400" : 
+            index % 6 === 2 ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400" : 
+            index % 6 === 3 ? "bg-violet-100 text-violet-600 dark:bg-violet-950 dark:text-violet-400" : 
+            index % 6 === 4 ? "bg-yellow-100 text-yellow-600 dark:bg-yellow-950 dark:text-yellow-400" : 
+            "bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-400"
+          }`}>
+            {getCategoryEmoji(category.name, index)}
+          </div>
+          <h3 className="text-card-foreground font-medium text-sm">{category.name}</h3>
+        </CardContent>
+      </Card>
     </Link>
   );
 
-  // Category list item component
-  const CategoryListItem = ({ category }: { category: Category }) => (
-    <Link href={`/categories/${category.id}`}>
-      <div className="custom-frame hover:bg-[hsl(var(--frame-hover))] transition-colors rounded-xl p-4 flex items-center cursor-pointer">
-        <div 
-          className={`w-12 h-12 rounded-full flex items-center justify-center mr-4`}
-          style={{ 
-            backgroundColor: category.color || '#6366f1',
-            background: category.backgroundColor ? `linear-gradient(135deg, ${category.color || '#6366f1'}, ${category.backgroundColor})` : undefined
-          }}
-        >
-          {category.iconUrl ? (
-            <img 
-              src={category.iconUrl} 
-              alt={category.name} 
-              className="w-6 h-6 object-contain"
-            />
-          ) : category.iconName ? (
-            <span className="text-xl text-white">{category.iconName}</span>
-          ) : (
-            React.cloneElement(getCategoryIcon(category.name) as React.ReactElement, { className: "h-6 w-6 text-white" })
-          )}
-        </div>
-        <div className="flex-grow">
-          <h3 className="font-medium">{category.name}</h3>
-          <p className="text-sm text-muted-foreground line-clamp-1">
-            {category.description || `${category.name} kategorisindeki içerikleri keşfedin.`}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="flex items-center gap-1">
-            <Eye className="h-3 w-3" />
-            <span>0 Test</span>
-          </Badge>
-          <ChevronRight className="h-4 w-4 text-muted-foreground" />
-        </div>
-      </div>
+  // İyileştirilmiş liste görünümü bileşeni
+  const CategoryListItem = ({ category, index = 0 }: { category: Category, index?: number }) => (
+    <Link href={`/category/${category.id}`}>
+      <Card className="cursor-pointer hover:border-primary/50 transition-all duration-300 overflow-hidden">
+        <CardContent className="p-4 flex items-center">
+          <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl mr-4 ${
+            index % 6 === 0 ? "bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400" : 
+            index % 6 === 1 ? "bg-sky-100 text-sky-600 dark:bg-sky-950 dark:text-sky-400" : 
+            index % 6 === 2 ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400" : 
+            index % 6 === 3 ? "bg-violet-100 text-violet-600 dark:bg-violet-950 dark:text-violet-400" : 
+            index % 6 === 4 ? "bg-yellow-100 text-yellow-600 dark:bg-yellow-950 dark:text-yellow-400" : 
+            "bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-400"
+          }`}>
+            {getCategoryEmoji(category.name, index)}
+          </div>
+          <div className="flex-grow">
+            <h3 className="font-medium">{category.name}</h3>
+            <p className="text-sm text-muted-foreground line-clamp-1">
+              {category.description || `${category.name} kategorisindeki içerikleri keşfedin.`}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="flex items-center gap-1">
+              <Eye className="h-3 w-3" />
+              <span>0 Test</span>
+            </Badge>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </div>
+        </CardContent>
+      </Card>
     </Link>
   );
 
@@ -222,14 +190,14 @@ export default function Categories() {
               </div>
             ) : activeView === "grid" ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                {filteredCategories.map((category: Category) => (
-                  <CategoryCard key={category.id} category={category} />
+                {filteredCategories.map((category: Category, index) => (
+                  <CategoryCard key={category.id} category={category} index={index} />
                 ))}
               </div>
             ) : (
               <div className="space-y-3">
-                {filteredCategories.map((category: Category) => (
-                  <CategoryListItem key={category.id} category={category} />
+                {filteredCategories.map((category: Category, index) => (
+                  <CategoryListItem key={category.id} category={category} index={index} />
                 ))}
               </div>
             )}
@@ -241,8 +209,8 @@ export default function Categories() {
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                 {categories.length > 0 
-                  ? categories.slice(0, 5).map((category: Category) => (
-                      <CategoryCard key={category.id} category={category} />
+                  ? categories.slice(0, 6).map((category: Category, index) => (
+                      <CategoryCard key={category.id} category={category} index={index} />
                     ))
                   : (
                     <div className="col-span-6 text-center p-12 bg-muted/30 rounded-lg">
@@ -261,8 +229,8 @@ export default function Categories() {
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                 {categories.length > 0 
-                  ? [...categories].slice(-5).reverse().map((category: Category) => (
-                      <CategoryCard key={category.id} category={category} />
+                  ? [...categories].slice(-6).reverse().map((category: Category, index) => (
+                      <CategoryCard key={category.id} category={category} index={index} />
                     ))
                   : (
                     <div className="col-span-6 text-center p-12 bg-muted/30 rounded-lg">

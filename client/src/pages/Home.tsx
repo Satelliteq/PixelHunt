@@ -213,22 +213,43 @@ export default function Home() {
   const handleTestClick = (testId: number) => {
     navigate(`/tests/${testId}`);
   };
+  
+  // Kategori adına göre emoji döndüren yardımcı fonksiyon
+  const getCategoryEmoji = (categoryName: string, index: number): string => {
+    const name = categoryName.toLowerCase();
+    
+    if (name.includes("film") || name.includes("tv") || name.includes("dizi")) return "🎬";
+    if (name.includes("oyun") || name.includes("game")) return "🎮";
+    if (name.includes("müzik") || name.includes("music")) return "🎵";
+    if (name.includes("sanat") || name.includes("art")) return "🎨";
+    if (name.includes("spor") || name.includes("sport")) return "⚽";
+    if (name.includes("bilim") || name.includes("science")) return "🧪";
+    if (name.includes("tarih") || name.includes("history")) return "📜";
+    if (name.includes("coğrafya") || name.includes("geography")) return "🌍";
+    if (name.includes("yemek") || name.includes("food")) return "🍕";
+    if (name.includes("hayvan") || name.includes("animal")) return "🐱";
+    if (name.includes("eğitim") || name.includes("education")) return "📚";
+    
+    // Varsayılan emojiler
+    const defaultEmojis = ["🔍", "💡", "🎯", "📊", "🔮", "🌟", "💎"];
+    return defaultEmojis[index % defaultEmojis.length];
+  };
 
   // Helper functions were refactored directly into the component rendering
 
   return (
     <div className="space-y-12">
-      {/* Gaming Platform Hero Section with theme aware styling */}
-      <section className="relative hero-banner max-w-content mx-auto overflow-hidden">
+      {/* Hero Section with theme aware styling */}
+      <section className="max-w-content mx-auto">
         {/* Hero banner with theme-aware styling */}
-        <div className="relative w-full bg-card rounded-lg mb-8 border shadow-sm">
+        <div className="relative w-full bg-card rounded-lg mb-8 border">
           <div className="flex flex-col md:flex-row items-center overflow-hidden">
             {/* Left side content */}
             <div className="w-full md:w-1/2 p-8 md:p-10 flex flex-col justify-center z-10">
               <div className="inline-block mb-4">
-                <span className="bg-primary text-primary-foreground py-1 px-4 rounded-md text-sm font-bold shadow-sm">
+                <Badge className="bg-primary text-primary-foreground py-1 px-4 text-sm font-bold">
                   ✨ Pixel Hunt
-                </span>
+                </Badge>
               </div>
               
               <h1 className="text-card-foreground text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-4">
@@ -265,8 +286,8 @@ export default function Home() {
               <div className="absolute top-6 right-10 w-16 h-16 bg-primary/10 rounded-full blur-xl z-10"></div>
               <div className="absolute bottom-10 left-20 w-20 h-20 bg-primary/10 rounded-full blur-xl z-10"></div>
               
-              {/* Dynamic overlapping test cards */}
-              <div className="absolute bottom-4 right-0 transform -rotate-6 translate-x-5 w-48 h-64 md:w-56 md:h-72 bg-gradient-to-br from-amber-500 to-yellow-600 rounded-lg shadow-xl overflow-hidden">
+              {/* Dynamic overlapping test cards - Z-index yapısı düzeltildi */}
+              <div className="absolute bottom-4 right-0 transform -rotate-6 translate-x-5 w-48 h-64 md:w-56 md:h-72 bg-gradient-to-br from-amber-500 to-yellow-600 rounded-lg shadow-lg overflow-hidden z-10">
                 <div className="absolute inset-0.5 bg-black/30 rounded-[7px] p-3 flex flex-col">
                   <div className="mt-auto">
                     <div className="bg-amber-300 w-10 h-10 rounded-full mb-2 flex items-center justify-center text-xl">
@@ -278,7 +299,7 @@ export default function Home() {
                 </div>
               </div>
               
-              <div className="absolute bottom-4 right-20 transform rotate-3 w-48 h-64 md:w-56 md:h-72 bg-gradient-to-br from-sky-500 to-blue-600 rounded-lg shadow-xl overflow-hidden z-20">
+              <div className="absolute bottom-4 right-20 transform rotate-3 w-48 h-64 md:w-56 md:h-72 bg-gradient-to-br from-sky-500 to-blue-600 rounded-lg shadow-lg overflow-hidden z-20">
                 <div className="absolute inset-0.5 bg-black/30 rounded-[7px] p-3 flex flex-col">
                   <div className="mt-auto">
                     <div className="bg-sky-300 w-10 h-10 rounded-full mb-2 flex items-center justify-center text-xl">
@@ -290,7 +311,7 @@ export default function Home() {
                 </div>
               </div>
               
-              <div className="absolute bottom-4 right-40 transform -rotate-3 w-48 h-64 md:w-56 md:h-72 bg-gradient-to-br from-emerald-500 to-green-600 rounded-lg shadow-xl overflow-hidden z-30">
+              <div className="absolute bottom-4 right-40 transform -rotate-3 w-48 h-64 md:w-56 md:h-72 bg-gradient-to-br from-emerald-500 to-green-600 rounded-lg shadow-lg overflow-hidden z-30">
                 <div className="absolute inset-0.5 bg-black/30 rounded-[7px] p-3 flex flex-col">
                   <div className="mt-auto">
                     <div className="bg-emerald-300 w-10 h-10 rounded-full mb-2 flex items-center justify-center text-xl">
@@ -305,25 +326,28 @@ export default function Home() {
           </div>
         </div>
         
-        {/* Category shortcuts */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 mb-8">
+        {/* Kategori kartları - düzenlenmiş hali */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
           {categories.slice(0, 6).map((category, index) => (
-            <div 
-              key={index}
-              className="bg-card border-border hover:border-primary/50 transition-colors p-3 rounded-lg text-center cursor-pointer border shadow-sm"
+            <Card 
+              key={category.id || index}
+              className="group cursor-pointer hover:border-primary/50 transition-all duration-300 overflow-hidden"
               onClick={() => navigate(`/category/${category.id || index + 1}`)}
             >
-              <div className={`w-10 h-10 mx-auto rounded-full flex items-center justify-center text-lg mb-2 ${
-                index % 6 === 0 ? "bg-amber-500" : 
-                index % 6 === 1 ? "bg-sky-500" : 
-                index % 6 === 2 ? "bg-emerald-500" : 
-                index % 6 === 3 ? "bg-violet-500" : 
-                index % 6 === 4 ? "bg-yellow-500" : "bg-orange-500"
-              }`}>
-                {category.iconName || category.icon_name || "🎯"}
-              </div>
-              <h3 className="text-card-foreground text-sm font-medium truncate">{category.name}</h3>
-            </div>
+              <CardContent className="p-4 flex flex-col items-center text-center">
+                <div className={`w-14 h-14 rounded-full flex items-center justify-center text-2xl mb-3 mt-2 ${
+                  index % 6 === 0 ? "bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400" : 
+                  index % 6 === 1 ? "bg-sky-100 text-sky-600 dark:bg-sky-950 dark:text-sky-400" : 
+                  index % 6 === 2 ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400" : 
+                  index % 6 === 3 ? "bg-violet-100 text-violet-600 dark:bg-violet-950 dark:text-violet-400" : 
+                  index % 6 === 4 ? "bg-yellow-100 text-yellow-600 dark:bg-yellow-950 dark:text-yellow-400" : 
+                  "bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-400"
+                }`}>
+                  {getCategoryEmoji(category.name || "", index)}
+                </div>
+                <h3 className="text-card-foreground font-medium text-sm">{category.name}</h3>
+              </CardContent>
+            </Card>
           ))}
         </div>
         
