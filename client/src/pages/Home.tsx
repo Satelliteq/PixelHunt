@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Heart, Trophy, BookOpen, Filter, Clock, Users, Sparkles, Award, ChevronLeft, ChevronRight, Plus, Search, X, Loader2 } from "lucide-react";
-import { Test } from "@shared/schema";
+import { Test, Category } from "@shared/schema";
 import { useLanguage } from "@/lib/LanguageContext";
 
 import ContentCard from "@/components/game/ContentCard";
@@ -190,6 +190,24 @@ export default function Home() {
     enabled: activeTab === "featured",
   });
 
+  // Fetch categories
+  const { data: categoriesData } = useQuery<Category[]>({
+    queryKey: ["/api/categories"],
+  });
+
+  // Örnek kategoriler (API'den veri gelmezse kullanılacak)
+  const defaultCategories: Array<{id?: number, name: string, iconName?: string}> = [
+    { id: 1, name: "Film & TV", iconName: "🎬" },
+    { id: 2, name: "Müzik", iconName: "🎵" },
+    { id: 3, name: "Sanat", iconName: "🎨" },
+    { id: 4, name: "Oyun", iconName: "🎮" },
+    { id: 5, name: "Spor", iconName: "⚽" },
+    { id: 6, name: "Bilim", iconName: "🧪" },
+  ];
+
+  // Kategorileri API'den veya varsayılan veriden al
+  const categories = categoriesData || defaultCategories;
+
   const handleTestClick = (testId: number) => {
     navigate(`/tests/${testId}`);
   };
@@ -198,92 +216,223 @@ export default function Home() {
 
   return (
     <div className="space-y-12">
-      {/* Modern Gaming Hero Section with Card-style Frame */}
+      {/* Gaming Platform Hero Section inspired by reference designs */}
       <section className="relative hero-banner max-w-content mx-auto overflow-hidden">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-          {/* Left side main content - takes 3/5 on larger screens */}
-          <div className="md:col-span-3 bg-gradient-to-br from-red-700 via-red-600 to-red-800 rounded-2xl p-0.5 shadow-lg">
-            <div className="h-full rounded-2xl bg-gradient-to-b from-gray-900 to-gray-950 p-8 md:p-10 flex flex-col justify-center relative overflow-hidden">
-              {/* Background elements */}
-              <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-5"></div>
-              <div className="absolute -bottom-12 -right-12 w-40 h-40 bg-red-600/10 rounded-full blur-3xl"></div>
-              <div className="absolute -top-10 -left-12 w-32 h-32 bg-red-500/10 rounded-full blur-2xl"></div>
+        {/* Hero banner with square-cornered frame */}
+        <div className="relative w-full bg-gray-900 rounded-lg mb-8">
+          <div className="flex flex-col md:flex-row items-center overflow-hidden">
+            {/* Left side content */}
+            <div className="w-full md:w-1/2 p-8 md:p-10 flex flex-col justify-center z-10">
+              <div className="inline-block mb-4">
+                <span className="bg-red-600 text-white py-1 px-4 rounded-md text-sm font-bold shadow-lg">
+                  ✨ Pixel Hunt
+                </span>
+              </div>
               
-              {/* Content */}
-              <div className="relative z-10 text-center md:text-left">
-                <div className="inline-block mb-4">
-                  <span className="bg-red-600/80 text-white py-1 px-4 rounded-full text-sm font-bold shadow-lg">
-                    ✨ Pixel Hunt
-                  </span>
+              <h1 className="text-white text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-4">
+                Görsellerinizi <span className="text-red-500 font-extrabold">Tahmin Etmeye</span> Hazır Mısınız?
+              </h1>
+              
+              <p className="text-gray-300 max-w-xl mb-8">
+                Farklı kategorilerde testler oluşturun, paylaşın ve arkadaşlarınızla birlikte eğlenin!
+              </p>
+              
+              <div className="flex flex-wrap gap-4">
+                <Button 
+                  onClick={() => navigate("/create-test")}
+                  className="bg-red-600 hover:bg-red-700 text-white font-medium shadow-lg"
+                  size="lg"
+                >
+                  <Plus className="mr-2 h-5 w-5" />
+                  Test Oluştur
+                </Button>
+                
+                <Button 
+                  variant="outline"
+                  onClick={() => setActiveTab("popular")}
+                  className="bg-black/40 border-gray-700 text-white hover:bg-black/60"
+                  size="lg"
+                >
+                  <Trophy className="mr-2 h-5 w-5" />
+                  Popüler Testler
+                </Button>
+              </div>
+            </div>
+            
+            {/* Right side image */}
+            <div className="w-full md:w-1/2 h-[260px] md:h-[320px] relative">
+              {/* Decorative elements */}
+              <div className="absolute top-6 right-10 w-16 h-16 bg-red-500/10 rounded-full blur-xl z-10"></div>
+              <div className="absolute bottom-10 left-20 w-20 h-20 bg-blue-500/10 rounded-full blur-xl z-10"></div>
+              
+              {/* Dynamic overlapping test cards */}
+              <div className="absolute bottom-4 right-0 transform -rotate-6 translate-x-5 w-48 h-64 md:w-56 md:h-72 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg shadow-xl overflow-hidden">
+                <div className="absolute inset-0.5 bg-black/30 rounded-[7px] p-3 flex flex-col">
+                  <div className="mt-auto">
+                    <div className="bg-yellow-300 w-10 h-10 rounded-full mb-2 flex items-center justify-center text-xl">
+                      🎮
+                    </div>
+                    <h3 className="text-white font-bold text-lg">Oyun</h3>
+                    <p className="text-white/70 text-sm">20+ Test</p>
+                  </div>
                 </div>
-                
-                <h1 className="text-white text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-4">
-                  Görsellerinizi <span className="text-red-400 font-extrabold">Tahmin Etmeye</span> Hazır Mısınız?
-                </h1>
-                
-                <p className="text-gray-300 max-w-xl mb-8">
-                  Farklı kategorilerde testler oluşturun, paylaşın ve arkadaşlarınızla birlikte eğlenin!
-                </p>
-                
-                <div className="flex flex-wrap gap-4 justify-center md:justify-start">
-                  <Button 
-                    onClick={() => navigate("/create-test")}
-                    className="bg-red-600 hover:bg-red-700 text-white font-medium shadow-lg"
-                    size="lg"
-                  >
-                    <Plus className="mr-2 h-5 w-5" />
-                    Test Oluştur
-                  </Button>
-                  
-                  <Button 
-                    variant="outline"
-                    onClick={() => setActiveTab("popular")}
-                    className="bg-transparent border-gray-600 text-white hover:bg-white/10"
-                    size="lg"
-                  >
-                    <Trophy className="mr-2 h-5 w-5" />
-                    Popüler Testler
-                  </Button>
+              </div>
+              
+              <div className="absolute bottom-4 right-20 transform rotate-3 w-48 h-64 md:w-56 md:h-72 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg shadow-xl overflow-hidden z-20">
+                <div className="absolute inset-0.5 bg-black/30 rounded-[7px] p-3 flex flex-col">
+                  <div className="mt-auto">
+                    <div className="bg-blue-300 w-10 h-10 rounded-full mb-2 flex items-center justify-center text-xl">
+                      🎬
+                    </div>
+                    <h3 className="text-white font-bold text-lg">Film</h3>
+                    <p className="text-white/70 text-sm">45+ Test</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="absolute bottom-4 right-40 transform -rotate-3 w-48 h-64 md:w-56 md:h-72 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg shadow-xl overflow-hidden z-30">
+                <div className="absolute inset-0.5 bg-black/30 rounded-[7px] p-3 flex flex-col">
+                  <div className="mt-auto">
+                    <div className="bg-green-300 w-10 h-10 rounded-full mb-2 flex items-center justify-center text-xl">
+                      🎨
+                    </div>
+                    <h3 className="text-white font-bold text-lg">Sanat</h3>
+                    <p className="text-white/70 text-sm">30+ Test</p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-          
-          {/* Right side featured content cards - takes 2/5 on larger screens */}
-          <div className="md:col-span-2 grid grid-cols-1 gap-4">
-            {/* Top card */}
-            <div className="bg-gradient-to-r from-gray-800 to-gray-900 rounded-2xl p-6 flex flex-col">
-              <h3 className="text-lg font-semibold text-white mb-2 flex items-center">
-                <Sparkles className="w-5 h-5 mr-2 text-yellow-500" />
-                Öne Çıkanlar
-              </h3>
-              <p className="text-gray-400 text-sm mb-4">En çok yorum alan ve beğenilen testlere göz atın!</p>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setActiveTab("featured")}
-                className="mt-auto self-start text-white border-gray-700 hover:bg-gray-800"
-              >
-                Keşfet
-              </Button>
+        </div>
+        
+        {/* Category shortcuts */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 mb-8">
+          {categories.slice(0, 6).map((category, index) => (
+            <div 
+              key={index}
+              className="bg-gray-900 border border-gray-800 hover:border-red-500/50 transition-colors p-3 rounded-lg text-center cursor-pointer"
+              onClick={() => navigate(`/category/${category.id || index + 1}`)}
+            >
+              <div className={`w-10 h-10 mx-auto rounded-full flex items-center justify-center text-lg mb-2 ${
+                index % 6 === 0 ? "bg-red-600" : 
+                index % 6 === 1 ? "bg-blue-600" : 
+                index % 6 === 2 ? "bg-green-600" : 
+                index % 6 === 3 ? "bg-purple-600" : 
+                index % 6 === 4 ? "bg-yellow-600" : "bg-orange-600"
+              }`}>
+                {category.iconName || "🎯"}
+              </div>
+              <h3 className="text-white text-sm font-medium truncate">{category.name}</h3>
+            </div>
+          ))}
+        </div>
+        
+        {/* Featured sections */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+          {/* Popular */}
+          <div className="bg-gray-900 border border-gray-800 rounded-lg p-5">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+              <Trophy className="w-5 h-5 mr-2 text-yellow-500" />
+              Popüler Testler
+            </h3>
+            
+            <div className="space-y-3 mb-4">
+              {popularTests?.slice(0, 3).map((test, index) => (
+                <div 
+                  key={index} 
+                  className="flex items-center gap-3 p-2 hover:bg-black/20 rounded-lg cursor-pointer"
+                  onClick={() => handleTestClick(test.id)}
+                >
+                  <div className="w-10 h-10 bg-gray-800 rounded-md flex items-center justify-center text-sm font-bold text-white">
+                    {index + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-white text-sm font-medium truncate">{test.title}</h4>
+                    <p className="text-gray-400 text-xs">{test.playCount || 0} oynama</p>
+                  </div>
+                </div>
+              ))}
             </div>
             
-            {/* Bottom card */}
-            <div className="bg-gradient-to-r from-gray-800 to-gray-900 rounded-2xl p-6 flex flex-col">
-              <h3 className="text-lg font-semibold text-white mb-2 flex items-center">
-                <Clock className="w-5 h-5 mr-2 text-blue-500" />
-                Son Eklenenler
-              </h3>
-              <p className="text-gray-400 text-sm mb-4">Platformumuza yeni eklenen testleri kaçırmayın!</p>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setActiveTab("newest")}
-                className="mt-auto self-start text-white border-gray-700 hover:bg-gray-800"
-              >
-                Keşfet
-              </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setActiveTab("popular")}
+              className="w-full text-white border-gray-700 hover:bg-black/30"
+            >
+              Tümünü Gör
+            </Button>
+          </div>
+          
+          {/* Featured */}
+          <div className="bg-gray-900 border border-gray-800 rounded-lg p-5">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+              <Sparkles className="w-5 h-5 mr-2 text-pink-500" />
+              Öne Çıkanlar
+            </h3>
+            
+            <div className="space-y-3 mb-4">
+              {featuredTests?.slice(0, 3).map((test, index) => (
+                <div 
+                  key={index}
+                  className="flex items-center gap-3 p-2 hover:bg-black/20 rounded-lg cursor-pointer" 
+                  onClick={() => handleTestClick(test.id)}
+                >
+                  <div 
+                    className="w-10 h-10 bg-cover bg-center rounded-md"
+                    style={{backgroundImage: `url(${test.imageUrl || '/default-test-thumb.jpg'})`}}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-white text-sm font-medium truncate">{test.title}</h4>
+                    <p className="text-gray-400 text-xs">{test.likeCount || 0} beğeni</p>
+                  </div>
+                </div>
+              ))}
             </div>
+            
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setActiveTab("featured")}
+              className="w-full text-white border-gray-700 hover:bg-black/30"
+            >
+              Tümünü Gör
+            </Button>
+          </div>
+          
+          {/* Newest */}
+          <div className="bg-gray-900 border border-gray-800 rounded-lg p-5">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+              <Clock className="w-5 h-5 mr-2 text-blue-500" />
+              Son Eklenenler
+            </h3>
+            
+            <div className="space-y-3 mb-4">
+              {newestTests?.slice(0, 3).map((test, index) => (
+                <div 
+                  key={index}
+                  className="flex items-center gap-3 p-2 hover:bg-black/20 rounded-lg cursor-pointer"
+                  onClick={() => handleTestClick(test.id)}
+                >
+                  <div className="w-10 h-10 bg-gray-800 rounded-md flex items-center justify-center">
+                    <Clock className="w-5 h-5 text-blue-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-white text-sm font-medium truncate">{test.title}</h4>
+                    <p className="text-gray-400 text-xs">Yeni eklendi</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setActiveTab("newest")}
+              className="w-full text-white border-gray-700 hover:bg-black/30"
+            >
+              Tümünü Gör
+            </Button>
           </div>
         </div>
       </section>
