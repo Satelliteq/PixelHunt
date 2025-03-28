@@ -216,31 +216,30 @@ export default function Home() {
 
   return (
     <div className="space-y-12">
-      {/* Gaming Platform Hero Section inspired by reference designs */}
+      {/* Gaming Platform Hero Section with theme aware styling */}
       <section className="relative hero-banner max-w-content mx-auto overflow-hidden">
-        {/* Hero banner with square-cornered frame */}
-        <div className="relative w-full bg-gray-900 rounded-lg mb-8">
+        {/* Hero banner with theme-aware styling */}
+        <div className="relative w-full bg-card rounded-lg mb-8 border shadow-sm">
           <div className="flex flex-col md:flex-row items-center overflow-hidden">
             {/* Left side content */}
             <div className="w-full md:w-1/2 p-8 md:p-10 flex flex-col justify-center z-10">
               <div className="inline-block mb-4">
-                <span className="bg-red-600 text-white py-1 px-4 rounded-md text-sm font-bold shadow-lg">
+                <span className="bg-primary text-primary-foreground py-1 px-4 rounded-md text-sm font-bold shadow-sm">
                   ✨ Pixel Hunt
                 </span>
               </div>
               
-              <h1 className="text-white text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-4">
-                Görsellerinizi <span className="text-red-500 font-extrabold">Tahmin Etmeye</span> Hazır Mısınız?
+              <h1 className="text-card-foreground text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-4">
+                Görsellerinizi <span className="text-primary font-extrabold">Tahmin Etmeye</span> Hazır Mısınız?
               </h1>
               
-              <p className="text-gray-300 max-w-xl mb-8">
+              <p className="text-muted-foreground max-w-xl mb-8">
                 Farklı kategorilerde testler oluşturun, paylaşın ve arkadaşlarınızla birlikte eğlenin!
               </p>
               
               <div className="flex flex-wrap gap-4">
                 <Button 
                   onClick={() => navigate("/create-test")}
-                  className="bg-red-600 hover:bg-red-700 text-white font-medium shadow-lg"
                   size="lg"
                 >
                   <Plus className="mr-2 h-5 w-5" />
@@ -250,7 +249,6 @@ export default function Home() {
                 <Button 
                   variant="outline"
                   onClick={() => setActiveTab("popular")}
-                  className="bg-black/40 border-gray-700 text-white hover:bg-black/60"
                   size="lg"
                 >
                   <Trophy className="mr-2 h-5 w-5" />
@@ -262,14 +260,14 @@ export default function Home() {
             {/* Right side image */}
             <div className="w-full md:w-1/2 h-[260px] md:h-[320px] relative">
               {/* Decorative elements */}
-              <div className="absolute top-6 right-10 w-16 h-16 bg-red-500/10 rounded-full blur-xl z-10"></div>
-              <div className="absolute bottom-10 left-20 w-20 h-20 bg-blue-500/10 rounded-full blur-xl z-10"></div>
+              <div className="absolute top-6 right-10 w-16 h-16 bg-primary/10 rounded-full blur-xl z-10"></div>
+              <div className="absolute bottom-10 left-20 w-20 h-20 bg-primary/10 rounded-full blur-xl z-10"></div>
               
               {/* Dynamic overlapping test cards */}
-              <div className="absolute bottom-4 right-0 transform -rotate-6 translate-x-5 w-48 h-64 md:w-56 md:h-72 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg shadow-xl overflow-hidden">
+              <div className="absolute bottom-4 right-0 transform -rotate-6 translate-x-5 w-48 h-64 md:w-56 md:h-72 bg-gradient-to-br from-amber-500 to-yellow-600 rounded-lg shadow-xl overflow-hidden">
                 <div className="absolute inset-0.5 bg-black/30 rounded-[7px] p-3 flex flex-col">
                   <div className="mt-auto">
-                    <div className="bg-yellow-300 w-10 h-10 rounded-full mb-2 flex items-center justify-center text-xl">
+                    <div className="bg-amber-300 w-10 h-10 rounded-full mb-2 flex items-center justify-center text-xl">
                       🎮
                     </div>
                     <h3 className="text-white font-bold text-lg">Oyun</h3>
@@ -278,10 +276,10 @@ export default function Home() {
                 </div>
               </div>
               
-              <div className="absolute bottom-4 right-20 transform rotate-3 w-48 h-64 md:w-56 md:h-72 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg shadow-xl overflow-hidden z-20">
+              <div className="absolute bottom-4 right-20 transform rotate-3 w-48 h-64 md:w-56 md:h-72 bg-gradient-to-br from-sky-500 to-blue-600 rounded-lg shadow-xl overflow-hidden z-20">
                 <div className="absolute inset-0.5 bg-black/30 rounded-[7px] p-3 flex flex-col">
                   <div className="mt-auto">
-                    <div className="bg-blue-300 w-10 h-10 rounded-full mb-2 flex items-center justify-center text-xl">
+                    <div className="bg-sky-300 w-10 h-10 rounded-full mb-2 flex items-center justify-center text-xl">
                       🎬
                     </div>
                     <h3 className="text-white font-bold text-lg">Film</h3>
@@ -290,10 +288,10 @@ export default function Home() {
                 </div>
               </div>
               
-              <div className="absolute bottom-4 right-40 transform -rotate-3 w-48 h-64 md:w-56 md:h-72 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg shadow-xl overflow-hidden z-30">
+              <div className="absolute bottom-4 right-40 transform -rotate-3 w-48 h-64 md:w-56 md:h-72 bg-gradient-to-br from-emerald-500 to-green-600 rounded-lg shadow-xl overflow-hidden z-30">
                 <div className="absolute inset-0.5 bg-black/30 rounded-[7px] p-3 flex flex-col">
                   <div className="mt-auto">
-                    <div className="bg-green-300 w-10 h-10 rounded-full mb-2 flex items-center justify-center text-xl">
+                    <div className="bg-emerald-300 w-10 h-10 rounded-full mb-2 flex items-center justify-center text-xl">
                       🎨
                     </div>
                     <h3 className="text-white font-bold text-lg">Sanat</h3>
@@ -310,19 +308,19 @@ export default function Home() {
           {categories.slice(0, 6).map((category, index) => (
             <div 
               key={index}
-              className="bg-gray-900 border border-gray-800 hover:border-red-500/50 transition-colors p-3 rounded-lg text-center cursor-pointer"
+              className="bg-card border-border hover:border-primary/50 transition-colors p-3 rounded-lg text-center cursor-pointer border shadow-sm"
               onClick={() => navigate(`/category/${category.id || index + 1}`)}
             >
               <div className={`w-10 h-10 mx-auto rounded-full flex items-center justify-center text-lg mb-2 ${
-                index % 6 === 0 ? "bg-red-600" : 
-                index % 6 === 1 ? "bg-blue-600" : 
-                index % 6 === 2 ? "bg-green-600" : 
-                index % 6 === 3 ? "bg-purple-600" : 
-                index % 6 === 4 ? "bg-yellow-600" : "bg-orange-600"
+                index % 6 === 0 ? "bg-amber-500" : 
+                index % 6 === 1 ? "bg-sky-500" : 
+                index % 6 === 2 ? "bg-emerald-500" : 
+                index % 6 === 3 ? "bg-violet-500" : 
+                index % 6 === 4 ? "bg-yellow-500" : "bg-orange-500"
               }`}>
-                {category.iconName || "🎯"}
+                {category.iconName || category.icon_name || "🎯"}
               </div>
-              <h3 className="text-white text-sm font-medium truncate">{category.name}</h3>
+              <h3 className="text-card-foreground text-sm font-medium truncate">{category.name}</h3>
             </div>
           ))}
         </div>
@@ -330,8 +328,8 @@ export default function Home() {
         {/* Featured sections */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
           {/* Popular */}
-          <div className="bg-gray-900 border border-gray-800 rounded-lg p-5">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+          <div className="bg-card border-border rounded-lg p-5 border shadow-sm">
+            <h3 className="text-lg font-semibold text-card-foreground mb-4 flex items-center">
               <Trophy className="w-5 h-5 mr-2 text-yellow-500" />
               Popüler Testler
             </h3>
@@ -340,15 +338,15 @@ export default function Home() {
               {popularTests?.slice(0, 3).map((test, index) => (
                 <div 
                   key={index} 
-                  className="flex items-center gap-3 p-2 hover:bg-black/20 rounded-lg cursor-pointer"
+                  className="flex items-center gap-3 p-2 hover:bg-accent/50 rounded-lg cursor-pointer"
                   onClick={() => handleTestClick(test.id)}
                 >
-                  <div className="w-10 h-10 bg-gray-800 rounded-md flex items-center justify-center text-sm font-bold text-white">
+                  <div className="w-10 h-10 bg-muted rounded-md flex items-center justify-center text-sm font-bold text-muted-foreground">
                     {index + 1}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-white text-sm font-medium truncate">{test.title}</h4>
-                    <p className="text-gray-400 text-xs">{test.playCount || 0} oynama</p>
+                    <h4 className="text-card-foreground text-sm font-medium truncate">{test.title}</h4>
+                    <p className="text-muted-foreground text-xs">{test.playCount || 0} oynama</p>
                   </div>
                 </div>
               ))}
@@ -358,16 +356,16 @@ export default function Home() {
               variant="outline" 
               size="sm"
               onClick={() => setActiveTab("popular")}
-              className="w-full text-white border-gray-700 hover:bg-black/30"
+              className="w-full"
             >
               Tümünü Gör
             </Button>
           </div>
           
           {/* Featured */}
-          <div className="bg-gray-900 border border-gray-800 rounded-lg p-5">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-              <Sparkles className="w-5 h-5 mr-2 text-pink-500" />
+          <div className="bg-card border-border rounded-lg p-5 border shadow-sm">
+            <h3 className="text-lg font-semibold text-card-foreground mb-4 flex items-center">
+              <Sparkles className="w-5 h-5 mr-2 text-primary" />
               Öne Çıkanlar
             </h3>
             
@@ -375,7 +373,7 @@ export default function Home() {
               {featuredTests?.slice(0, 3).map((test, index) => (
                 <div 
                   key={index}
-                  className="flex items-center gap-3 p-2 hover:bg-black/20 rounded-lg cursor-pointer" 
+                  className="flex items-center gap-3 p-2 hover:bg-accent/50 rounded-lg cursor-pointer" 
                   onClick={() => handleTestClick(test.id)}
                 >
                   <div 
@@ -383,8 +381,8 @@ export default function Home() {
                     style={{backgroundImage: `url(${test.imageUrl || '/default-test-thumb.jpg'})`}}
                   />
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-white text-sm font-medium truncate">{test.title}</h4>
-                    <p className="text-gray-400 text-xs">{test.likeCount || 0} beğeni</p>
+                    <h4 className="text-card-foreground text-sm font-medium truncate">{test.title}</h4>
+                    <p className="text-muted-foreground text-xs">{test.likeCount || 0} beğeni</p>
                   </div>
                 </div>
               ))}
@@ -394,15 +392,15 @@ export default function Home() {
               variant="outline" 
               size="sm"
               onClick={() => setActiveTab("featured")}
-              className="w-full text-white border-gray-700 hover:bg-black/30"
+              className="w-full"
             >
               Tümünü Gör
             </Button>
           </div>
           
           {/* Newest */}
-          <div className="bg-gray-900 border border-gray-800 rounded-lg p-5">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+          <div className="bg-card border-border rounded-lg p-5 border shadow-sm">
+            <h3 className="text-lg font-semibold text-card-foreground mb-4 flex items-center">
               <Clock className="w-5 h-5 mr-2 text-blue-500" />
               Son Eklenenler
             </h3>
@@ -411,15 +409,15 @@ export default function Home() {
               {newestTests?.slice(0, 3).map((test, index) => (
                 <div 
                   key={index}
-                  className="flex items-center gap-3 p-2 hover:bg-black/20 rounded-lg cursor-pointer"
+                  className="flex items-center gap-3 p-2 hover:bg-accent/50 rounded-lg cursor-pointer"
                   onClick={() => handleTestClick(test.id)}
                 >
-                  <div className="w-10 h-10 bg-gray-800 rounded-md flex items-center justify-center">
+                  <div className="w-10 h-10 bg-muted rounded-md flex items-center justify-center">
                     <Clock className="w-5 h-5 text-blue-400" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-white text-sm font-medium truncate">{test.title}</h4>
-                    <p className="text-gray-400 text-xs">Yeni eklendi</p>
+                    <h4 className="text-card-foreground text-sm font-medium truncate">{test.title}</h4>
+                    <p className="text-muted-foreground text-xs">Yeni eklendi</p>
                   </div>
                 </div>
               ))}
@@ -429,7 +427,7 @@ export default function Home() {
               variant="outline" 
               size="sm"
               onClick={() => setActiveTab("newest")}
-              className="w-full text-white border-gray-700 hover:bg-black/30"
+              className="w-full"
             >
               Tümünü Gör
             </Button>
