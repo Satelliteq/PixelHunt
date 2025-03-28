@@ -401,6 +401,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Transform data - rename properties to match database schema
       // Don't include is_anonymous field here as it causes issues with Supabase schema cache
+      let questions = req.body.images || req.body.questions || [];
+      
+      // Özel format dönüşümü: Form yapısından veritabanı yapısına
+      if (req.body.images && Array.isArray(req.body.images)) {
+        // Form'dan gelen görseller dizisini questions formatına dönüştür
+        questions = req.body.images.map((image: any, index: number) => ({
+          id: String(index + 1),
+          imageUrl: image.imageUrl,
+          answers: image.answers || [],
+        }));
+        console.log("Görsel formatı dönüştürüldü:", questions);
+      }
+      
       const transformedData = {
         title: req.body.title,
         description: req.body.description || "",
@@ -409,7 +422,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         difficulty: req.body.difficulty || 3, // Default to medium difficulty
         duration: req.body.duration || null,
         image_url: req.body.thumbnail || req.body.image_url || null,
-        questions: req.body.images || req.body.questions || [],
+        questions: questions,
         approved: true, // Auto-approve for now
         is_public: req.body.isPublic !== undefined ? req.body.isPublic : true,
         featured: false

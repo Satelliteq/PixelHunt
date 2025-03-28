@@ -198,159 +198,62 @@ export default function Home() {
 
   return (
     <div className="space-y-12">
-      {/* Hero Banner Carousel */}
-      <section className="relative overflow-hidden rounded-2xl hero-carousel max-w-content mx-auto">
-        {/* Carousel Navigation Buttons */}
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 z-30">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="rounded-full bg-black/20 text-white hover:bg-black/40"
-            onClick={prevSlide}
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-        </div>
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 z-30">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="rounded-full bg-black/20 text-white hover:bg-black/40"
-            onClick={nextSlide}
-          >
-            <ChevronRight className="h-5 w-5" />
-          </Button>
-        </div>
+      {/* Hero Banner (Nintendo Switch style) */}
+      <section className="relative overflow-hidden rounded-2xl bg-black max-w-content mx-auto">
+        <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-10"></div>
         
-        {/* Indicator Dots */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex space-x-2">
-          {heroSlides.map((_, index) => (
-            <button
-              key={index}
-              className={`w-2 h-2 rounded-full transition-colors ${
-                index === activeHeroSlide ? "bg-white" : "bg-white/30"
-              }`}
-              onClick={() => goToSlide(index)}
-            />
-          ))}
-        </div>
-
-        {/* Carousel Slides */}
-        {heroSlides.map((slide, index) => (
-          <div 
-            key={index} 
-            className={`hero-carousel-slide ${
-              index === slideState.prev ? 'prev' : 
-              index === activeHeroSlide ? 'active' : 
-              index === slideState.next ? 'next' : ''
-            }`}
-          >
-            <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-10"></div>
-            <div className="relative z-10 px-8 py-10 md:p-12 flex flex-col md:flex-row items-center justify-between">
-              <div className="mb-6 md:mb-0 md:max-w-[60%]">
-                <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">{slide.title}</h1>
-                <p className="text-white/80 mb-5">{slide.description}</p>
-                <div className="flex flex-wrap gap-3">
-                  <Button 
-                    onClick={() => navigate(slide.primaryAction.url)}
-                    className="bg-white text-primary hover:bg-white/90 font-medium"
-                  >
-                    {slide.primaryAction.icon}
-                    {slide.primaryAction.text}
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    onClick={() => {
-                      if (slide.secondaryAction.url.startsWith('#')) {
-                        setActiveTab(slide.secondaryAction.url.substring(1));
-                      } else {
-                        navigate(slide.secondaryAction.url);
-                      }
-                    }}
-                    className="bg-transparent border-white text-white hover:bg-white/10"
-                  >
-                    {slide.secondaryAction.icon}
-                    {slide.secondaryAction.text}
-                  </Button>
-                </div>
-              </div>
-              <div className="flex-shrink-0 w-full md:w-[280px] rounded-xl overflow-hidden custom-hero-overlay backdrop-blur-sm">
-                <div className="p-4">
-                  <h3 className="text-white font-semibold flex items-center">
-                    {slide.icon} {slide.cardTitle}
-                  </h3>
-                  <div className="mt-3 aspect-video rounded-lg overflow-hidden custom-frame">
-                    {/* Farklı içerikler için karousel bazında farklı veriler gösterme */}
-                    {index === 0 && featuredTests && featuredTests[0] && (
-                      <img 
-                        src={featuredTests[0].imageUrl || '/default-test-thumb.jpg'} 
-                        alt={featuredTests[0].title}
-                        className="w-full h-full object-cover" 
-                      />
-                    )}
-                    {index === 1 && popularTests && popularTests[0] && (
-                      <img 
-                        src={popularTests[0].imageUrl || '/default-test-thumb.jpg'} 
-                        alt={popularTests[0].title}
-                        className="w-full h-full object-cover" 
-                      />
-                    )}
-                    {index === 2 && (
-                      <div className="w-full h-full flex items-center justify-center bg-primary/20">
-                        <Plus className="h-10 w-10 text-white/70" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="mt-3">
-                    <h4 className="text-white text-sm font-medium">
-                      {index === 0 && featuredTests && featuredTests[0] 
-                        ? featuredTests[0].title 
-                        : index === 1 && popularTests && popularTests[0]
-                          ? popularTests[0].title
-                          : index === 2
-                            ? "Yeni Test Oluştur"
-                            : t('loading')}
-                    </h4>
-                    <div className="flex justify-between items-center mt-2">
-                      <div className="flex items-center text-xs text-white/60">
-                        {index !== 2 ? (
-                          <>
-                            <Users className="h-3 w-3 mr-1" /> 
-                            <span>
-                              {index === 0 && featuredTests && featuredTests[0] 
-                                ? (featuredTests[0].playCount || 0) 
-                                : index === 1 && popularTests && popularTests[0]
-                                  ? (popularTests[0].playCount || 0)
-                                  : "0"} {t('players')}
-                            </span>
-                          </>
-                        ) : (
-                          <span>Kendi testlerinizi oluşturun</span>
-                        )}
-                      </div>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        className="h-7 text-xs text-white bg-white/10 hover:bg-white/20"
-                        onClick={() => {
-                          if (index === 0 && featuredTests && featuredTests[0]) {
-                            handleTestClick(featuredTests[0].id);
-                          } else if (index === 1 && popularTests && popularTests[0]) {
-                            handleTestClick(popularTests[0].id);
-                          } else if (index === 2) {
-                            navigate("/test-create");
-                          }
-                        }}
-                      >
-                        {index === 2 ? 'Oluştur' : t('play')}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+        <div className="relative z-10 p-8 md:p-12">
+          <div className="text-center mb-10">
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">Fun Games</h1>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">PixelHunt</h2>
+            <p className="text-white/80 mx-auto max-w-2xl">
+              Görsellerinizi tahmin etmek için hazır mısınız? Farklı kategorilerde testler oluşturun ve paylaşın!
+            </p>
           </div>
-        ))}
+          
+          {/* Game Cards - Nintendo Style */}
+          <div className="flex justify-center items-end gap-2 md:gap-4 pt-8 pb-8">
+            {heroSlides.map((slide, index) => (
+              <div 
+                key={index} 
+                className={`game-card rounded-2xl overflow-hidden transform transition-all duration-300
+                  ${index === 1 ? 'scale-110 z-10' : 'scale-95 opacity-90'}`}
+                onClick={() => {
+                  if (index === 1) {
+                    // Center card action
+                    navigate(slide.primaryAction.url)
+                  } else {
+                    goToSlide(1); // Move to center
+                  }
+                }}
+                style={{
+                  backgroundColor: index === 0 ? '#ff5252' : 
+                                   index === 1 ? '#42c0fb' : 
+                                   index === 2 ? '#4ade80' : '#9333ea',
+                }}
+              >
+                <div className="p-4 text-center">
+                  <h3 className="font-bold text-white text-lg">
+                    {index === 0 ? 'Klasik' : index === 1 ? 'PixelHunt' : 'Testler'}
+                  </h3>
+                  <div className="mt-2 w-24 h-24 flex items-center justify-center mx-auto">
+                    {index === 0 ? 
+                      <img src="attached_assets/Group 37.png" alt="Game Character" className="w-16 h-16" /> : 
+                      index === 1 ? 
+                      <img src="attached_assets/Logo icon-white.png" alt="Game Character" className="w-16 h-16" /> : 
+                      <Trophy className="w-12 h-12 text-white" />
+                    }
+                  </div>
+                  <div className="rating mt-2 flex justify-center">
+                    <span className="inline-flex items-center bg-white/30 text-white text-xs px-2 py-1 rounded-full">
+                      {index === 0 ? '5.0' : index === 1 ? '4.7' : '4.2'} ★
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* Search Results (hidden by default, shown when search is activated) */}
