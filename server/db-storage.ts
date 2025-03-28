@@ -439,28 +439,39 @@ export class PostgresStorage implements IStorage {
   async createTest(test: InsertTest): Promise<Test> {
     try {
       const uuid = createId();
+      console.log('Creating test in PostgreSQL database with values:', {
+        uuid,
+        title: test.title,
+        description: test.description,
+        category_id: test.category_id,
+        creator_id: test.creator_id,
+        image_url: test.image_url,
+        questions_length: JSON.stringify(test.questions).length
+      });
+      
       const result = await pool.query(
         `INSERT INTO tests (
           uuid, title, description, category_id, creator_id, 
           difficulty, duration, image_url, questions,
-          play_count, like_count, approved, is_public, featured
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) 
+          play_count, like_count, approved, is_public, featured, is_anonymous
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) 
         RETURNING *`,
         [
           uuid,
           test.title,
-          test.description,
+          test.description || '',
           test.category_id,
           test.creator_id,
-          test.difficulty,
+          test.difficulty || 3,
           test.duration,
           test.image_url,
           JSON.stringify(test.questions),
           test.play_count || 0,
           test.like_count || 0,
-          test.approved !== undefined ? test.approved : false,
-          test.is_public !== undefined ? test.is_public : false,
-          test.featured !== undefined ? test.featured : false
+          test.approved !== undefined ? test.approved : true,  // Auto-approve tests by default
+          test.is_public !== undefined ? test.is_public : true, // Make tests public by default
+          test.featured !== undefined ? test.featured : false,
+          test.is_anonymous !== undefined ? test.is_anonymous : false
         ]
       );
       
