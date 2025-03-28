@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Heart, Trophy, BookOpen, Filter, Clock, Users, Sparkles, Award, ChevronLeft, ChevronRight, Plus, Search, X, Loader2 } from "lucide-react";
+import { Heart, Trophy, BookOpen, Filter, Clock, Users, Sparkles, Award, ChevronLeft, ChevronRight, Plus, Search, X, Loader2, Layers } from "lucide-react";
 import { Test, Category } from "@shared/schema";
 import { useLanguage } from "@/lib/LanguageContext";
 
@@ -9,6 +9,15 @@ import ContentCard from "@/components/game/ContentCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export default function Home() {
   const [_, navigate] = useLocation();
@@ -195,6 +204,35 @@ export default function Home() {
     queryKey: ["/api/categories"],
   });
 
+  // Kategori iconları
+  const categoryIcons: Record<string, string> = {
+    "Film": "🎬",
+    "Müzik": "🎵",
+    "Sanat": "🎨",
+    "Oyun": "🎮",
+    "Spor": "⚽",
+    "Bilim": "🧪",
+    "Tarih": "📚",
+    "Coğrafya": "🌍",
+    "Teknoloji": "💻",
+    "Yemek": "🍕",
+    "Moda": "👕",
+    "TV": "📺"
+  };
+  
+  // Kategori simgesini belirle
+  const getCategoryIcon = (name: string): string => {
+    // Kategori adında anahtar kelime arayarak uygun simgeyi bul
+    for (const key in categoryIcons) {
+      if (name.toLowerCase().includes(key.toLowerCase())) {
+        return categoryIcons[key];
+      }
+    }
+    
+    // Varsayılan simge
+    return "🎯";
+  };
+  
   // Örnek kategoriler (API'den veri gelmezse kullanılacak)
   const defaultCategories: Array<{id?: number, name: string, iconName?: string}> = [
     { id: 1, name: "Film & TV", iconName: "🎬" },
@@ -216,48 +254,56 @@ export default function Home() {
 
   return (
     <div className="space-y-12">
-      {/* Gaming Platform Hero Section with theme aware styling */}
-      <section className="relative hero-banner max-w-content mx-auto overflow-hidden">
-        {/* Hero banner with theme-aware styling */}
-        <div className="relative w-full bg-card rounded-lg mb-8 border shadow-sm">
-          <div className="flex flex-col md:flex-row items-center overflow-hidden">
-            {/* Left side content */}
-            <div className="w-full md:w-1/2 p-8 md:p-10 flex flex-col justify-center z-10">
-              <div className="inline-block mb-4">
-                <span className="bg-primary text-primary-foreground py-1 px-4 rounded-md text-sm font-bold shadow-sm">
-                  ✨ Pixel Hunt
-                </span>
-              </div>
+      {/* Hero Section with Card component matching project's UI structure */}
+      <section className="max-w-content mx-auto">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold tracking-tight mb-2">Pixel Hunt</h1>
+          <p className="text-muted-foreground">
+            Görsel tahmin oyunlarında yeteneklerinizi test edin ve eğlenin
+          </p>
+        </div>
+        
+        <Card className="mb-8 overflow-hidden border shadow-sm">
+          <div className="flex flex-col md:flex-row items-center">
+            {/* Left content */}
+            <div className="w-full md:w-1/2 p-6 md:p-8">
+              <CardHeader className="p-0 pb-4">
+                <Badge className="mb-2 text-sm bg-primary text-primary-foreground hover:bg-primary/80">
+                  ✨ Yeni
+                </Badge>
+                <CardTitle className="text-3xl md:text-4xl font-bold tracking-tight">
+                  Görsellerinizi <span className="text-primary">Tahmin Etmeye</span> Hazır Mısınız?
+                </CardTitle>
+                <CardDescription className="text-base mt-2">
+                  Farklı kategorilerde testler oluşturun, paylaşın ve arkadaşlarınızla birlikte eğlenin!
+                </CardDescription>
+              </CardHeader>
               
-              <h1 className="text-card-foreground text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-4">
-                Görsellerinizi <span className="text-primary font-extrabold">Tahmin Etmeye</span> Hazır Mısınız?
-              </h1>
-              
-              <p className="text-muted-foreground max-w-xl mb-8">
-                Farklı kategorilerde testler oluşturun, paylaşın ve arkadaşlarınızla birlikte eğlenin!
-              </p>
-              
-              <div className="flex flex-wrap gap-4">
-                <Button 
-                  onClick={() => navigate("/create-test")}
-                  size="lg"
-                >
-                  <Plus className="mr-2 h-5 w-5" />
-                  Test Oluştur
-                </Button>
-                
-                <Button 
-                  variant="outline"
-                  onClick={() => setActiveTab("popular")}
-                  size="lg"
-                >
-                  <Trophy className="mr-2 h-5 w-5" />
-                  Popüler Testler
-                </Button>
-              </div>
+              <CardContent className="p-0 pb-6">
+                <div className="flex flex-wrap gap-3 mt-4">
+                  <Button 
+                    onClick={() => navigate("/create-test")}
+                    size="lg"
+                    className="font-medium"
+                  >
+                    <Plus className="mr-2 h-5 w-5" />
+                    Test Oluştur
+                  </Button>
+                  
+                  <Button 
+                    variant="outline"
+                    onClick={() => setActiveTab("popular")}
+                    size="lg"
+                    className="font-medium"
+                  >
+                    <Trophy className="mr-2 h-5 w-5" />
+                    Popüler Testler
+                  </Button>
+                </div>
+              </CardContent>
             </div>
             
-            {/* Right side image */}
+            {/* Right content with cards */}
             <div className="w-full md:w-1/2 h-[260px] md:h-[320px] relative">
               {/* Decorative elements */}
               <div className="absolute top-6 right-10 w-16 h-16 bg-primary/10 rounded-full blur-xl z-10"></div>
@@ -301,40 +347,57 @@ export default function Home() {
               </div>
             </div>
           </div>
-        </div>
+        </Card>
         
         {/* Category shortcuts */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 mb-8">
-          {categories.slice(0, 6).map((category, index) => (
-            <div 
-              key={index}
-              className="bg-card border-border hover:border-primary/50 transition-colors p-3 rounded-lg text-center cursor-pointer border shadow-sm"
-              onClick={() => navigate(`/category/${category.id || index + 1}`)}
+        <div className="mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
+            <h2 className="text-xl font-bold flex items-center">
+              <Layers className="w-5 h-5 text-primary mr-2" /> Kategoriler
+            </h2>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => navigate("/categories")} 
+              className="mt-2 sm:mt-0 self-start sm:self-auto"
             >
-              <div className={`w-10 h-10 mx-auto rounded-full flex items-center justify-center text-lg mb-2 ${
-                index % 6 === 0 ? "bg-amber-500" : 
-                index % 6 === 1 ? "bg-sky-500" : 
-                index % 6 === 2 ? "bg-emerald-500" : 
-                index % 6 === 3 ? "bg-violet-500" : 
-                index % 6 === 4 ? "bg-yellow-500" : "bg-orange-500"
-              }`}>
-                {category.iconName || category.icon_name || "🎯"}
-              </div>
-              <h3 className="text-card-foreground text-sm font-medium truncate">{category.name}</h3>
-            </div>
-          ))}
+              Tüm Kategoriler
+            </Button>
+          </div>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+            {categories.slice(0, 6).map((category, index) => (
+              <Card 
+                key={index}
+                className="custom-frame hover:border-primary/50 transition-colors p-3 text-center cursor-pointer border shadow-sm"
+                onClick={() => navigate(`/category/${category.id || index + 1}`)}
+              >
+                <div className={`w-10 h-10 mx-auto rounded-full flex items-center justify-center text-lg mb-2 ${
+                  index % 6 === 0 ? "bg-amber-500" : 
+                  index % 6 === 1 ? "bg-sky-500" : 
+                  index % 6 === 2 ? "bg-emerald-500" : 
+                  index % 6 === 3 ? "bg-violet-500" : 
+                  index % 6 === 4 ? "bg-yellow-500" : "bg-orange-500"
+                }`}>
+                  {getCategoryIcon(category.name)}
+                </div>
+                <h3 className="text-card-foreground text-sm font-medium truncate">{category.name}</h3>
+              </Card>
+            ))}
+          </div>
         </div>
         
         {/* Featured sections */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
           {/* Popular */}
-          <div className="bg-card border-border rounded-lg p-5 border shadow-sm">
-            <h3 className="text-lg font-semibold text-card-foreground mb-4 flex items-center">
-              <Trophy className="w-5 h-5 mr-2 text-yellow-500" />
-              Popüler Testler
-            </h3>
-            
-            <div className="space-y-3 mb-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center">
+                <Trophy className="w-5 h-5 mr-2 text-yellow-500" />
+                Popüler Testler
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
               {popularTests?.slice(0, 3).map((test, index) => (
                 <div 
                   key={index} 
@@ -350,26 +413,28 @@ export default function Home() {
                   </div>
                 </div>
               ))}
-            </div>
-            
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => setActiveTab("popular")}
-              className="w-full"
-            >
-              Tümünü Gör
-            </Button>
-          </div>
+            </CardContent>
+            <CardFooter className="pt-0">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setActiveTab("popular")}
+                className="w-full"
+              >
+                Tümünü Gör
+              </Button>
+            </CardFooter>
+          </Card>
           
           {/* Featured */}
-          <div className="bg-card border-border rounded-lg p-5 border shadow-sm">
-            <h3 className="text-lg font-semibold text-card-foreground mb-4 flex items-center">
-              <Sparkles className="w-5 h-5 mr-2 text-primary" />
-              Öne Çıkanlar
-            </h3>
-            
-            <div className="space-y-3 mb-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center">
+                <Sparkles className="w-5 h-5 mr-2 text-primary" />
+                Öne Çıkanlar
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
               {featuredTests?.slice(0, 3).map((test, index) => (
                 <div 
                   key={index}
@@ -386,26 +451,28 @@ export default function Home() {
                   </div>
                 </div>
               ))}
-            </div>
-            
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => setActiveTab("featured")}
-              className="w-full"
-            >
-              Tümünü Gör
-            </Button>
-          </div>
+            </CardContent>
+            <CardFooter className="pt-0">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setActiveTab("featured")}
+                className="w-full"
+              >
+                Tümünü Gör
+              </Button>
+            </CardFooter>
+          </Card>
           
           {/* Newest */}
-          <div className="bg-card border-border rounded-lg p-5 border shadow-sm">
-            <h3 className="text-lg font-semibold text-card-foreground mb-4 flex items-center">
-              <Clock className="w-5 h-5 mr-2 text-blue-500" />
-              Son Eklenenler
-            </h3>
-            
-            <div className="space-y-3 mb-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center">
+                <Clock className="w-5 h-5 mr-2 text-blue-500" />
+                Son Eklenenler
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
               {newestTests?.slice(0, 3).map((test, index) => (
                 <div 
                   key={index}
@@ -421,17 +488,18 @@ export default function Home() {
                   </div>
                 </div>
               ))}
-            </div>
-            
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => setActiveTab("newest")}
-              className="w-full"
-            >
-              Tümünü Gör
-            </Button>
-          </div>
+            </CardContent>
+            <CardFooter className="pt-0">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setActiveTab("newest")}
+                className="w-full"
+              >
+                Tümünü Gör
+              </Button>
+            </CardFooter>
+          </Card>
         </div>
       </section>
 
