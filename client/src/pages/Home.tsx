@@ -198,60 +198,116 @@ export default function Home() {
 
   return (
     <div className="space-y-12">
-      {/* Hero Banner (Nintendo Switch style) */}
-      <section className="relative overflow-hidden rounded-2xl bg-black max-w-content mx-auto">
+      {/* Modern Hero Banner */}
+      <section className="hero-banner rounded-2xl max-w-content mx-auto overflow-hidden bg-gradient-to-r from-primary/90 to-primary">
         <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-10"></div>
         
-        <div className="relative z-10 p-8 md:p-12">
-          <div className="text-center mb-10">
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">Fun Games</h1>
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">PixelHunt</h2>
-            <p className="text-white/80 mx-auto max-w-2xl">
-              Görsellerinizi tahmin etmek için hazır mısınız? Farklı kategorilerde testler oluşturun ve paylaşın!
+        <div className="relative z-10 p-8 md:p-12 flex flex-col md:flex-row items-center">
+          {/* Left section - Main content */}
+          <div className="md:w-1/2 md:pr-6 mb-8 md:mb-0">
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+              Görsellerinizi Tahmin Etmeye <span className="text-black">Hazır mısınız?</span>
+            </h1>
+            <p className="text-white/90 text-lg mb-6">
+              Farklı kategorilerde testler oluşturun, paylaşın ve arkadaşlarınızla birlikte eğlenin!
             </p>
-          </div>
-          
-          {/* Game Cards - Nintendo Style */}
-          <div className="flex justify-center items-end gap-2 md:gap-4 pt-8 pb-8">
-            {heroSlides.map((slide, index) => (
-              <div 
-                key={index} 
-                className={`game-card rounded-2xl overflow-hidden transform transition-all duration-300
-                  ${index === 1 ? 'scale-110 z-10' : 'scale-95 opacity-90'}`}
-                onClick={() => {
-                  if (index === 1) {
-                    // Center card action
-                    navigate(slide.primaryAction.url)
-                  } else {
-                    goToSlide(1); // Move to center
-                  }
-                }}
-                style={{
-                  backgroundColor: index === 0 ? '#ff5252' : 
-                                   index === 1 ? '#42c0fb' : 
-                                   index === 2 ? '#4ade80' : '#9333ea',
-                }}
+            <div className="flex flex-wrap gap-3">
+              <Button 
+                onClick={() => navigate("/create-test")}
+                className="bg-black hover:bg-black/80 text-white"
+                size="lg"
               >
-                <div className="p-4 text-center">
-                  <h3 className="font-bold text-white text-lg">
-                    {index === 0 ? 'Klasik' : index === 1 ? 'PixelHunt' : 'Testler'}
-                  </h3>
-                  <div className="mt-2 w-24 h-24 flex items-center justify-center mx-auto">
-                    {index === 0 ? 
-                      <img src="attached_assets/Group 37.png" alt="Game Character" className="w-16 h-16" /> : 
-                      index === 1 ? 
-                      <img src="attached_assets/Logo icon-white.png" alt="Game Character" className="w-16 h-16" /> : 
-                      <Trophy className="w-12 h-12 text-white" />
-                    }
-                  </div>
-                  <div className="rating mt-2 flex justify-center">
-                    <span className="inline-flex items-center bg-white/30 text-white text-xs px-2 py-1 rounded-full">
-                      {index === 0 ? '5.0' : index === 1 ? '4.7' : '4.2'} ★
-                    </span>
-                  </div>
+                <Plus className="mr-2 h-4 w-4" />
+                Test Oluştur
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => setActiveTab("popular")}
+                className="bg-transparent border-white text-white hover:bg-white/10"
+                size="lg"
+              >
+                <Trophy className="mr-2 h-4 w-4" />
+                Popüler Testler
+              </Button>
+            </div>
+          </div>
+
+          {/* Right section - Feature cards */}
+          <div className="md:w-1/2 grid grid-cols-2 gap-4">
+            {/* Featured Test Card */}
+            <div 
+              className="feature-card rounded-xl aspect-[4/3] overflow-hidden"
+              onClick={() => featuredTests && featuredTests[0] && navigate(`/tests/${featuredTests[0].id}`)}
+            >
+              <img 
+                src={featuredTests && featuredTests[0] ? featuredTests[0].imageUrl || "/default-test-thumb.jpg" : "/default-test-thumb.jpg"} 
+                alt="Featured Test"
+                className="w-full h-full object-cover"
+              />
+              <div className="feature-card-content">
+                <div className="flex items-center gap-1 text-white/80 text-xs mb-1">
+                  <Award className="h-3 w-3" />
+                  <span>Öne çıkan</span>
                 </div>
+                <h3 className="text-white font-medium text-sm line-clamp-2">
+                  {featuredTests && featuredTests[0] ? featuredTests[0].title : "Yükleniyor..."}
+                </h3>
               </div>
-            ))}
+            </div>
+
+            {/* Popular Test Card */}
+            <div 
+              className="feature-card rounded-xl aspect-[4/3] overflow-hidden"
+              onClick={() => popularTests && popularTests[0] && navigate(`/tests/${popularTests[0].id}`)}
+            >
+              <img 
+                src={popularTests && popularTests[0] ? popularTests[0].imageUrl || "/default-test-thumb.jpg" : "/default-test-thumb.jpg"} 
+                alt="Popular Test"
+                className="w-full h-full object-cover"
+              />
+              <div className="feature-card-content">
+                <div className="flex items-center gap-1 text-white/80 text-xs mb-1">
+                  <Trophy className="h-3 w-3" />
+                  <span>Popüler</span>
+                </div>
+                <h3 className="text-white font-medium text-sm line-clamp-2">
+                  {popularTests && popularTests[0] ? popularTests[0].title : "Yükleniyor..."}
+                </h3>
+              </div>
+            </div>
+
+            {/* Newest Test Card */}
+            <div 
+              className="feature-card rounded-xl aspect-[4/3] overflow-hidden"
+              onClick={() => newestTests && newestTests[0] && navigate(`/tests/${newestTests[0].id}`)}
+            >
+              <img 
+                src={newestTests && newestTests[0] ? newestTests[0].imageUrl || "/default-test-thumb.jpg" : "/default-test-thumb.jpg"} 
+                alt="Newest Test"
+                className="w-full h-full object-cover" 
+              />
+              <div className="feature-card-content">
+                <div className="flex items-center gap-1 text-white/80 text-xs mb-1">
+                  <Clock className="h-3 w-3" />
+                  <span>En yeni</span>
+                </div>
+                <h3 className="text-white font-medium text-sm line-clamp-2">
+                  {newestTests && newestTests[0] ? newestTests[0].title : "Yükleniyor..."}
+                </h3>
+              </div>
+            </div>
+
+            {/* Create Test Card */}
+            <div 
+              className="feature-card rounded-xl aspect-[4/3] bg-black/20 backdrop-blur-sm hover:bg-black/30 flex flex-col items-center justify-center text-white p-4"
+              onClick={() => navigate("/create-test")}
+            >
+              <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mb-2">
+                <Plus className="h-6 w-6" />
+              </div>
+              <h3 className="font-medium">Yeni Test Oluştur</h3>
+              <p className="text-xs text-white/70 mt-1">Kendi testlerinizi oluşturun</p>
+            </div>
           </div>
         </div>
       </section>
