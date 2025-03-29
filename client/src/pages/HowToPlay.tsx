@@ -72,20 +72,20 @@ export default function HowToPlay() {
               
               <div className="bg-muted/40 p-4 rounded-lg border">
                 <h3 className="font-bold text-lg flex items-center mb-2">
-                  <Brain className="w-5 h-5 mr-2 text-primary" /> Oyun Modları
+                  <Brain className="w-5 h-5 mr-2 text-primary" /> Test İpuçları
                 </h3>
                 <ul className="space-y-2 text-sm">
                   <li className="flex items-start">
-                    <Badge variant="outline" className="mt-0.5 mr-2">Klasik</Badge>
-                    <span>Standart mod, sınırsız tahmin hakkı</span>
+                    <Badge variant="outline" className="mt-0.5 mr-2 bg-amber-500/10 border-amber-200 text-amber-700">İpucu</Badge>
+                    <span>Her soruya dikkatlice bakın, detaylar önemlidir</span>
                   </li>
                   <li className="flex items-start">
-                    <Badge variant="outline" className="mt-0.5 mr-2">Zaman</Badge>
-                    <span>Süre sınırlı, hızlı düşünmelisiniz</span>
+                    <Badge variant="outline" className="mt-0.5 mr-2 bg-amber-500/10 border-amber-200 text-amber-700">İpucu</Badge>
+                    <span>Doğru yazıma dikkat edin, benzer kelimeler kabul edilmeyebilir</span>
                   </li>
                   <li className="flex items-start">
-                    <Badge variant="outline" className="mt-0.5 mr-2">Hız</Badge>
-                    <span>Otomatik açılan görsel, hızlı olun</span>
+                    <Badge variant="outline" className="mt-0.5 mr-2 bg-amber-500/10 border-amber-200 text-amber-700">İpucu</Badge>
+                    <span>Test oluştururken açık ve anlaşılır sorular hazırlayın</span>
                   </li>
                 </ul>
               </div>
@@ -164,13 +164,13 @@ export default function HowToPlay() {
                   </div>
                   
                   <div className="p-3 rounded-md border bg-muted/30">
-                    <h4 className="font-medium text-sm mb-2">Zorluğa Göre</h4>
+                    <h4 className="font-medium text-sm mb-2">Kategorilere Göre</h4>
                     <div className="flex flex-wrap gap-2">
-                      <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-200">Kolay</Badge>
-                      <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-200">Orta</Badge>
-                      <Badge variant="outline" className="bg-orange-500/10 text-orange-600 border-orange-200">Zor</Badge>
-                      <Badge variant="outline" className="bg-red-500/10 text-red-600 border-red-200">Çok Zor</Badge>
-                      <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-200">Uzman</Badge>
+                      <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 border-yellow-200">Filmler</Badge>
+                      <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-200">Oyunlar</Badge>
+                      <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-200">Doğa</Badge>
+                      <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-200">Bilim</Badge>
+                      <Badge variant="outline" className="bg-orange-500/10 text-orange-600 border-orange-200">Diğer</Badge>
                     </div>
                   </div>
                   

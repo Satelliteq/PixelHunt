@@ -32,6 +32,7 @@ export const categories = pgTable("categories", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
+  iconName: text("icon_name"), // Lucide ikon adı
   active: boolean("active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at"),
@@ -63,7 +64,6 @@ export const tests = pgTable("tests", {
   categoryId: integer("category_id").references(() => categories.id),
   imageUrl: text("image_url"), // Test kapak resmi
   questions: jsonb("questions").notNull(), // Soru dizisi
-  duration: integer("duration"), // Test süresi (saniye olarak)
   playCount: integer("play_count").default(0),
   likeCount: integer("like_count").default(0),
   isPublic: boolean("is_public").default(true),
@@ -129,19 +129,7 @@ export const insertImageSchema = createInsertSchema(images).pick({
   createdBy: true,
 });
 
-export const insertTestSchema = createInsertSchema(tests).pick({
-  title: true,
-  description: true,
-  creatorId: true,
-  categoryId: true,
-  imageUrl: true,
-  questions: true,
-  duration: true,
-  isPublic: true,
-  isAnonymous: true,
-  approved: true,
-  featured: true,
-});
+export const insertTestSchema = createInsertSchema(tests);
 
 export const insertTestCommentSchema = createInsertSchema(testComments).pick({
   testId: true,

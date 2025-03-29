@@ -145,56 +145,43 @@ export default function Header() {
             <LogoWithText className="h-8" textClassName="text-xl tracking-wide" />
           </Link>
           
-          <nav className="hidden md:flex items-center space-x-1">
-            {/* Modern Pill Style Navigation */}
-            <div className="bg-muted/50 rounded-full p-1 flex items-center">
-              <Button
-                variant="ghost"
-                className="text-foreground hover:text-primary hover:bg-background rounded-full text-sm px-4 py-2 transition-all"
-                onClick={() => handleNavigation("/categories")}
-              >
-                <Grid2X2 className="w-4 h-4 mr-2" />
-                {t('categories')}
-              </Button>
-              
-              <Button
-                variant="ghost"
-                className="text-foreground hover:text-primary hover:bg-background rounded-full text-sm px-4 py-2 transition-all"
-                onClick={() => handleNavigation("/tests")}
-              >
-                <BookOpen className="w-4 h-4 mr-2" />
-                {t('tests')}
-              </Button>
-              
-              <Button
-                variant="ghost"
-                className="text-foreground hover:text-primary hover:bg-background rounded-full text-sm px-4 py-2 transition-all"
-                onClick={() => handleNavigation("/how-to-play")}
-              >
-                <PlayCircle className="w-4 h-4 mr-2" />
-                {t('howToPlay')}
-              </Button>
-            </div>
+          <nav className="hidden md:flex items-center space-x-4">
+            {/* Simplified Navigation */}
+            <Button
+              variant="ghost"
+              className="text-foreground hover:text-primary text-sm font-medium"
+              onClick={() => handleNavigation("/categories")}
+            >
+              <Grid2X2 className="w-4 h-4 mr-2" />
+              {t('categories')}
+            </Button>
             
-            <div className="flex items-center space-x-1 ml-2">
-              <Button
-                variant="ghost"
-                className="text-muted-foreground hover:text-foreground rounded-full text-sm px-3"
-                onClick={() => handleNavigation("/support")}
-              >
-                <HelpCircle className="w-4 h-4" />
-                <span className="sr-only">Destek Ol</span>
-              </Button>
-              
-              <Button
-                variant="ghost"
-                className="text-muted-foreground hover:text-foreground rounded-full text-sm px-3"
-                onClick={() => handleNavigation("/contact")}
-              >
-                <Mail className="w-4 h-4" />
-                <span className="sr-only">{t('contact')}</span>
-              </Button>
-            </div>
+            <Button
+              variant="ghost"
+              className="text-foreground hover:text-primary text-sm font-medium"
+              onClick={() => handleNavigation("/tests")}
+            >
+              <BookOpen className="w-4 h-4 mr-2" />
+              {t('tests')}
+            </Button>
+            
+            <Button
+              variant="ghost"
+              className="text-foreground hover:text-primary text-sm font-medium"
+              onClick={() => handleNavigation("/how-to-play")}
+            >
+              <PlayCircle className="w-4 h-4 mr-2" />
+              {t('howToPlay')}
+            </Button>
+            
+            <Button
+              variant="ghost"
+              className="text-foreground hover:text-primary text-sm font-medium"
+              onClick={() => handleNavigation("/support")}
+            >
+              <HelpCircle className="w-4 h-4 mr-2" />
+              Destek
+            </Button>
           </nav>
         </div>
         
