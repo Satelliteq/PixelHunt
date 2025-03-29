@@ -33,6 +33,9 @@ export const categories = pgTable("categories", {
   name: text("name").notNull(),
   description: text("description"),
   iconName: text("icon_name"), // Lucide ikon adı
+  color: text("color"), // Kategori rengi
+  backgroundColor: text("background_color"), // Kategori arka plan rengi
+  imageUrl: text("image_url"), // Kategori resmi
   active: boolean("active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at"),

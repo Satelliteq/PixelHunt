@@ -280,34 +280,127 @@ export default function Home() {
               </div>
             </div>
             
-            {/* Right side illustration - Simple Yellow Pixel Design */}
-            <div className="w-full md:w-1/2 h-[260px] md:h-[320px] relative hero-card-container">
+            {/* Right side illustration - Interactive Game Card Collage */}
+            <div className="w-full md:w-1/2 h-[260px] md:h-[360px] relative hero-card-container">
               {/* Decorative elements */}
               <div className="absolute top-0 right-10 w-20 h-20 bg-primary/10 rounded-full blur-xl"></div>
               <div className="absolute bottom-10 left-0 w-24 h-24 bg-primary/10 rounded-full blur-xl"></div>
               
-              {/* Single yellow design */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="relative w-[280px] h-[280px]">
-                  {/* Main yellow circle */}
-                  <div className="absolute inset-0 bg-primary rounded-full"></div>
+              {/* Game Card Collection - Inspired by Switch UI */}
+              <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+                <div className="relative w-full h-full max-w-[500px] flex items-end justify-center perspective-800">
                   
-                  {/* Inner circle */}
-                  <div className="absolute inset-[40px] bg-primary-foreground rounded-full flex items-center justify-center">
-                    {/* Pixel hunt logo or text */}
-                    <div className="text-primary font-bold text-4xl">PH</div>
+                  {/* Background glow */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent to-primary/5 rounded-xl"></div>
+                  
+                  {/* 3D Stacked Cards */}
+                  {/* Card 1 - Film Card */}
+                  <div className="absolute bottom-6 -left-5 w-[120px] md:w-[140px] h-[180px] md:h-[210px] bg-gradient-to-br from-rose-500 to-red-600 rounded-2xl shadow-xl transform -rotate-12 hover:rotate-0 hover:scale-105 transition-transform duration-300 overflow-hidden border-4 border-white/20 dark:border-black/20" style={{ zIndex: 1 }}>
+                    <div className="h-full w-full p-4 flex flex-col justify-between">
+                      <div className="flex justify-between items-center">
+                        <span className="text-white text-xs font-bold px-2 py-1 bg-black/20 rounded-full">Film</span>
+                        <span className="bg-white/20 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                          4.9
+                        </span>
+                      </div>
+                      <div className="mt-auto">
+                        <h4 className="text-white font-bold text-sm mb-1">Sinema</h4>
+                        <div className="bg-white/20 h-6 w-16 rounded-lg"></div>
+                      </div>
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+                    <div className="absolute bottom-0 right-0 p-2">
+                      <div className="text-white text-xs font-bold">🎬</div>
+                    </div>
                   </div>
                   
-                  {/* Decorative elements */}
-                  <div className="absolute top-[20px] right-[20px] w-[30px] h-[30px] bg-primary-foreground rounded-full"></div>
-                  <div className="absolute bottom-[40px] left-[30px] w-[20px] h-[20px] bg-primary-foreground rounded-full"></div>
-                  <div className="absolute top-[100px] left-[10px] w-[15px] h-[15px] bg-primary-foreground rounded-full"></div>
+                  {/* Card 2 - TV Card */}
+                  <div className="absolute bottom-6 -left-1 w-[120px] md:w-[140px] h-[180px] md:h-[210px] bg-gradient-to-br from-purple-500 to-violet-600 rounded-2xl shadow-xl transform -rotate-6 hover:rotate-0 hover:scale-105 transition-transform duration-300 overflow-hidden border-4 border-white/20 dark:border-black/20" style={{ zIndex: 2 }}>
+                    <div className="h-full w-full p-4 flex flex-col justify-between">
+                      <div className="flex justify-between items-center">
+                        <span className="text-white text-xs font-bold px-2 py-1 bg-black/20 rounded-full">Dizi</span>
+                        <span className="bg-white/20 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                          4.7
+                        </span>
+                      </div>
+                      <div className="mt-auto">
+                        <h4 className="text-white font-bold text-sm mb-1">TV</h4>
+                        <div className="bg-white/20 h-6 w-16 rounded-lg"></div>
+                      </div>
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+                    <div className="absolute bottom-0 right-0 p-2">
+                      <div className="text-white text-xs font-bold">📺</div>
+                    </div>
+                  </div>
                   
-                  {/* Rays or pixel elements */}
-                  <div className="absolute top-[-30px] left-[120px] w-[40px] h-[100px] bg-primary-foreground/20 rotate-45 rounded-lg"></div>
-                  <div className="absolute bottom-[-30px] right-[120px] w-[40px] h-[100px] bg-primary-foreground/20 rotate-45 rounded-lg"></div>
-                  <div className="absolute left-[-30px] top-[120px] w-[100px] h-[40px] bg-primary-foreground/20 rotate-45 rounded-lg"></div>
-                  <div className="absolute right-[-30px] bottom-[120px] w-[100px] h-[40px] bg-primary-foreground/20 rotate-45 rounded-lg"></div>
+                  {/* Card 3 - Game Card - Center/Main Card */}
+                  <div className="absolute bottom-0 left-[60px] md:left-[70px] w-[130px] md:w-[160px] h-[190px] md:h-[225px] bg-gradient-to-br from-primary-600 to-amber-400 rounded-2xl shadow-2xl transform hover:scale-110 transition-transform duration-300 overflow-hidden border-4 border-white/20 dark:border-black/20" style={{ zIndex: 5 }}>
+                    <div className="h-full w-full p-4 flex flex-col justify-between">
+                      <div className="flex justify-between items-center">
+                        <span className="text-white text-xs font-bold px-2 py-1 bg-black/20 rounded-full">PixelHunt</span>
+                        <span className="bg-white/20 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                          5.0
+                        </span>
+                      </div>
+                      <div className="mt-auto">
+                        <h4 className="text-white font-bold text-sm mb-1">Tahmin</h4>
+                        <div className="bg-white/20 h-6 w-16 rounded-lg"></div>
+                      </div>
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+                    <div className="absolute bottom-0 right-0 p-2">
+                      <div className="text-white text-xs font-bold">🎮</div>
+                    </div>
+                    
+                    {/* Center Halo Effect */}
+                    <div className="absolute -inset-1 bg-white/5 rounded-full blur-lg"></div>
+                  </div>
+                  
+                  {/* Card 4 - Character Card */}
+                  <div className="absolute bottom-6 left-[170px] md:left-[200px] w-[120px] md:w-[140px] h-[180px] md:h-[210px] bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl shadow-xl transform rotate-6 hover:rotate-0 hover:scale-105 transition-transform duration-300 overflow-hidden border-4 border-white/20 dark:border-black/20" style={{ zIndex: 2 }}>
+                    <div className="h-full w-full p-4 flex flex-col justify-between">
+                      <div className="flex justify-between items-center">
+                        <span className="text-white text-xs font-bold px-2 py-1 bg-black/20 rounded-full">Ünlü</span>
+                        <span className="bg-white/20 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                          4.5
+                        </span>
+                      </div>
+                      <div className="mt-auto">
+                        <h4 className="text-white font-bold text-sm mb-1">Karakter</h4>
+                        <div className="bg-white/20 h-6 w-16 rounded-lg"></div>
+                      </div>
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+                    <div className="absolute bottom-0 right-0 p-2">
+                      <div className="text-white text-xs font-bold">👤</div>
+                    </div>
+                  </div>
+                  
+                  {/* Card 5 - Art Card */}
+                  <div className="absolute bottom-6 left-[215px] md:left-[250px] w-[120px] md:w-[140px] h-[180px] md:h-[210px] bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl shadow-xl transform rotate-12 hover:rotate-0 hover:scale-105 transition-transform duration-300 overflow-hidden border-4 border-white/20 dark:border-black/20" style={{ zIndex: 1 }}>
+                    <div className="h-full w-full p-4 flex flex-col justify-between">
+                      <div className="flex justify-between items-center">
+                        <span className="text-white text-xs font-bold px-2 py-1 bg-black/20 rounded-full">Sanat</span>
+                        <span className="bg-white/20 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                          4.6
+                        </span>
+                      </div>
+                      <div className="mt-auto">
+                        <h4 className="text-white font-bold text-sm mb-1">Resim</h4>
+                        <div className="bg-white/20 h-6 w-16 rounded-lg"></div>
+                      </div>
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+                    <div className="absolute bottom-0 right-0 p-2">
+                      <div className="text-white text-xs font-bold">🎨</div>
+                    </div>
+                  </div>
+                  
+                  {/* Floating Decorative Elements */}
+                  <div className="absolute top-10 left-10 w-6 h-6 bg-primary/80 rounded-full animate-float"></div>
+                  <div className="absolute top-20 right-20 w-4 h-4 bg-rose-500/80 rounded-full animate-float-delayed"></div>
+                  <div className="absolute bottom-40 left-40 w-5 h-5 bg-cyan-500/80 rounded-full animate-float-slow"></div>
                 </div>
               </div>
             </div>
