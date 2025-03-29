@@ -115,10 +115,7 @@ export default function Header() {
     
     setIsSearching(true);
     try {
-      const response = await apiRequest<any[]>({
-        url: `/api/tests?query=${encodeURIComponent(searchQuery)}`,
-        method: 'GET',
-      });
+      const response = await apiRequest(`/api/tests?query=${encodeURIComponent(searchQuery)}`);
       
       setSearchResults(response);
       setSearchOpen(true);
@@ -149,45 +146,55 @@ export default function Header() {
           </Link>
           
           <nav className="hidden md:flex items-center space-x-1">
-            <IconButton
-              variant="ghost"
-              icon={<Grid2X2 className="w-4 h-4" />}
-              label={t('categories')}
-              className="text-foreground hover-text-accent text-sm px-3 font-medium"
-              onClick={() => handleNavigation("/categories")}
-            />
+            {/* Modern Pill Style Navigation */}
+            <div className="bg-muted/50 rounded-full p-1 flex items-center">
+              <Button
+                variant="ghost"
+                className="text-foreground hover:text-primary hover:bg-background rounded-full text-sm px-4 py-2 transition-all"
+                onClick={() => handleNavigation("/categories")}
+              >
+                <Grid2X2 className="w-4 h-4 mr-2" />
+                {t('categories')}
+              </Button>
+              
+              <Button
+                variant="ghost"
+                className="text-foreground hover:text-primary hover:bg-background rounded-full text-sm px-4 py-2 transition-all"
+                onClick={() => handleNavigation("/tests")}
+              >
+                <BookOpen className="w-4 h-4 mr-2" />
+                {t('tests')}
+              </Button>
+              
+              <Button
+                variant="ghost"
+                className="text-foreground hover:text-primary hover:bg-background rounded-full text-sm px-4 py-2 transition-all"
+                onClick={() => handleNavigation("/how-to-play")}
+              >
+                <PlayCircle className="w-4 h-4 mr-2" />
+                {t('howToPlay')}
+              </Button>
+            </div>
             
-            <IconButton
-              variant="ghost"
-              icon={<BookOpen className="w-4 h-4" />}
-              label={t('tests')}
-              className="text-foreground hover-text-accent text-sm px-3 font-medium"
-              onClick={() => handleNavigation("/tests")}
-            />
-            
-            <IconButton
-              variant="ghost"
-              icon={<PlayCircle className="w-4 h-4" />}
-              label={t('howToPlay')}
-              className="text-foreground hover-text-accent text-sm px-3 font-medium"
-              onClick={() => handleNavigation("/how-to-play")}
-            />
-            
-            <IconButton
-              variant="ghost"
-              icon={<HelpCircle className="w-4 h-4" />}
-              label="Destek Ol"
-              className="text-foreground hover-text-accent text-sm px-3 font-medium"
-              onClick={() => handleNavigation("/support")}
-            />
-            
-            <IconButton
-              variant="ghost"
-              icon={<Mail className="w-4 h-4" />}
-              label={t('contact')}
-              className="text-foreground hover-text-accent text-sm px-3 font-medium" 
-              onClick={() => handleNavigation("/contact")}
-            />
+            <div className="flex items-center space-x-1 ml-2">
+              <Button
+                variant="ghost"
+                className="text-muted-foreground hover:text-foreground rounded-full text-sm px-3"
+                onClick={() => handleNavigation("/support")}
+              >
+                <HelpCircle className="w-4 h-4" />
+                <span className="sr-only">Destek Ol</span>
+              </Button>
+              
+              <Button
+                variant="ghost"
+                className="text-muted-foreground hover:text-foreground rounded-full text-sm px-3"
+                onClick={() => handleNavigation("/contact")}
+              >
+                <Mail className="w-4 h-4" />
+                <span className="sr-only">{t('contact')}</span>
+              </Button>
+            </div>
           </nav>
         </div>
         
@@ -293,7 +300,7 @@ export default function Header() {
           
           <Button 
             className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded-full text-sm hidden md:flex"
-            onClick={() => handleNavigation("/create")}
+            onClick={() => handleNavigation("/create-test")}
           >
             <PlusCircle className="w-4 h-4 mr-1" /> {t('createTest')}
           </Button>
@@ -428,7 +435,7 @@ export default function Header() {
         <div className="mt-auto pt-8 flex flex-col space-y-4">
           <Button 
             className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold w-full" 
-            onClick={() => handleNavigation("/create")}
+            onClick={() => handleNavigation("/create-test")}
           >
             <PlusCircle className="w-5 h-5 mr-2" /> {t('createTest')}
           </Button>

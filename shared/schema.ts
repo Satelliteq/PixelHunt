@@ -68,9 +68,8 @@ export const tests = pgTable("tests", {
   likeCount: integer("like_count").default(0),
   isPublic: boolean("is_public").default(true),
   isAnonymous: boolean("is_anonymous").default(false), // İsimsiz paylaşım (kullanıcı bilgileri gösterilmez)
-  approved: boolean("approved").default(false), // Admin onaylı mı?
+  approved: boolean("approved").default(true), // Admin onaylı mı? (default: true)
   featured: boolean("featured").default(false), // Öne çıkarıldı mı?
-  difficulty: integer("difficulty").default(2), // Average difficulty
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at"),
 });
@@ -142,7 +141,6 @@ export const insertTestSchema = createInsertSchema(tests).pick({
   isAnonymous: true,
   approved: true,
   featured: true,
-  difficulty: true,
 });
 
 export const insertTestCommentSchema = createInsertSchema(testComments).pick({

@@ -280,45 +280,99 @@ export default function Home() {
               </div>
             </div>
             
-            {/* Right side image */}
+            {/* Right side image - Modern Game Card Illustration */}
             <div className="w-full md:w-1/2 h-[260px] md:h-[320px] relative hero-card-container">
-              {/* Decorative elements */}
-              <div className="absolute top-6 right-10 w-16 h-16 bg-primary/10 rounded-full blur-xl"></div>
-              <div className="absolute bottom-10 left-20 w-20 h-20 bg-primary/10 rounded-full blur-xl"></div>
+              {/* Decorative circle elements */}
+              <div className="absolute top-0 right-10 w-20 h-20 bg-primary/10 rounded-full blur-xl"></div>
+              <div className="absolute bottom-10 left-0 w-24 h-24 bg-primary/10 rounded-full blur-xl"></div>
               
-              {/* Dynamic overlapping test cards - Z-index yapısı düzeltildi */}
-              <div className="absolute bottom-4 right-0 transform -rotate-6 translate-x-5 w-48 h-64 md:w-56 md:h-72 bg-gradient-to-br from-amber-500 to-yellow-600 rounded-lg shadow-lg overflow-hidden" style={{ zIndex: 1 }}>
-                <div className="absolute inset-0.5 bg-black/30 rounded-[7px] p-3 flex flex-col">
-                  <div className="mt-auto">
-                    <div className="bg-amber-300 w-10 h-10 rounded-full mb-2 flex items-center justify-center text-xl">
-                      🎮
+              {/* Modern Game Card Style Illustration */}
+              <div className="absolute bottom-0 right-0 w-full h-full flex items-end justify-center">
+                {/* Card Stack */}
+                <div className="relative h-[240px] md:h-[280px] w-[90%] perspective-500">
+                  {/* Purple Card - Fortnite/Games */}
+                  <div className="absolute bottom-0 left-0 h-[180px] w-[120px] md:h-[210px] md:w-[150px] bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl shadow-xl transform -rotate-12 -translate-x-1 overflow-hidden" style={{ zIndex: 1 }}>
+                    <div className="h-full w-full p-4 flex flex-col justify-between">
+                      <div className="flex justify-between items-center">
+                        <span className="text-white text-sm font-medium">Oyunlar</span>
+                        <span className="bg-white/20 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                          4.8
+                        </span>
+                      </div>
+                      <div>
+                        <h4 className="text-white font-bold mb-1">Oyun</h4>
+                        <div className="rounded-full bg-white/20 w-10 h-6"></div>
+                      </div>
                     </div>
-                    <h3 className="text-white font-bold text-lg">Oyun</h3>
-                    <p className="text-white/70 text-sm">20+ Test</p>
+                    <div className="absolute bottom-0 right-0 w-16 h-16 bg-white/10 rounded-tl-3xl"></div>
                   </div>
-                </div>
-              </div>
-              
-              <div className="absolute bottom-4 right-20 transform rotate-3 w-48 h-64 md:w-56 md:h-72 bg-gradient-to-br from-sky-500 to-blue-600 rounded-lg shadow-lg overflow-hidden" style={{ zIndex: 2 }}>
-                <div className="absolute inset-0.5 bg-black/30 rounded-[7px] p-3 flex flex-col">
-                  <div className="mt-auto">
-                    <div className="bg-sky-300 w-10 h-10 rounded-full mb-2 flex items-center justify-center text-xl">
-                      🎬
+                  
+                  {/* Red Card - Mario/Film */}
+                  <div className="absolute bottom-0 left-[60px] md:left-[70px] h-[180px] w-[120px] md:h-[210px] md:w-[150px] bg-gradient-to-br from-rose-500 to-red-600 rounded-2xl shadow-xl transform -rotate-6 overflow-hidden" style={{ zIndex: 2 }}>
+                    <div className="h-full w-full p-4 flex flex-col justify-between">
+                      <div className="flex justify-between items-center">
+                        <span className="text-white text-sm font-medium">Filmler</span>
+                        <span className="bg-white/20 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                          4.9
+                        </span>
+                      </div>
+                      <div>
+                        <h4 className="text-white font-bold mb-1">Sinema</h4>
+                        <div className="rounded-full bg-white/20 w-10 h-6"></div>
+                      </div>
                     </div>
-                    <h3 className="text-white font-bold text-lg">Film</h3>
-                    <p className="text-white/70 text-sm">45+ Test</p>
+                    <div className="absolute bottom-0 right-0 w-16 h-16 bg-white/10 rounded-tl-3xl"></div>
                   </div>
-                </div>
-              </div>
-              
-              <div className="absolute bottom-4 right-40 transform -rotate-3 w-48 h-64 md:w-56 md:h-72 bg-gradient-to-br from-emerald-500 to-green-600 rounded-lg shadow-lg overflow-hidden" style={{ zIndex: 3 }}>
-                <div className="absolute inset-0.5 bg-black/30 rounded-[7px] p-3 flex flex-col">
-                  <div className="mt-auto">
-                    <div className="bg-emerald-300 w-10 h-10 rounded-full mb-2 flex items-center justify-center text-xl">
-                      🎨
+                  
+                  {/* Blue Card - Kirby/Character */}
+                  <div className="absolute bottom-0 left-[120px] md:left-[140px] h-[180px] w-[120px] md:h-[210px] md:w-[150px] bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl shadow-xl overflow-hidden" style={{ zIndex: 3 }}>
+                    <div className="h-full w-full p-4 flex flex-col justify-between">
+                      <div className="flex justify-between items-center">
+                        <span className="text-white text-sm font-medium">Karakterler</span>
+                        <span className="bg-white/20 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                          4.7
+                        </span>
+                      </div>
+                      <div>
+                        <h4 className="text-white font-bold mb-1">Ünlüler</h4>
+                        <div className="rounded-full bg-white/20 w-10 h-6"></div>
+                      </div>
                     </div>
-                    <h3 className="text-white font-bold text-lg">Sanat</h3>
-                    <p className="text-white/70 text-sm">30+ Test</p>
+                    <div className="absolute bottom-0 right-0 w-16 h-16 bg-white/10 rounded-tl-3xl"></div>
+                  </div>
+                  
+                  {/* Green Card - Pokemon/Nature */}
+                  <div className="absolute bottom-0 left-[180px] md:left-[210px] h-[180px] w-[120px] md:h-[210px] md:w-[150px] bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl shadow-xl transform rotate-6 overflow-hidden" style={{ zIndex: 2 }}>
+                    <div className="h-full w-full p-4 flex flex-col justify-between">
+                      <div className="flex justify-between items-center">
+                        <span className="text-white text-sm font-medium">Doğa</span>
+                        <span className="bg-white/20 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                          4.2
+                        </span>
+                      </div>
+                      <div>
+                        <h4 className="text-white font-bold mb-1">Hayvanlar</h4>
+                        <div className="rounded-full bg-white/20 w-10 h-6"></div>
+                      </div>
+                    </div>
+                    <div className="absolute bottom-0 right-0 w-16 h-16 bg-white/10 rounded-tl-3xl"></div>
+                  </div>
+                  
+                  {/* Yellow Card - Splatoon/Art */}
+                  <div className="absolute bottom-0 left-[240px] md:left-[280px] h-[180px] w-[120px] md:h-[210px] md:w-[150px] bg-gradient-to-br from-amber-500 to-yellow-600 rounded-2xl shadow-xl transform rotate-12 translate-x-1 overflow-hidden" style={{ zIndex: 1 }}>
+                    <div className="h-full w-full p-4 flex flex-col justify-between">
+                      <div className="flex justify-between items-center">
+                        <span className="text-white text-sm font-medium">Sanat</span>
+                        <span className="bg-white/20 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                          4.3
+                        </span>
+                      </div>
+                      <div>
+                        <h4 className="text-white font-bold mb-1">Müzik</h4>
+                        <div className="rounded-full bg-white/20 w-10 h-6"></div>
+                      </div>
+                    </div>
+                    <div className="absolute bottom-0 right-0 w-16 h-16 bg-white/10 rounded-tl-3xl"></div>
                   </div>
                 </div>
               </div>

@@ -1,39 +1,96 @@
 import React from "react";
-import { Users, Image, Info, Sparkles, BookText, Trophy, UserPlus, ArrowRight } from "lucide-react";
+import { Users, Image, Info, Sparkles, BookText, Trophy, UserPlus, ArrowRight, Timer, Zap, Brain, GamepadIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 
 export default function HowToPlay() {
   return (
     <div className="max-w-content mx-auto py-10 px-4 md:px-0">
-      <h1 className="text-3xl font-bold mb-2">Nasıl Oynanır?</h1>
-      <p className="text-muted-foreground mb-8">
-        Pixelhunt'ta testler ile görsellerinizi tanıma yeteneklerinizi sınayın ve kendi testlerinizi oluşturun.
-      </p>
+      <div className="text-center mb-12">
+        <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-primary to-indigo-500">Pixelhunt'a Hoş Geldiniz!</h1>
+        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          Görsellerinizi tanıma yeteneklerinizi sınayın, farklı oyun modlarında eğlenin ve kendi testlerinizi oluşturun.
+        </p>
+      </div>
+      
+      <div className="bg-card border rounded-xl overflow-hidden shadow-lg mb-12">
+        <div className="aspect-[21/9] relative overflow-hidden">
+          <img 
+            src="/attached_assets/ba1f50f644077acc8bedb8b0634c1af8.jpg" 
+            alt="Nintendo Switch Style Card Game" 
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/70 flex items-end p-6">
+            <div className="text-white">
+              <h2 className="text-2xl font-bold">Test Oyun Sistemi</h2>
+              <p className="opacity-80">Tahmin yeteneğinizi geliştirin, puan kazanın!</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="p-6 space-y-6">
+          <div className="space-y-4">
+            <p className="text-lg">Pixelhunt'ta testler aracılığıyla görsellerinizi tanıma yeteneklerinizi geliştirirsiniz:</p>
+            <ol className="list-decimal ml-5 space-y-2">
+              <li>Temaya uygun görsel setlerinden oluşan testleri seçebilirsiniz.</li>
+              <li>Görseller kademeli olarak açılır ve doğru cevabı bulmanız gerekir.</li>
+              <li>Ne kadar az açılmış görüntüyle doğru cevabı bulursanız, o kadar yüksek puan alırsınız.</li>
+              <li>Testleri tamamladıkça puan kazanır ve sıralamada yükselirsiniz.</li>
+              <li>Farklı zorluk seviyelerinde testler bulabilirsiniz.</li>
+              <li>Kendi testlerinizi oluşturarak toplulukla paylaşabilirsiniz.</li>
+            </ol>
 
-      <div className="custom-frame p-6 rounded-lg mb-8">
-        <h2 className="text-2xl font-bold mb-4 flex items-center">
-          <Info className="mr-2 text-primary" /> Test Oyun Sistemi
-        </h2>
-        <div className="space-y-4">
-          <p>Pixelhunt'ta testler aracılığıyla görsellerinizi tanıma yeteneklerinizi geliştirirsiniz:</p>
-          <ol className="list-decimal ml-5 space-y-2">
-            <li>Temaya uygun görsel setlerinden oluşan testleri seçebilirsiniz.</li>
-            <li>Görseller kademeli olarak açılır ve doğru cevabı bulmanız gerekir.</li>
-            <li>Ne kadar az açılmış görüntüyle doğru cevabı bulursanız, o kadar yüksek puan alırsınız.</li>
-            <li>Testleri tamamladıkça puan kazanır ve sıralamada yükselirsiniz.</li>
-            <li>Farklı zorluk seviyelerinde testler bulabilirsiniz.</li>
-            <li>Kendi testlerinizi oluşturarak toplulukla paylaşabilirsiniz.</li>
-          </ol>
-
-          <p className="font-medium mt-4">Puan Sistemi:</p>
-          <ul className="list-disc ml-5 space-y-1">
-            <li>Görüntünün %10'u açıkken doğru cevap: 100 puan</li>
-            <li>Görüntünün %30'u açıkken doğru cevap: 70 puan</li>
-            <li>Görüntünün %50'si açıkken doğru cevap: 50 puan</li>
-            <li>Görüntünün %70'i açıkken doğru cevap: 30 puan</li>
-            <li>Görüntünün %90'ı açıkken doğru cevap: 10 puan</li>
-          </ul>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+              <div className="bg-muted/40 p-4 rounded-lg border">
+                <h3 className="font-bold text-lg flex items-center mb-2">
+                  <GamepadIcon className="w-5 h-5 mr-2 text-primary" /> Puan Sistemi
+                </h3>
+                <ul className="space-y-1 text-sm">
+                  <li className="flex justify-between">
+                    <span>Görüntünün %10'u açıkken:</span>
+                    <Badge variant="default" className="ml-2">100 puan</Badge>
+                  </li>
+                  <li className="flex justify-between">
+                    <span>Görüntünün %30'u açıkken:</span>
+                    <Badge variant="default" className="ml-2">70 puan</Badge>
+                  </li>
+                  <li className="flex justify-between">
+                    <span>Görüntünün %50'si açıkken:</span>
+                    <Badge variant="default" className="ml-2">50 puan</Badge>
+                  </li>
+                  <li className="flex justify-between">
+                    <span>Görüntünün %70'i açıkken:</span>
+                    <Badge variant="default" className="ml-2">30 puan</Badge>
+                  </li>
+                  <li className="flex justify-between">
+                    <span>Görüntünün %90'ı açıkken:</span>
+                    <Badge variant="default" className="ml-2">10 puan</Badge>
+                  </li>
+                </ul>
+              </div>
+              
+              <div className="bg-muted/40 p-4 rounded-lg border">
+                <h3 className="font-bold text-lg flex items-center mb-2">
+                  <Brain className="w-5 h-5 mr-2 text-primary" /> Oyun Modları
+                </h3>
+                <ul className="space-y-2 text-sm">
+                  <li className="flex items-start">
+                    <Badge variant="outline" className="mt-0.5 mr-2">Klasik</Badge>
+                    <span>Standart mod, sınırsız tahmin hakkı</span>
+                  </li>
+                  <li className="flex items-start">
+                    <Badge variant="outline" className="mt-0.5 mr-2">Zaman</Badge>
+                    <span>Süre sınırlı, hızlı düşünmelisiniz</span>
+                  </li>
+                  <li className="flex items-start">
+                    <Badge variant="outline" className="mt-0.5 mr-2">Hız</Badge>
+                    <span>Otomatik açılan görsel, hızlı olun</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -51,62 +108,268 @@ export default function HowToPlay() {
         </TabsList>
 
         <TabsContent value="browse">
-          <div className="custom-frame p-6 rounded-lg mb-8">
-            <h2 className="text-2xl font-bold mb-4 flex items-center">
-              <BookText className="mr-2 text-primary" /> Test Bulma ve Keşfetme
-            </h2>
-            <div className="space-y-4">
-              <p>Pixelhunt'ta ilgi alanınıza ve beceri seviyenize göre testler bulabilirsiniz:</p>
-              <ol className="list-decimal ml-5 space-y-2">
-                <li>Ana sayfadaki "Testler" bölümünden popüler ve öne çıkan testlere göz atabilirsiniz.</li>
-                <li>Kategoriler sayfasından belirli temalara göre testleri filtreleyebilirsiniz.</li>
-                <li>Zorluk seviyesine göre testleri sıralayabilirsiniz (Kolay, Orta, Zor, Çok Zor, Uzman).</li>
-                <li>Arama çubuğunu kullanarak belirli anahtar kelimelere göre test bulabilirsiniz.</li>
-                <li>En çok oynanan ve beğenilen testleri keşfedebilirsiniz.</li>
-                <li>Yeni eklenen testleri takip edebilirsiniz.</li>
-              </ol>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-card border rounded-lg overflow-hidden shadow-md">
+              <div className="aspect-[16/9] relative overflow-hidden">
+                <img 
+                  src="/attached_assets/86b4065a7c34a1c78de57b71078b4f5b.jpg" 
+                  alt="Game selection interface" 
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-4">
+                  <div className="text-white">
+                    <h3 className="text-lg font-bold">Keşfet ve Seç</h3>
+                    <p className="text-xs opacity-80">İlgi alanınıza göre testler bulun</p>
+                  </div>
+                </div>
+              </div>
+              <div className="p-4">
+                <h3 className="font-bold text-lg flex items-center mb-2">
+                  <BookText className="mr-2 h-5 w-5 text-primary" /> Test Bulma ve Keşfetme
+                </h3>
+                <p className="text-sm mb-4">Pixelhunt'ta ilgi alanınıza ve beceri seviyenize göre testler bulabilirsiniz.</p>
+                <ul className="space-y-2 text-sm">
+                  <li className="flex items-start">
+                    <div className="bg-primary/10 text-primary rounded-full w-5 h-5 flex items-center justify-center mr-2 mt-0.5">1</div>
+                    <span>Ana sayfadan popüler ve öne çıkan testlere göz atın</span>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="bg-primary/10 text-primary rounded-full w-5 h-5 flex items-center justify-center mr-2 mt-0.5">2</div>
+                    <span>Kategorilere göre testleri filtreleyin</span>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="bg-primary/10 text-primary rounded-full w-5 h-5 flex items-center justify-center mr-2 mt-0.5">3</div>
+                    <span>Arama çubuğunu kullanarak özel testler bulun</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            
+            <div className="bg-card border rounded-lg overflow-hidden shadow-md">
+              <div className="p-4">
+                <h3 className="font-bold text-lg flex items-center mb-3">
+                  <BookText className="mr-2 h-5 w-5 text-primary" /> Testleri Sıralama
+                </h3>
+                <div className="space-y-4">
+                  <div className="p-3 rounded-md border bg-muted/30">
+                    <h4 className="font-medium text-sm mb-2">Popülerliğe Göre</h4>
+                    <div className="flex justify-between text-sm">
+                      <span>En çok oynanan</span>
+                      <span className="text-primary">🔥</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>En çok beğenilen</span>
+                      <span className="text-primary">❤️</span>
+                    </div>
+                  </div>
+                  
+                  <div className="p-3 rounded-md border bg-muted/30">
+                    <h4 className="font-medium text-sm mb-2">Zorluğa Göre</h4>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-200">Kolay</Badge>
+                      <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-200">Orta</Badge>
+                      <Badge variant="outline" className="bg-orange-500/10 text-orange-600 border-orange-200">Zor</Badge>
+                      <Badge variant="outline" className="bg-red-500/10 text-red-600 border-red-200">Çok Zor</Badge>
+                      <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-200">Uzman</Badge>
+                    </div>
+                  </div>
+                  
+                  <div className="p-3 rounded-md border bg-muted/30">
+                    <h4 className="font-medium text-sm mb-2">Tarihe Göre</h4>
+                    <div className="flex justify-between text-sm">
+                      <span>Yeni eklenenler</span>
+                      <span className="text-primary">✨</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Öne çıkan testler</span>
+                      <span className="text-primary">🌟</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </TabsContent>
 
         <TabsContent value="play">
-          <div className="custom-frame p-6 rounded-lg mb-8">
-            <h2 className="text-2xl font-bold mb-4 flex items-center">
-              <Image className="mr-2 text-primary" /> Test Çözme
-            </h2>
-            <div className="space-y-4">
-              <p>Seçtiğiniz testi çözerken izleyeceğiniz adımlar:</p>
-              <ol className="list-decimal ml-5 space-y-2">
-                <li>Test sayfasında "Oyna" butonuna tıklayarak testi başlatın.</li>
-                <li>Her görsel başlangıçta kısmen kapalıdır ve kademeli olarak açılır.</li>
-                <li>Açılan kısımları inceleyerek görselde ne olduğunu tahmin etmeye çalışın.</li>
-                <li>Tahminlerinizi metin kutusuna yazın ve "Tahmin Et" butonuna tıklayın.</li>
-                <li>Yanlış tahminlerde, görsel açılmaya devam eder ve tekrar deneyebilirsiniz.</li>
-                <li>Doğru cevabı bulduğunuzda veya görsel tamamen açıldığında bir sonraki soruya geçilir.</li>
-                <li>Tüm soruları cevapladığınızda sonuçlarınız ve puanınız gösterilir.</li>
-              </ol>
-              <p className="mt-4">Testi bitirdikten sonra beğenebilir, yorum yapabilir ve kendi rekorunuzu geliştirmek için tekrar oynayabilirsiniz.</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-card border rounded-lg overflow-hidden shadow-md md:col-span-2">
+              <div className="p-4">
+                <h3 className="font-bold text-lg flex items-center mb-4">
+                  <Image className="mr-2 h-5 w-5 text-primary" /> Test Çözme Adımları
+                </h3>
+                <div className="space-y-4">
+                  <div className="flex gap-4">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <span className="font-bold text-primary">1</span>
+                    </div>
+                    <div>
+                      <h4 className="font-medium">Testi Başlat</h4>
+                      <p className="text-sm text-muted-foreground">Test sayfasında "Oyna" butonuna tıklayın</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-4">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <span className="font-bold text-primary">2</span>
+                    </div>
+                    <div>
+                      <h4 className="font-medium">Görseli İncele</h4>
+                      <p className="text-sm text-muted-foreground">Kısmen açılan görseli dikkatlice inceleyin</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-4">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <span className="font-bold text-primary">3</span>
+                    </div>
+                    <div>
+                      <h4 className="font-medium">Tahmin Et</h4>
+                      <p className="text-sm text-muted-foreground">Tahminlerinizi metin kutusuna yazıp "Tahmin Et" butonuna tıklayın</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-4">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <span className="font-bold text-primary">4</span>
+                    </div>
+                    <div>
+                      <h4 className="font-medium">Sonuçlarınızı Görün</h4>
+                      <p className="text-sm text-muted-foreground">Tüm soruları cevapladıktan sonra puanınızı ve sonuçlarınızı görüntüleyin</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-card border rounded-lg overflow-hidden shadow-md">
+              <div className="p-4">
+                <h3 className="font-bold text-lg flex items-center mb-3">
+                  <Zap className="mr-2 h-5 w-5 text-primary" /> Oyun Sonrası Etkileşim
+                </h3>
+                <div className="space-y-3">
+                  <div className="p-3 rounded-lg border bg-muted/30">
+                    <h4 className="font-medium text-sm mb-1 flex items-center">
+                      <span className="text-lg mr-2">❤️</span> Beğen
+                    </h4>
+                    <p className="text-xs text-muted-foreground">Beğendiğiniz testleri işaretleyin</p>
+                  </div>
+                  
+                  <div className="p-3 rounded-lg border bg-muted/30">
+                    <h4 className="font-medium text-sm mb-1 flex items-center">
+                      <span className="text-lg mr-2">💬</span> Yorum Yap
+                    </h4>
+                    <p className="text-xs text-muted-foreground">Test hakkında yorumlarınızı paylaşın</p>
+                  </div>
+                  
+                  <div className="p-3 rounded-lg border bg-muted/30">
+                    <h4 className="font-medium text-sm mb-1 flex items-center">
+                      <span className="text-lg mr-2">🔄</span> Tekrar Oyna
+                    </h4>
+                    <p className="text-xs text-muted-foreground">Daha yüksek puan için tekrar deneyin</p>
+                  </div>
+                  
+                  <div className="p-3 rounded-lg border bg-muted/30">
+                    <h4 className="font-medium text-sm mb-1 flex items-center">
+                      <span className="text-lg mr-2">🏆</span> Sıralamayı Kontrol Et
+                    </h4>
+                    <p className="text-xs text-muted-foreground">Liderlik tablosundaki yerinizi görün</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </TabsContent>
 
         <TabsContent value="create">
-          <div className="custom-frame p-6 rounded-lg mb-8">
-            <h2 className="text-2xl font-bold mb-4 flex items-center">
-              <Sparkles className="mr-2 text-primary" /> Test Oluşturma
-            </h2>
-            <div className="space-y-4">
-              <p>Kendi testinizi oluşturmak için izlemeniz gereken adımlar:</p>
-              <ol className="list-decimal ml-5 space-y-2">
-                <li>Ana menüde veya testler sayfasında "Test Oluştur" butonuna tıklayın.</li>
-                <li>Testiniz için bir başlık, açıklama ve kategori belirleyin.</li>
-                <li>Zorluk seviyesini seçin (Kolay, Orta, Zor, Çok Zor, Uzman).</li>
-                <li>"Görsel Ekle" butonuyla testinize görsel ekleyin.</li>
-                <li>Her görsel için doğru cevap ve alternatif kabul edilebilir cevapları belirleyin.</li>
-                <li>Gerekirse görsellerin sırasını değiştirin veya kaldırın.</li>
-                <li>Test önizlemesini kontrol edin ve hazır olduğunda "Yayınla" butonuna tıklayın.</li>
-              </ol>
-              <p className="mt-4">Yayınlanan testiniz diğer kullanıcılar tarafından oynanabilir, beğenilebilir ve yorum alabilir. Oluşturduğunuz testleri istediğiniz zaman düzenleyebilir veya güncelleyebilirsiniz.</p>
+          <div className="bg-card border rounded-lg overflow-hidden shadow-md">
+            <div className="aspect-[21/9] relative overflow-hidden">
+              <img 
+                src="/attached_assets/6c161a984b072640f8d7cde4b759f0a8.jpg" 
+                alt="Test creation interface" 
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-6">
+                <div className="text-white">
+                  <h3 className="text-xl font-bold">Kendi Testinizi Oluşturun</h3>
+                  <p className="opacity-80">Yaratıcılığınızı gösterin, topluluğa katkıda bulunun</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="font-bold text-lg flex items-center mb-4">
+                    <Sparkles className="mr-2 h-5 w-5 text-primary" /> Test Oluşturma Adımları
+                  </h3>
+                  <ol className="space-y-3">
+                    <li className="flex items-start">
+                      <div className="bg-primary/10 text-primary rounded-full min-w-6 h-6 flex items-center justify-center mr-2 mt-0.5">1</div>
+                      <div>
+                        <p className="font-medium">Test Oluştur Butonuna Tıklayın</p>
+                        <p className="text-sm text-muted-foreground">Ana menüde "Test Oluştur" butonunu bulun</p>
+                      </div>
+                    </li>
+                    <li className="flex items-start">
+                      <div className="bg-primary/10 text-primary rounded-full min-w-6 h-6 flex items-center justify-center mr-2 mt-0.5">2</div>
+                      <div>
+                        <p className="font-medium">Test Bilgilerini Girin</p>
+                        <p className="text-sm text-muted-foreground">Başlık, açıklama ve kategori belirleyin</p>
+                      </div>
+                    </li>
+                    <li className="flex items-start">
+                      <div className="bg-primary/10 text-primary rounded-full min-w-6 h-6 flex items-center justify-center mr-2 mt-0.5">3</div>
+                      <div>
+                        <p className="font-medium">Görselleri Ekleyin</p>
+                        <p className="text-sm text-muted-foreground">"Görsel Ekle" ile testinize resimler ekleyin</p>
+                      </div>
+                    </li>
+                    <li className="flex items-start">
+                      <div className="bg-primary/10 text-primary rounded-full min-w-6 h-6 flex items-center justify-center mr-2 mt-0.5">4</div>
+                      <div>
+                        <p className="font-medium">Doğru Cevapları Belirleyin</p>
+                        <p className="text-sm text-muted-foreground">Her görsel için kabul edilebilir cevaplar tanımlayın</p>
+                      </div>
+                    </li>
+                    <li className="flex items-start">
+                      <div className="bg-primary/10 text-primary rounded-full min-w-6 h-6 flex items-center justify-center mr-2 mt-0.5">5</div>
+                      <div>
+                        <p className="font-medium">Yayınlayın</p>
+                        <p className="text-sm text-muted-foreground">Önizlemeyi kontrol edip "Yayınla" butonuna tıklayın</p>
+                      </div>
+                    </li>
+                  </ol>
+                </div>
+                
+                <div>
+                  <h3 className="font-bold text-lg flex items-center mb-4">
+                    <Sparkles className="mr-2 h-5 w-5 text-primary" /> Test Yönetimi
+                  </h3>
+                  <div className="space-y-4">
+                    <div className="p-3 rounded-lg border bg-muted/30">
+                      <h4 className="font-medium mb-1">Görsel İpuçları</h4>
+                      <p className="text-sm text-muted-foreground">Görsellerin aşamalı olarak açılması için kaliteli ve tanınabilir resimler seçin</p>
+                    </div>
+                    
+                    <div className="p-3 rounded-lg border bg-muted/30">
+                      <h4 className="font-medium mb-1">Test Düzenleme</h4>
+                      <p className="text-sm text-muted-foreground">Oluşturduğunuz testleri istediğiniz zaman düzenleyebilir veya güncelleyebilirsiniz</p>
+                    </div>
+                    
+                    <div className="p-3 rounded-lg border bg-muted/30">
+                      <h4 className="font-medium mb-1">Topluluk Etkileşimi</h4>
+                      <p className="text-sm text-muted-foreground">Kullanıcıların yorumlarını okuyabilir ve testlerinizin popülerliğini takip edebilirsiniz</p>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-2 mt-4">
+                      <Badge variant="outline" className="bg-green-500/10 border-green-200">Yaratıcılık</Badge>
+                      <Badge variant="outline" className="bg-blue-500/10 border-blue-200">Paylaşım</Badge>
+                      <Badge variant="outline" className="bg-purple-500/10 border-purple-200">Topluluk</Badge>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </TabsContent>
