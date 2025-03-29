@@ -191,6 +191,7 @@ const categoryFormSchema = z.object({
   description: z.string().min(10, {
     message: "Açıklama en az 10 karakter olmalıdır.",
   }),
+  iconName: z.string().nullable().optional(),
   active: z.boolean().default(true)
 });
 
@@ -329,6 +330,7 @@ function AdminPanel() {
     categoryForm.reset({
       name: category.name,
       description: category.description,
+      iconName: category.iconName,
       active: category.active
     });
     setIsCategoryDialogOpen(true);
@@ -528,6 +530,7 @@ function AdminPanel() {
                         categoryForm.reset({
                           name: "",
                           description: "",
+                          iconName: null,
                           active: true
                         });
                       }}
@@ -589,8 +592,38 @@ function AdminPanel() {
                             </FormItem>
                           )}
                         />
-                        
 
+                        <FormField
+                          control={categoryForm.control}
+                          name="iconName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>İkon</FormLabel>
+                              <div className="grid grid-cols-4 gap-2 p-2 max-h-32 overflow-y-auto border rounded-md">
+                                {availableIcons.map((icon) => (
+                                  <div
+                                    key={icon.name}
+                                    onClick={() => field.onChange(icon.name)}
+                                    className={`flex flex-col items-center justify-center p-2 rounded-md cursor-pointer transition-colors ${
+                                      field.value === icon.name
+                                        ? "bg-primary/20 border border-primary"
+                                        : "hover:bg-muted"
+                                    }`}
+                                  >
+                                    {React.createElement(icon.component, {
+                                      className: "w-5 h-5 mb-1",
+                                    })}
+                                    <span className="text-xs truncate">{icon.name}</span>
+                                  </div>
+                                ))}
+                              </div>
+                              <FormDescription>
+                                Kategori için bir ikon seçin (isteğe bağlı)
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                         
                         <FormField
                           control={categoryForm.control}
@@ -672,8 +705,11 @@ function AdminPanel() {
                         <TableCell>{category.id}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center">
-                              <Image className="w-3 h-3 text-gray-500" />
+                            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+                              {category.iconName ? 
+                                getIconComponent(category.iconName) : 
+                                <Image className="w-3 h-3 text-primary/50" />
+                              }
                             </div>
                             <span>{category.name}</span>
                           </div>
