@@ -280,100 +280,34 @@ export default function Home() {
               </div>
             </div>
             
-            {/* Right side image - Modern Game Card Illustration */}
+            {/* Right side illustration - Simple Yellow Pixel Design */}
             <div className="w-full md:w-1/2 h-[260px] md:h-[320px] relative hero-card-container">
-              {/* Decorative circle elements */}
+              {/* Decorative elements */}
               <div className="absolute top-0 right-10 w-20 h-20 bg-primary/10 rounded-full blur-xl"></div>
               <div className="absolute bottom-10 left-0 w-24 h-24 bg-primary/10 rounded-full blur-xl"></div>
               
-              {/* Modern Game Card Style Illustration */}
-              <div className="absolute bottom-0 right-0 w-full h-full flex items-end justify-center">
-                {/* Card Stack */}
-                <div className="relative h-[240px] md:h-[280px] w-[90%] perspective-500">
-                  {/* Purple Card - Fortnite/Games */}
-                  <div className="absolute bottom-0 left-0 h-[180px] w-[120px] md:h-[210px] md:w-[150px] bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl shadow-xl transform -rotate-12 -translate-x-1 overflow-hidden" style={{ zIndex: 1 }}>
-                    <div className="h-full w-full p-4 flex flex-col justify-between">
-                      <div className="flex justify-between items-center">
-                        <span className="text-white text-sm font-medium">Oyunlar</span>
-                        <span className="bg-white/20 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                          4.8
-                        </span>
-                      </div>
-                      <div>
-                        <h4 className="text-white font-bold mb-1">Oyun</h4>
-                        <div className="rounded-full bg-white/20 w-10 h-6"></div>
-                      </div>
-                    </div>
-                    <div className="absolute bottom-0 right-0 w-16 h-16 bg-white/10 rounded-tl-3xl"></div>
+              {/* Single yellow design */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="relative w-[280px] h-[280px]">
+                  {/* Main yellow circle */}
+                  <div className="absolute inset-0 bg-primary rounded-full"></div>
+                  
+                  {/* Inner circle */}
+                  <div className="absolute inset-[40px] bg-primary-foreground rounded-full flex items-center justify-center">
+                    {/* Pixel hunt logo or text */}
+                    <div className="text-primary font-bold text-4xl">PH</div>
                   </div>
                   
-                  {/* Red Card - Mario/Film */}
-                  <div className="absolute bottom-0 left-[60px] md:left-[70px] h-[180px] w-[120px] md:h-[210px] md:w-[150px] bg-gradient-to-br from-rose-500 to-red-600 rounded-2xl shadow-xl transform -rotate-6 overflow-hidden" style={{ zIndex: 2 }}>
-                    <div className="h-full w-full p-4 flex flex-col justify-between">
-                      <div className="flex justify-between items-center">
-                        <span className="text-white text-sm font-medium">Filmler</span>
-                        <span className="bg-white/20 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                          4.9
-                        </span>
-                      </div>
-                      <div>
-                        <h4 className="text-white font-bold mb-1">Sinema</h4>
-                        <div className="rounded-full bg-white/20 w-10 h-6"></div>
-                      </div>
-                    </div>
-                    <div className="absolute bottom-0 right-0 w-16 h-16 bg-white/10 rounded-tl-3xl"></div>
-                  </div>
+                  {/* Decorative elements */}
+                  <div className="absolute top-[20px] right-[20px] w-[30px] h-[30px] bg-primary-foreground rounded-full"></div>
+                  <div className="absolute bottom-[40px] left-[30px] w-[20px] h-[20px] bg-primary-foreground rounded-full"></div>
+                  <div className="absolute top-[100px] left-[10px] w-[15px] h-[15px] bg-primary-foreground rounded-full"></div>
                   
-                  {/* Blue Card - Kirby/Character */}
-                  <div className="absolute bottom-0 left-[120px] md:left-[140px] h-[180px] w-[120px] md:h-[210px] md:w-[150px] bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl shadow-xl overflow-hidden" style={{ zIndex: 3 }}>
-                    <div className="h-full w-full p-4 flex flex-col justify-between">
-                      <div className="flex justify-between items-center">
-                        <span className="text-white text-sm font-medium">Karakterler</span>
-                        <span className="bg-white/20 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                          4.7
-                        </span>
-                      </div>
-                      <div>
-                        <h4 className="text-white font-bold mb-1">Ünlüler</h4>
-                        <div className="rounded-full bg-white/20 w-10 h-6"></div>
-                      </div>
-                    </div>
-                    <div className="absolute bottom-0 right-0 w-16 h-16 bg-white/10 rounded-tl-3xl"></div>
-                  </div>
-                  
-                  {/* Green Card - Pokemon/Nature */}
-                  <div className="absolute bottom-0 left-[180px] md:left-[210px] h-[180px] w-[120px] md:h-[210px] md:w-[150px] bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl shadow-xl transform rotate-6 overflow-hidden" style={{ zIndex: 2 }}>
-                    <div className="h-full w-full p-4 flex flex-col justify-between">
-                      <div className="flex justify-between items-center">
-                        <span className="text-white text-sm font-medium">Doğa</span>
-                        <span className="bg-white/20 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                          4.2
-                        </span>
-                      </div>
-                      <div>
-                        <h4 className="text-white font-bold mb-1">Hayvanlar</h4>
-                        <div className="rounded-full bg-white/20 w-10 h-6"></div>
-                      </div>
-                    </div>
-                    <div className="absolute bottom-0 right-0 w-16 h-16 bg-white/10 rounded-tl-3xl"></div>
-                  </div>
-                  
-                  {/* Yellow Card - Splatoon/Art */}
-                  <div className="absolute bottom-0 left-[240px] md:left-[280px] h-[180px] w-[120px] md:h-[210px] md:w-[150px] bg-gradient-to-br from-amber-500 to-yellow-600 rounded-2xl shadow-xl transform rotate-12 translate-x-1 overflow-hidden" style={{ zIndex: 1 }}>
-                    <div className="h-full w-full p-4 flex flex-col justify-between">
-                      <div className="flex justify-between items-center">
-                        <span className="text-white text-sm font-medium">Sanat</span>
-                        <span className="bg-white/20 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                          4.3
-                        </span>
-                      </div>
-                      <div>
-                        <h4 className="text-white font-bold mb-1">Müzik</h4>
-                        <div className="rounded-full bg-white/20 w-10 h-6"></div>
-                      </div>
-                    </div>
-                    <div className="absolute bottom-0 right-0 w-16 h-16 bg-white/10 rounded-tl-3xl"></div>
-                  </div>
+                  {/* Rays or pixel elements */}
+                  <div className="absolute top-[-30px] left-[120px] w-[40px] h-[100px] bg-primary-foreground/20 rotate-45 rounded-lg"></div>
+                  <div className="absolute bottom-[-30px] right-[120px] w-[40px] h-[100px] bg-primary-foreground/20 rotate-45 rounded-lg"></div>
+                  <div className="absolute left-[-30px] top-[120px] w-[100px] h-[40px] bg-primary-foreground/20 rotate-45 rounded-lg"></div>
+                  <div className="absolute right-[-30px] bottom-[120px] w-[100px] h-[40px] bg-primary-foreground/20 rotate-45 rounded-lg"></div>
                 </div>
               </div>
             </div>
@@ -405,114 +339,7 @@ export default function Home() {
           ))}
         </div>
         
-        {/* Featured sections */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
-          {/* Popular */}
-          <div className="bg-card border-border rounded-lg p-5 border shadow-sm">
-            <h3 className="text-lg font-semibold text-card-foreground mb-4 flex items-center">
-              <Trophy className="w-5 h-5 mr-2 text-yellow-500" />
-              Popüler Testler
-            </h3>
-            
-            <div className="space-y-3 mb-4">
-              {popularTests?.slice(0, 3).map((test, index) => (
-                <div 
-                  key={index} 
-                  className="flex items-center gap-3 p-2 hover:bg-accent/50 rounded-lg cursor-pointer"
-                  onClick={() => handleTestClick(test.id)}
-                >
-                  <div className="w-10 h-10 bg-muted rounded-md flex items-center justify-center text-sm font-bold text-muted-foreground">
-                    {index + 1}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-card-foreground text-sm font-medium truncate">{test.title}</h4>
-                    <p className="text-muted-foreground text-xs">{test.playCount || 0} oynama</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => setActiveTab("popular")}
-              className="w-full"
-            >
-              Tümünü Gör
-            </Button>
-          </div>
-          
-          {/* Featured */}
-          <div className="bg-card border-border rounded-lg p-5 border shadow-sm">
-            <h3 className="text-lg font-semibold text-card-foreground mb-4 flex items-center">
-              <Sparkles className="w-5 h-5 mr-2 text-primary" />
-              Öne Çıkanlar
-            </h3>
-            
-            <div className="space-y-3 mb-4">
-              {featuredTests?.slice(0, 3).map((test, index) => (
-                <div 
-                  key={index}
-                  className="flex items-center gap-3 p-2 hover:bg-accent/50 rounded-lg cursor-pointer" 
-                  onClick={() => handleTestClick(test.id)}
-                >
-                  <div 
-                    className="w-10 h-10 bg-cover bg-center rounded-md"
-                    style={{backgroundImage: `url(${test.imageUrl || '/default-test-thumb.jpg'})`}}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-card-foreground text-sm font-medium truncate">{test.title}</h4>
-                    <p className="text-muted-foreground text-xs">{test.likeCount || 0} beğeni</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => setActiveTab("featured")}
-              className="w-full"
-            >
-              Tümünü Gör
-            </Button>
-          </div>
-          
-          {/* Newest */}
-          <div className="bg-card border-border rounded-lg p-5 border shadow-sm">
-            <h3 className="text-lg font-semibold text-card-foreground mb-4 flex items-center">
-              <Clock className="w-5 h-5 mr-2 text-blue-500" />
-              Son Eklenenler
-            </h3>
-            
-            <div className="space-y-3 mb-4">
-              {newestTests?.slice(0, 3).map((test, index) => (
-                <div 
-                  key={index}
-                  className="flex items-center gap-3 p-2 hover:bg-accent/50 rounded-lg cursor-pointer"
-                  onClick={() => handleTestClick(test.id)}
-                >
-                  <div className="w-10 h-10 bg-muted rounded-md flex items-center justify-center">
-                    <Clock className="w-5 h-5 text-blue-400" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-card-foreground text-sm font-medium truncate">{test.title}</h4>
-                    <p className="text-muted-foreground text-xs">Yeni eklendi</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => setActiveTab("newest")}
-              className="w-full"
-            >
-              Tümünü Gör
-            </Button>
-          </div>
-        </div>
+
       </section>
 
       {/* Search Results (hidden by default, shown when search is activated) */}

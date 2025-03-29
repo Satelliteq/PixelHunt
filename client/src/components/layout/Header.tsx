@@ -182,6 +182,15 @@ export default function Header() {
               <HelpCircle className="w-4 h-4 mr-2" />
               Destek
             </Button>
+            
+            <Button
+              variant="ghost"
+              className="text-foreground hover:text-primary text-sm font-medium"
+              onClick={() => handleNavigation("/contact")}
+            >
+              <Mail className="w-4 h-4 mr-2" />
+              İletişim
+            </Button>
           </nav>
         </div>
         
