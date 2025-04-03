@@ -280,50 +280,50 @@ export default function Home() {
               </div>
             </div>
             
-            {/* Right side illustration - Simple Yellow Pixel Design */}
-            <div className="w-full md:w-1/2 h-[260px] md:h-[320px] relative hero-card-container">
+            {/* Right side illustration - Compact Yellow Pixel Design */}
+            <div className="w-full md:w-1/2 h-[180px] md:h-[220px] relative hero-card-container">
               {/* Decorative elements */}
-              <div className="absolute top-0 right-10 w-20 h-20 bg-primary/10 rounded-full blur-xl"></div>
-              <div className="absolute bottom-10 left-0 w-24 h-24 bg-primary/10 rounded-full blur-xl"></div>
+              <div className="absolute top-0 right-10 w-16 h-16 bg-primary/10 rounded-full blur-xl"></div>
+              <div className="absolute bottom-10 left-0 w-16 h-16 bg-primary/10 rounded-full blur-xl"></div>
               
               {/* Single yellow design */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="relative w-[280px] h-[280px]">
+                <div className="relative w-[200px] h-[200px]">
                   {/* Main yellow circle */}
                   <div className="absolute inset-0 bg-primary rounded-full"></div>
                   
                   {/* Inner circle */}
-                  <div className="absolute inset-[40px] bg-primary-foreground rounded-full flex items-center justify-center">
+                  <div className="absolute inset-[30px] bg-primary-foreground rounded-full flex items-center justify-center">
                     {/* Pixel hunt logo or text */}
-                    <div className="text-primary font-bold text-4xl">PH</div>
+                    <div className="text-primary font-bold text-3xl">PH</div>
                   </div>
                   
                   {/* Decorative elements */}
-                  <div className="absolute top-[20px] right-[20px] w-[30px] h-[30px] bg-primary-foreground rounded-full"></div>
-                  <div className="absolute bottom-[40px] left-[30px] w-[20px] h-[20px] bg-primary-foreground rounded-full"></div>
-                  <div className="absolute top-[100px] left-[10px] w-[15px] h-[15px] bg-primary-foreground rounded-full"></div>
+                  <div className="absolute top-[15px] right-[15px] w-[20px] h-[20px] bg-primary-foreground rounded-full"></div>
+                  <div className="absolute bottom-[30px] left-[20px] w-[15px] h-[15px] bg-primary-foreground rounded-full"></div>
+                  <div className="absolute top-[75px] left-[10px] w-[10px] h-[10px] bg-primary-foreground rounded-full"></div>
                   
                   {/* Rays or pixel elements */}
-                  <div className="absolute top-[-30px] left-[120px] w-[40px] h-[100px] bg-primary-foreground/20 rotate-45 rounded-lg"></div>
-                  <div className="absolute bottom-[-30px] right-[120px] w-[40px] h-[100px] bg-primary-foreground/20 rotate-45 rounded-lg"></div>
-                  <div className="absolute left-[-30px] top-[120px] w-[100px] h-[40px] bg-primary-foreground/20 rotate-45 rounded-lg"></div>
-                  <div className="absolute right-[-30px] bottom-[120px] w-[100px] h-[40px] bg-primary-foreground/20 rotate-45 rounded-lg"></div>
+                  <div className="absolute top-[-20px] left-[90px] w-[30px] h-[80px] bg-primary-foreground/20 rotate-45 rounded-lg"></div>
+                  <div className="absolute bottom-[-20px] right-[90px] w-[30px] h-[80px] bg-primary-foreground/20 rotate-45 rounded-lg"></div>
+                  <div className="absolute left-[-20px] top-[90px] w-[80px] h-[30px] bg-primary-foreground/20 rotate-45 rounded-lg"></div>
+                  <div className="absolute right-[-20px] bottom-[90px] w-[80px] h-[30px] bg-primary-foreground/20 rotate-45 rounded-lg"></div>
                 </div>
               </div>
             </div>
           </div>
         </div>
         
-        {/* Kategori kartları - düzenlenmiş hali */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
+        {/* Kategori kartları - daha küçük ve sade */}
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 sm:gap-3 mb-6">
           {categories.slice(0, 6).map((category, index) => (
             <Card 
               key={category.id || index}
               className="group cursor-pointer hover:border-primary/50 transition-all duration-300 overflow-hidden"
               onClick={() => navigate(`/category/${category.id || index + 1}`)}
             >
-              <CardContent className="p-4 flex flex-col items-center text-center">
-                <div className={`w-14 h-14 rounded-full flex items-center justify-center text-2xl mb-3 mt-2 ${
+              <CardContent className="p-3 flex flex-col items-center text-center">
+                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-xl mb-2 ${
                   index % 6 === 0 ? "bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400" : 
                   index % 6 === 1 ? "bg-sky-100 text-sky-600 dark:bg-sky-950 dark:text-sky-400" : 
                   index % 6 === 2 ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400" : 
@@ -333,7 +333,7 @@ export default function Home() {
                 }`}>
                   {getCategoryEmoji(category.name || "", index)}
                 </div>
-                <h3 className="text-card-foreground font-medium text-sm">{category.name}</h3>
+                <h3 className="text-card-foreground font-medium text-xs sm:text-sm">{category.name}</h3>
               </CardContent>
             </Card>
           ))}

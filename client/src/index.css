@@ -358,9 +358,14 @@
   
   /* Responsive adjustments */
   @media (max-width: 768px) {
+    .max-w-content {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+    
     .hero-carousel {
       height: auto;
-      min-height: 580px; /* Increased for better mobile content display */
+      min-height: 480px; /* Reduced height for mobile */
     }
     
     .hero-carousel-slide {
@@ -371,6 +376,10 @@
     .hero-carousel-slide .custom-hero-overlay {
       width: 100% !important; /* Force full width on mobile */
       margin-top: 1rem;
+    }
+    
+    .mobile-menu-button {
+      display: block;
     }
 
     .hero-carousel-slide .relative.z-10 {

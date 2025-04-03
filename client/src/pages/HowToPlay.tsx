@@ -7,9 +7,9 @@ import { Badge } from "@/components/ui/badge";
 export default function HowToPlay() {
   return (
     <div className="max-w-content mx-auto py-10 px-4 md:px-0">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-primary to-indigo-500">Pixelhunt'a Hoş Geldiniz!</h1>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+      <div className="text-center mb-8">
+        <h1 className="text-3xl md:text-4xl font-bold mb-3 text-card-foreground">Pixelhunt Nasıl Oynanır?</h1>
+        <p className="text-base text-muted-foreground max-w-2xl mx-auto">
           Görsellerinizi tanıma yeteneklerinizi sınayın, farklı oyun modlarında eğlenin ve kendi testlerinizi oluşturun.
         </p>
       </div>

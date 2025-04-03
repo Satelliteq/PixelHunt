@@ -181,10 +181,10 @@ export class PostgresStorage implements IStorage {
         [
           category.name,
           category.description,
-          category.iconName,
+          category.iconname,
           category.color,
-          category.backgroundColor,
-          category.imageUrl,
+          category.backgroundcolor,
+          category.imageurl,
           category.active !== undefined ? category.active : true
         ]
       );
@@ -209,21 +209,21 @@ export class PostgresStorage implements IStorage {
         updates.push(`description = $${counter++}`);
         values.push(category.description);
       }
-      if (category.iconName !== undefined) {
+      if (category.iconname !== undefined) {
         updates.push(`iconname = $${counter++}`);
-        values.push(category.iconName);
+        values.push(category.iconname);
       }
       if (category.color !== undefined) {
         updates.push(`color = $${counter++}`);
         values.push(category.color);
       }
-      if (category.backgroundColor !== undefined) {
+      if (category.backgroundcolor !== undefined) {
         updates.push(`backgroundcolor = $${counter++}`);
-        values.push(category.backgroundColor);
+        values.push(category.backgroundcolor);
       }
-      if (category.imageUrl !== undefined) {
+      if (category.imageurl !== undefined) {
         updates.push(`imageurl = $${counter++}`);
-        values.push(category.imageUrl);
+        values.push(category.imageurl);
       }
       if (category.active !== undefined) {
         updates.push(`active = $${counter++}`);
