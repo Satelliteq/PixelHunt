@@ -1,4 +1,4 @@
--- Mevcut tabloları temizle (ihtiyaç duyarsanız)
+-- Mevcut tabloları temizle
 DROP TABLE IF EXISTS game_scores CASCADE;
 DROP TABLE IF EXISTS test_comments CASCADE; 
 DROP TABLE IF EXISTS tests CASCADE;
@@ -7,22 +7,96 @@ DROP TABLE IF EXISTS categories CASCADE;
 DROP TABLE IF EXISTS user_activities CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 
--- Kullanıcılar tablosu
+-- Users tablosu
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
-  uuid TEXT NOT NULL UNIQUE,
-  username TEXT NOT NULL,
-  password TEXT,
-  email TEXT,
+  uuid UUID DEFAULT gen_random_uuid() NOT NULL UNIQUE,
+  username TEXT NOT NULL UNIQUE,
+  password TEXT NOT NULL,
+  email TEXT UNIQUE,
+  score INTEGER DEFAULT 0,
   avatar TEXT,
   role TEXT DEFAULT 'user',
-  score INTEGER DEFAULT 0,
   banned BOOLEAN DEFAULT false,
   last_login_at TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Kullanıcı Aktiviteleri tablosu
+-- Categories tablosu
+CREATE TABLE categories (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT,
+  icon_name TEXT,
+  color TEXT,
+  background_color TEXT,
+  image_url TEXT,
+  active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE
+);
+
+-- Images tablosu
+CREATE TABLE images (
+  id SERIAL PRIMARY KEY,
+  title TEXT NOT NULL,
+  image_url TEXT NOT NULL,
+  storage_key TEXT,
+  category_id INTEGER REFERENCES categories(id),
+  answers JSONB NOT NULL,
+  hints JSONB,
+  difficulty INTEGER DEFAULT 1,
+  play_count INTEGER DEFAULT 0,
+  like_count INTEGER DEFAULT 0,
+  active BOOLEAN DEFAULT true,
+  created_by INTEGER REFERENCES users(id),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE
+);
+
+-- Tests tablosu
+CREATE TABLE tests (
+  id SERIAL PRIMARY KEY,
+  uuid UUID DEFAULT gen_random_uuid() NOT NULL UNIQUE,
+  title TEXT NOT NULL,
+  description TEXT,
+  creator_id INTEGER REFERENCES users(id),
+  category_id INTEGER REFERENCES categories(id),
+  image_url TEXT,
+  questions JSONB NOT NULL DEFAULT '[]'::jsonb,
+  play_count INTEGER DEFAULT 0,
+  like_count INTEGER DEFAULT 0,
+  is_public BOOLEAN DEFAULT true,
+  is_anonymous BOOLEAN DEFAULT false,
+  approved BOOLEAN DEFAULT false,
+  featured BOOLEAN DEFAULT false,
+  difficulty INTEGER DEFAULT 2,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE
+);
+
+-- Test comments tablosu
+CREATE TABLE test_comments (
+  id SERIAL PRIMARY KEY,
+  test_id INTEGER REFERENCES tests(id) ON DELETE CASCADE,
+  user_id INTEGER REFERENCES users(id),
+  comment TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Game scores tablosu
+CREATE TABLE game_scores (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id),
+  test_id INTEGER REFERENCES tests(id),
+  completion_time INTEGER,
+  attempts_count INTEGER NOT NULL DEFAULT 1,
+  score INTEGER NOT NULL,
+  completed BOOLEAN DEFAULT false,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- User activities tablosu
 CREATE TABLE user_activities (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES users(id),
@@ -32,76 +106,6 @@ CREATE TABLE user_activities (
   entity_id INTEGER,
   entity_type TEXT,
   metadata JSONB,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Kategoriler tablosu (basitleştirilmiş)
-CREATE TABLE categories (
-  id SERIAL PRIMARY KEY,
-  name TEXT NOT NULL,
-  description TEXT,
-  active BOOLEAN DEFAULT true,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE
-);
-
--- Görsel/Resimler tablosu
-CREATE TABLE images (
-  id SERIAL PRIMARY KEY,
-  title TEXT NOT NULL,
-  image_url TEXT NOT NULL,
-  storage_key TEXT,
-  category_id INTEGER NOT NULL REFERENCES categories(id),
-  answers JSONB NOT NULL,
-  hints JSONB,
-  difficulty INTEGER DEFAULT 1,
-  play_count INTEGER DEFAULT 0,
-  like_count INTEGER DEFAULT 0,
-  active BOOLEAN DEFAULT true,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  created_by INTEGER REFERENCES users(id),
-  updated_at TIMESTAMP WITH TIME ZONE
-);
-
--- Testler tablosu
-CREATE TABLE tests (
-  id SERIAL PRIMARY KEY,
-  uuid TEXT NOT NULL UNIQUE,
-  title TEXT NOT NULL,
-  description TEXT,
-  creator_id INTEGER REFERENCES users(id),
-  category_id INTEGER REFERENCES categories(id),
-  image_url TEXT,
-  questions JSONB NOT NULL,
-  duration INTEGER,
-  play_count INTEGER DEFAULT 0,
-  like_count INTEGER DEFAULT 0,
-  is_public BOOLEAN DEFAULT true,
-  approved BOOLEAN DEFAULT false,
-  featured BOOLEAN DEFAULT false,
-  difficulty INTEGER DEFAULT 2,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE
-);
-
--- Test Yorumları tablosu
-CREATE TABLE test_comments (
-  id SERIAL PRIMARY KEY,
-  test_id INTEGER NOT NULL REFERENCES tests(id),
-  user_id INTEGER NOT NULL REFERENCES users(id),
-  comment TEXT NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Oyun Skorları tablosu
-CREATE TABLE game_scores (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER REFERENCES users(id),
-  test_id INTEGER NOT NULL REFERENCES tests(id),
-  completion_time INTEGER,
-  attempts_count INTEGER NOT NULL,
-  score INTEGER NOT NULL,
-  completed BOOLEAN DEFAULT false,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
