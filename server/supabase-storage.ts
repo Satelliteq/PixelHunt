@@ -341,9 +341,20 @@ export class SupabaseStorage implements IStorage {
   }
 
   async createCategory(category: InsertCategory): Promise<Category> {
+    // Sütun adlarını Supabase'in beklediği formata uyarla
+    const formattedCategory = {
+      name: category.name,
+      description: category.description,
+      iconname: category.iconname,
+      color: category.color,
+      backgroundcolor: category.backgroundcolor,
+      imageurl: category.imageurl,
+      active: category.active
+    };
+    
     const { data, error } = await supabase
       .from('categories')
-      .insert(category)
+      .insert(formattedCategory)
       .select('*')
       .single();
       
@@ -356,9 +367,20 @@ export class SupabaseStorage implements IStorage {
   }
 
   async updateCategory(id: number, category: InsertCategory): Promise<Category | undefined> {
+    // Sütun adlarını Supabase'in beklediği formata uyarla
+    const formattedCategory = {
+      name: category.name,
+      description: category.description,
+      iconname: category.iconname,
+      color: category.color,
+      backgroundcolor: category.backgroundcolor,
+      imageurl: category.imageurl,
+      active: category.active
+    };
+    
     const { data, error } = await supabase
       .from('categories')
-      .update(category)
+      .update(formattedCategory)
       .eq('id', id)
       .select('*')
       .single();

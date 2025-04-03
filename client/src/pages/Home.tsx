@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Heart, Trophy, BookOpen, Filter, Clock, Users, Sparkles, Award, ChevronLeft, ChevronRight, Plus, Search, X, Loader2, Layers } from "lucide-react";
+import { Heart, Trophy, BookOpen, Filter, Clock, Users, Sparkles, Award, ChevronLeft, ChevronRight, Plus, Search, X, Loader2, Layers, Film, Music, Palette, Gamepad2, Dumbbell, FlaskConical, Landmark } from "lucide-react";
 import { Test, Category } from "@shared/schema";
 import { useLanguage } from "@/lib/LanguageContext";
 
@@ -198,20 +198,20 @@ export default function Home() {
   });
 
   // Örnek kategoriler (API'den veri gelmezse kullanılacak)
-  const defaultCategories: Array<{id?: number, name: string, iconName?: string}> = [
-    { id: 1, name: "Film & TV", iconName: "🎬" },
-    { id: 2, name: "Müzik", iconName: "🎵" },
-    { id: 3, name: "Sanat", iconName: "🎨" },
-    { id: 4, name: "Oyun", iconName: "🎮" },
-    { id: 5, name: "Spor", iconName: "⚽" },
-    { id: 6, name: "Bilim", iconName: "🧪" },
+  const defaultCategories: Array<{id?: number, name: string, iconname?: string}> = [
+    { id: 1, name: "Film & TV", iconname: "film" },
+    { id: 2, name: "Müzik", iconname: "music" },
+    { id: 3, name: "Sanat", iconname: "palette" },
+    { id: 4, name: "Oyunlar", iconname: "gamepad-2" },
+    { id: 5, name: "Spor", iconname: "dumbbell" },
+    { id: 6, name: "Bilim", iconname: "flask-conical" },
   ];
 
   // Kategorileri API'den veya varsayılan veriden al
   const categories = categoriesData || defaultCategories;
 
-  const handleTestClick = (testId: number) => {
-    navigate(`/tests/${testId}`);
+  const handleTestClick = (testUuid: string) => {
+    navigate(`/tests/${testUuid}`);
   };
   
   // Kategori adına göre emoji döndüren yardımcı fonksiyon
@@ -234,80 +234,129 @@ export default function Home() {
     const defaultEmojis = ["🔍", "💡", "🎯", "📊", "🔮", "🌟", "💎"];
     return defaultEmojis[index % defaultEmojis.length];
   };
+  
+  // Icon ismine göre Lucide icon komponenti döndüren yardımcı fonksiyon
+  const getCategoryIcon = (iconName: string | null) => {
+    if (!iconName) return null;
+    
+    switch (iconName) {
+      case 'film':
+        return <Film className="w-6 h-6" />;
+      case 'music':
+        return <Music className="w-6 h-6" />;
+      case 'palette':
+        return <Palette className="w-6 h-6" />;
+      case 'gamepad-2':
+        return <Gamepad2 className="w-6 h-6" />;
+      case 'dumbbell':
+        return <Dumbbell className="w-6 h-6" />;
+      case 'flask-conical':
+        return <FlaskConical className="w-6 h-6" />;
+      case 'landmark':
+        return <Landmark className="w-6 h-6" />;
+      default:
+        return <Layers className="w-6 h-6" />;
+    }
+  };
 
   // Helper functions were refactored directly into the component rendering
 
   return (
     <div className="space-y-12">
-      {/* Hero Section with theme aware styling */}
-      <section className="max-w-content mx-auto">
-        {/* Hero banner with theme-aware styling */}
-        <div className="relative w-full bg-card rounded-lg mb-8 border">
-          <div className="flex flex-col md:flex-row items-center overflow-hidden">
-            {/* Left side content */}
-            <div className="w-full md:w-1/2 p-8 md:p-10 flex flex-col justify-center z-10">
-              <div className="inline-block mb-4">
-                <Badge className="bg-primary text-primary-foreground py-1 px-4 text-sm font-bold">
-                  ✨ Pixel Hunt
-                </Badge>
-              </div>
-              
-              <h1 className="text-card-foreground text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-4">
-                Görsellerinizi <span className="text-primary font-extrabold">Tahmin Etmeye</span> Hazır Mısınız?
-              </h1>
-              
-              <p className="text-muted-foreground max-w-xl mb-8">
-                Farklı kategorilerde testler oluşturun, paylaşın ve arkadaşlarınızla birlikte eğlenin!
-              </p>
-              
-              <div className="flex flex-wrap gap-4">
-                <Button 
-                  onClick={() => navigate("/create-test")}
-                  size="lg"
-                >
-                  <Plus className="mr-2 h-5 w-5" />
-                  Test Oluştur
-                </Button>
-                
-                <Button 
-                  variant="outline"
-                  onClick={() => setActiveTab("popular")}
-                  size="lg"
-                >
-                  <Trophy className="mr-2 h-5 w-5" />
-                  Popüler Testler
-                </Button>
-              </div>
-            </div>
+      {/* Yeni Nintendo Switch Style Hero Section */}
+      <section className="max-w-content mx-auto mb-6">
+        <div className="bg-card rounded-xl overflow-hidden shadow-lg border">
+          {/* Hero Banner - Switch Style with multiple test cards */}
+          <div className="relative w-full aspect-[21/9] md:aspect-[16/6] overflow-hidden">
+            {/* Background gradient */}
+            <div className="absolute inset-0 bg-gradient-to-b from-primary/10 to-background/5"></div>
             
-            {/* Right side illustration - Compact Yellow Pixel Design */}
-            <div className="w-full md:w-1/2 h-[180px] md:h-[220px] relative hero-card-container">
-              {/* Decorative elements */}
-              <div className="absolute top-0 right-10 w-16 h-16 bg-primary/10 rounded-full blur-xl"></div>
-              <div className="absolute bottom-10 left-0 w-16 h-16 bg-primary/10 rounded-full blur-xl"></div>
-              
-              {/* Single yellow design */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="relative w-[200px] h-[200px]">
-                  {/* Main yellow circle */}
-                  <div className="absolute inset-0 bg-primary rounded-full"></div>
-                  
-                  {/* Inner circle */}
-                  <div className="absolute inset-[30px] bg-primary-foreground rounded-full flex items-center justify-center">
-                    {/* Pixel hunt logo or text */}
-                    <div className="text-primary font-bold text-3xl">PH</div>
+            {/* Content Container */}
+            <div className="absolute inset-0 p-6 md:p-8 flex flex-col justify-center">
+              <div className="flex flex-col md:flex-row items-start max-w-4xl">
+                {/* Left side: Text Content */}
+                <div className="w-full md:w-1/2 md:pr-8 z-10 mb-6 md:mb-0">
+                  <div className="inline-block mb-3">
+                    <Badge className="bg-primary text-primary-foreground py-1 px-3 text-xs font-bold">
+                      ✨ Görsel Tahmin Oyunu
+                    </Badge>
                   </div>
                   
-                  {/* Decorative elements */}
-                  <div className="absolute top-[15px] right-[15px] w-[20px] h-[20px] bg-primary-foreground rounded-full"></div>
-                  <div className="absolute bottom-[30px] left-[20px] w-[15px] h-[15px] bg-primary-foreground rounded-full"></div>
-                  <div className="absolute top-[75px] left-[10px] w-[10px] h-[10px] bg-primary-foreground rounded-full"></div>
+                  <h1 className="text-card-foreground text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight mb-3">
+                    Hemen <span className="text-primary font-extrabold">Test Çözmeye</span> Başlayın!
+                  </h1>
                   
-                  {/* Rays or pixel elements */}
-                  <div className="absolute top-[-20px] left-[90px] w-[30px] h-[80px] bg-primary-foreground/20 rotate-45 rounded-lg"></div>
-                  <div className="absolute bottom-[-20px] right-[90px] w-[30px] h-[80px] bg-primary-foreground/20 rotate-45 rounded-lg"></div>
-                  <div className="absolute left-[-20px] top-[90px] w-[80px] h-[30px] bg-primary-foreground/20 rotate-45 rounded-lg"></div>
-                  <div className="absolute right-[-20px] bottom-[90px] w-[80px] h-[30px] bg-primary-foreground/20 rotate-45 rounded-lg"></div>
+                  <p className="text-muted-foreground text-sm max-w-xl mb-4">
+                    Görsel algınızı test edin, farklı kategorilerde testler çözün ve kendi testlerinizi oluşturarak arkadaşlarınızla paylaşın.
+                  </p>
+                  
+                  <div className="flex flex-wrap gap-3">
+                    <Button 
+                      onClick={() => {
+                        const el = document.getElementById('featured-tests');
+                        el?.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      className="text-sm h-9 bg-primary hover:bg-primary/90"
+                    >
+                      <BookOpen className="mr-2 h-4 w-4" />
+                      Popüler Testleri Keşfet
+                    </Button>
+                    
+                    <Button 
+                      variant="outline"
+                      onClick={() => navigate("/create-test")}
+                      className="text-sm h-9"
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Test Oluştur
+                    </Button>
+                  </div>
+                </div>
+                
+                {/* Right side: Featured Test Cards Carousel */}
+                <div className="w-full md:w-1/2 relative">
+                  <div className="grid grid-cols-2 gap-3">
+                    {featuredTests && featuredTests.slice(0, 2).map((test, idx) => (
+                      <div 
+                        key={`featured-card-${idx}`}
+                        className="bg-card shadow-md border rounded-lg overflow-hidden cursor-pointer transform hover:-translate-y-1 transition duration-300"
+                        onClick={() => navigate(`/tests/${test.uuid}`)}
+                      >
+                        <div className="aspect-[4/3] relative">
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                          <img 
+                            src={test.imageUrl || `/attached_assets/Desktop - 3.png`} 
+                            alt={test.title}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute bottom-0 left-0 p-3">
+                            <h3 className="text-sm font-medium text-white truncate">{test.title}</h3>
+                            <div className="flex items-center mt-1">
+                              <Badge variant="outline" className="text-xs bg-primary/10 text-primary-foreground border-primary/20 mr-1">
+                                {test.categoryId ? `Kategori ${test.categoryId}` : 'Genel'}
+                              </Badge>
+                              <span className="text-xs flex items-center text-white/70">
+                                <Trophy className="h-3 w-3 mr-1" /> {test.playCount || 0}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {/* If not enough tests, show a 'view all' card */}
+                    {(!featuredTests || featuredTests.length < 2) && (
+                      <div 
+                        className="bg-primary/10 border border-primary/20 rounded-lg overflow-hidden cursor-pointer flex items-center justify-center p-4"
+                        onClick={() => setActiveTab('featured')}
+                      >
+                        <div className="text-center">
+                          <Sparkles className="h-8 w-8 text-primary mx-auto mb-2" />
+                          <p className="text-sm font-medium text-primary">Tüm Testleri Keşfet</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -320,18 +369,20 @@ export default function Home() {
             <Card 
               key={category.id || index}
               className="group cursor-pointer hover:border-primary/50 transition-all duration-300 overflow-hidden"
-              onClick={() => navigate(`/category/${category.id || index + 1}`)}
+              onClick={() => navigate(`/categories/${category.id || index + 1}`)}
             >
               <CardContent className="p-3 flex flex-col items-center text-center">
-                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-xl mb-2 ${
-                  index % 6 === 0 ? "bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400" : 
-                  index % 6 === 1 ? "bg-sky-100 text-sky-600 dark:bg-sky-950 dark:text-sky-400" : 
-                  index % 6 === 2 ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400" : 
-                  index % 6 === 3 ? "bg-violet-100 text-violet-600 dark:bg-violet-950 dark:text-violet-400" : 
-                  index % 6 === 4 ? "bg-yellow-100 text-yellow-600 dark:bg-yellow-950 dark:text-yellow-400" : 
-                  "bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-400"
-                }`}>
-                  {getCategoryEmoji(category.name || "", index)}
+                <div 
+                  className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center mb-2 ${
+                    index % 6 === 0 ? "bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400" : 
+                    index % 6 === 1 ? "bg-sky-100 text-sky-600 dark:bg-sky-950 dark:text-sky-400" : 
+                    index % 6 === 2 ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400" : 
+                    index % 6 === 3 ? "bg-violet-100 text-violet-600 dark:bg-violet-950 dark:text-violet-400" : 
+                    index % 6 === 4 ? "bg-yellow-100 text-yellow-600 dark:bg-yellow-950 dark:text-yellow-400" : 
+                    "bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-400"
+                  }`}
+                >
+                  {category.iconname ? getCategoryIcon(category.iconname) : getCategoryEmoji(category.name || "", index)}
                 </div>
                 <h3 className="text-card-foreground font-medium text-xs sm:text-sm">{category.name}</h3>
               </CardContent>
@@ -375,7 +426,7 @@ export default function Home() {
                       playCount={test.playCount}
                       likeCount={test.likeCount}
                       duration={`${test.questions && Array.isArray(test.questions) ? test.questions.length : 0} ${t('question')}`}
-                      onClick={() => handleTestClick(test.id)}
+                      onClick={() => handleTestClick(test.uuid)}
                     />
                   ))}
                 </div>
@@ -398,7 +449,7 @@ export default function Home() {
       )}
       
       {/* Main Content */}
-      <section className="max-w-content mx-auto">
+      <section id="featured-tests" className="max-w-content mx-auto">
         <Card className="border shadow-sm">
           <CardHeader className="pb-2">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -451,7 +502,7 @@ export default function Home() {
                         playCount={test.playCount || 0}
                         likeCount={test.likeCount || 0}
                         duration={`${test.questions && Array.isArray(test.questions) ? test.questions.length : 0} ${t('question')}`}
-                        onClick={() => handleTestClick(test.id)}
+                        onClick={() => handleTestClick(test.uuid)}
                       />
                     ))
                   )}
@@ -473,7 +524,7 @@ export default function Home() {
                         playCount={test.playCount || 0}
                         likeCount={test.likeCount || 0}
                         duration={`${test.questions && Array.isArray(test.questions) ? test.questions.length : 0} ${t('question')}`}
-                        onClick={() => handleTestClick(test.id)}
+                        onClick={() => handleTestClick(test.uuid)}
                       />
                     ))
                   )}
@@ -495,7 +546,7 @@ export default function Home() {
                         playCount={test.playCount || 0}
                         likeCount={test.likeCount || 0}
                         duration={`${test.questions && Array.isArray(test.questions) ? test.questions.length : 0} ${t('question')}`}
-                        onClick={() => handleTestClick(test.id)}
+                        onClick={() => handleTestClick(test.uuid)}
                       />
                     ))
                   )}
@@ -543,7 +594,7 @@ export default function Home() {
               {/* Category cards - Featured categories */}
               <Card
                 className="hover:border-primary/50 transition-colors p-4 text-center cursor-pointer border shadow-sm"
-                onClick={() => navigate("/categories")}
+                onClick={() => navigate("/categories/1")}
               >
                 <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
                   <BookOpen className="w-6 h-6 text-white" />
@@ -554,7 +605,7 @@ export default function Home() {
               
               <Card
                 className="hover:border-primary/50 transition-colors p-4 text-center cursor-pointer border shadow-sm"
-                onClick={() => navigate("/categories")}
+                onClick={() => navigate("/categories/2")}
               >
                 <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
                   <span className="text-xl text-white">🌎</span>
@@ -565,7 +616,7 @@ export default function Home() {
               
               <Card
                 className="hover:border-primary/50 transition-colors p-4 text-center cursor-pointer border shadow-sm"
-                onClick={() => navigate("/categories")}
+                onClick={() => navigate("/categories/3")}
               >
                 <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
                   <span className="text-xl text-white">🎬</span>
@@ -576,7 +627,7 @@ export default function Home() {
               
               <Card
                 className="hover:border-primary/50 transition-colors p-4 text-center cursor-pointer border shadow-sm"
-                onClick={() => navigate("/categories")}
+                onClick={() => navigate("/categories/4")}
               >
                 <div className="w-12 h-12 bg-yellow-600 rounded-full flex items-center justify-center mx-auto mb-3">
                   <span className="text-xl text-white">🎨</span>
@@ -587,7 +638,7 @@ export default function Home() {
               
               <Card
                 className="hover:border-primary/50 transition-colors p-4 text-center cursor-pointer border shadow-sm"
-                onClick={() => navigate("/categories")}
+                onClick={() => navigate("/categories/5")}
               >
                 <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-3">
                   <span className="text-xl text-white">🎮</span>
