@@ -414,15 +414,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("Görsel formatı dönüştürüldü:", questions);
       }
       
+      // Görsel ID'lerini oluştur
+      const imageIds = questions.map((q: any, index: number) => index + 1);
+      
       const transformedData = {
         title: req.body.title,
         description: req.body.description || "",
         category_id: req.body.categoryId || req.body.category_id,
         creator_id: typeof req.body.creator_id === 'string' ? 1 : (req.body.creator_id || req.body.creatorId || 1), // Ensure creator_id is not a string/UUID
-        difficulty: req.body.difficulty || 3, // Default to medium difficulty
+        // difficulty field has been removed from schema
         duration: req.body.duration || null,
         image_url: req.body.thumbnail || req.body.image_url || null,
         questions: questions,
+        image_ids: imageIds, // Görsel ID'lerini ekle
+        imageIds: imageIds, // İsim uyumluluğu için alternatif sürüm
         approved: true, // Auto-approve for now
         is_public: req.body.isPublic !== undefined ? req.body.isPublic : (req.body.is_public !== undefined ? req.body.is_public : true),
         featured: false,

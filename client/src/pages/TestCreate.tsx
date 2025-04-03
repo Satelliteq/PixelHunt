@@ -223,7 +223,8 @@ export default function TestCreate() {
         is_public: isPublic,
         is_anonymous: isAnonymous,
         questions: processedImages,
-        image_url: thumbnail
+        thumbnail: thumbnail, // image_url olarak değil thumbnail olarak gönderiyoruz
+        imageUrl: thumbnail // imageUrl alanını da ekleyelim
       };
       
       console.log("Manuel olarak hazırlanan form verileri:", formData);
@@ -394,7 +395,8 @@ export default function TestCreate() {
         creator_id: 1, // Sabit bir değer kullanıyoruz, çünkü UUID değil sayısal bir değer bekleniyor
         is_public: values.isPublic,
         is_anonymous: values.isAnonymous,
-        image_url: finalThumbnail,
+        thumbnail: finalThumbnail, // image_url yerine thumbnail kullanıyoruz
+        imageUrl: finalThumbnail, // Aynı zamanda imageUrl olarak da ekliyoruz
         questions: processedImages,
       };
       
