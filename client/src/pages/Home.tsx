@@ -272,10 +272,10 @@ export default function Home() {
             <div className="absolute inset-0 bg-gradient-to-b from-primary/10 to-background/5"></div>
             
             {/* Content Container */}
-            <div className="absolute inset-0 p-6 md:p-8 flex flex-col justify-center">
-              <div className="flex flex-col md:flex-row items-start max-w-4xl">
+            <div className="absolute inset-0 p-4 sm:p-6 lg:p-8 flex flex-col justify-center">
+              <div className="flex flex-col lg:flex-row items-start max-w-5xl mx-auto">
                 {/* Left side: Text Content */}
-                <div className="w-full md:w-1/2 md:pr-8 z-10 mb-6 md:mb-0">
+                <div className="w-full lg:w-1/2 lg:pr-8 z-10 mb-6 lg:mb-0 space-y-4">
                   <div className="inline-block mb-3">
                     <Badge className="bg-primary text-primary-foreground py-1 px-3 text-xs font-bold">
                       ✨ Görsel Tahmin Oyunu
@@ -314,8 +314,8 @@ export default function Home() {
                 </div>
                 
                 {/* Right side: Featured Test Cards Carousel */}
-                <div className="w-full md:w-1/2 relative">
-                  <div className="grid grid-cols-2 gap-3">
+                <div className="w-full lg:w-1/2 relative">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     {featuredTests && featuredTests.slice(0, 2).map((test, idx) => (
                       <div 
                         key={`featured-card-${idx}`}
