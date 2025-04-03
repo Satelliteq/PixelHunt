@@ -533,9 +533,10 @@ export class SupabaseStorage implements IStorage {
     console.log('Fetching all tests');
     
     try {
+      // İlişki adını belirtiyoruz burada
       const { data, error } = await supabase
         .from('tests')
-        .select('*, category:categories(*)')
+        .select('*, category:categories!tests_category_id_fkey(*)')
         .eq('is_public', true)
         .order('created_at', { ascending: false });
         
@@ -558,7 +559,7 @@ export class SupabaseStorage implements IStorage {
     try {
       const { data, error } = await supabase
         .from('tests')
-        .select('*, category:categories(*)')
+        .select('*, category:categories!tests_category_id_fkey(*)')
         .order('created_at', { ascending: false });
         
       if (error) {
@@ -580,7 +581,7 @@ export class SupabaseStorage implements IStorage {
     try {
       const { data, error } = await supabase
         .from('tests')
-        .select('*, category:categories(*)')
+        .select('*, category:categories!tests_category_id_fkey(*)')
         .eq('id', id)
         .limit(1)
         .single();
@@ -604,7 +605,7 @@ export class SupabaseStorage implements IStorage {
     try {
       const { data, error } = await supabase
         .from('tests')
-        .select('*, category:categories(*)')
+        .select('*, category:categories!tests_category_id_fkey(*)')
         .eq('uuid', uuid)
         .limit(1)
         .single();
@@ -628,7 +629,7 @@ export class SupabaseStorage implements IStorage {
     try {
       const { data, error } = await supabase
         .from('tests')
-        .select('*, category:categories(*)')
+        .select('*, category:categories!tests_category_id_fkey(*)')
         .eq('category_id', categoryId)
         .eq('is_public', true)
         .order('created_at', { ascending: false });
@@ -802,7 +803,7 @@ export class SupabaseStorage implements IStorage {
   async getPopularTests(limit: number): Promise<Test[]> {
     const { data, error } = await supabase
       .from('tests')
-      .select('*, category:categories(*)')
+      .select('*, category:categories!tests_category_id_fkey(*)')
       .eq('is_public', true)
       .eq('approved', true)
       .order('play_count', { ascending: false })
@@ -819,7 +820,7 @@ export class SupabaseStorage implements IStorage {
   async getNewestTests(limit: number): Promise<Test[]> {
     const { data, error } = await supabase
       .from('tests')
-      .select('*, category:categories(*)')
+      .select('*, category:categories!tests_category_id_fkey(*)')
       .eq('is_public', true)
       .eq('approved', true)
       .order('created_at', { ascending: false })
@@ -836,7 +837,7 @@ export class SupabaseStorage implements IStorage {
   async getFeaturedTests(limit: number): Promise<Test[]> {
     const { data, error } = await supabase
       .from('tests')
-      .select('*, category:categories(*)')
+      .select('*, category:categories!tests_category_id_fkey(*)')
       .eq('is_public', true)
       .eq('approved', true)
       .eq('featured', true)
@@ -1000,7 +1001,7 @@ export class SupabaseStorage implements IStorage {
     
     let supabaseQuery = supabase
       .from('tests')
-      .select('*, category:categories(*), createdBy:users(id, username)')
+      .select('*, category:categories!tests_category_id_fkey(*), createdBy:users(id, username)')
       .filter('is_public', 'eq', true);
       
     // Eğer kategori ID belirtilmişse, filtreleme yap
