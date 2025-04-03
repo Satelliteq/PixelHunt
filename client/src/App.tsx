@@ -44,6 +44,7 @@ function Router() {
       <Route path="/categories" component={Categories} />
       <Route path="/tests" component={Tests} />
       <Route path="/create" component={TestCreate} />
+      <Route path="/create-test" component={TestCreate} />
       <Route path="/support" component={() => 
         <div className="text-center p-10">
           <h1 className="text-2xl font-bold mb-4">Destek</h1>
