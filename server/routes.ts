@@ -689,23 +689,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Log request data for debugging
       console.log("Request body for category:", req.body);
       
-      // Try to parse with Zod schema
-      let categoryInput;
-      try {
-        categoryInput = insertCategorySchema.parse(req.body);
-        console.log("Validated category input:", categoryInput);
-      } catch (zodError) {
-        console.log("Zod validation failed, using fallback approach");
-        // Fallback - manually extract fields
-        categoryInput = {
-          name: req.body.name,
-          description: req.body.description || "",
-          icon_name: req.body.iconName === "none" ? null : (req.body.icon_name || req.body.iconName),
-          color: req.body.color,
-          background_color: req.body.background_color || req.body.backgroundColor,
-          active: req.body.active !== false // Default to true if not provided
-        };
-      }
+      // Doğrudan req.body'den ihtiyacımız olan alanları alıyoruz
+      const categoryInput = {
+        name: req.body.name,
+        description: req.body.description || "",
+        iconname: req.body.iconName || null,
+        color: req.body.color || null,
+        backgroundcolor: req.body.backgroundColor || null,
+        imageurl: req.body.imageUrl || null,
+        active: req.body.active !== false // Default to true if not provided
+      };
       
       // Try different storage methods until one works
       let newCategory;
@@ -748,27 +741,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid category ID" });
       }
       
-      let categoryInput: any;
-      try {
-        // Try to parse with Zod schema
-        const parsedData = insertCategorySchema.parse(req.body);
-        categoryInput = {
-          ...parsedData,
-          // Handle iconName conversion to icon_name
-          icon_name: req.body.iconName === "none" ? null : req.body.iconName
-        };
-      } catch (zodError) {
-        console.log("Zod validation failed, using manual field extraction:", zodError);
-        // Fallback - manually extract fields
-        categoryInput = {
-          name: req.body.name,
-          description: req.body.description || "",
-          icon_name: req.body.iconName === "none" ? null : (req.body.icon_name || req.body.iconName),
-          color: req.body.color,
-          background_color: req.body.background_color || req.body.backgroundColor,
-          active: req.body.active !== false // Default to true if not provided
-        };
-      }
+      // Doğrudan req.body'den ihtiyacımız olan alanları alıyoruz - update işlemi için
+      const categoryInput = {
+        name: req.body.name,
+        description: req.body.description || "",
+        iconname: req.body.iconName || null,
+        color: req.body.color || null,
+        backgroundcolor: req.body.backgroundColor || null,
+        imageurl: req.body.imageUrl || null,
+        active: req.body.active !== false // Default to true if not provided
+      };
       
       console.log("Updating category with data:", categoryInput);
       

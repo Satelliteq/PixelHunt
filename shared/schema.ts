@@ -32,10 +32,10 @@ export const categories = pgTable("categories", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
-  iconName: text("icon_name"), // Lucide ikon adı
+  iconName: text("iconname"), // Lucide ikon adı (düzeltildi - veritabanına uygun hale getirildi)
   color: text("color"), // Kategori rengi
-  backgroundColor: text("background_color"), // Kategori arka plan rengi
-  imageUrl: text("image_url"), // Kategori resmi
+  backgroundColor: text("backgroundcolor"), // Arka plan rengi
+  imageUrl: text("imageurl"), // Resim URL'si
   active: boolean("active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at"),

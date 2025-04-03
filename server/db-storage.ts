@@ -175,16 +175,16 @@ export class PostgresStorage implements IStorage {
     try {
       const result = await pool.query(
         `INSERT INTO categories (
-          name, description, icon_name, color, background_color, image_url, active
+          name, description, iconname, color, backgroundcolor, imageurl, active
         ) VALUES ($1, $2, $3, $4, $5, $6, $7) 
         RETURNING *`,
         [
           category.name,
           category.description,
-          category.icon_name,
+          category.iconName,
           category.color,
-          category.background_color,
-          category.image_url,
+          category.backgroundColor,
+          category.imageUrl,
           category.active !== undefined ? category.active : true
         ]
       );
@@ -209,21 +209,21 @@ export class PostgresStorage implements IStorage {
         updates.push(`description = $${counter++}`);
         values.push(category.description);
       }
-      if (category.icon_name !== undefined) {
-        updates.push(`icon_name = $${counter++}`);
-        values.push(category.icon_name);
+      if (category.iconName !== undefined) {
+        updates.push(`iconname = $${counter++}`);
+        values.push(category.iconName);
       }
       if (category.color !== undefined) {
         updates.push(`color = $${counter++}`);
         values.push(category.color);
       }
-      if (category.background_color !== undefined) {
-        updates.push(`background_color = $${counter++}`);
-        values.push(category.background_color);
+      if (category.backgroundColor !== undefined) {
+        updates.push(`backgroundcolor = $${counter++}`);
+        values.push(category.backgroundColor);
       }
-      if (category.image_url !== undefined) {
-        updates.push(`image_url = $${counter++}`);
-        values.push(category.image_url);
+      if (category.imageUrl !== undefined) {
+        updates.push(`imageurl = $${counter++}`);
+        values.push(category.imageUrl);
       }
       if (category.active !== undefined) {
         updates.push(`active = $${counter++}`);
