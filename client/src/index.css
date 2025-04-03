@@ -113,28 +113,10 @@
 
   .hero-description {
     max-width: 36rem;
-    font-size: 1rem;
+    font-size: 1.125rem;
     line-height: 1.6;
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
     opacity: 0.85;
-  }
-
-  @media (min-width: 640px) {
-    .hero-description {
-      font-size: 1.125rem;
-      margin-bottom: 2rem;
-    }
-  }
-
-  @media (max-width: 639px) {
-    .hero-banner {
-      min-height: 300px;
-    }
-    
-    .hero-title {
-      font-size: 1.75rem;
-      margin-bottom: 1rem;
-    }
   }
 
   .hero-action-button {

@@ -1,32 +1,36 @@
-import { execSync } from 'child_process';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
 
 /**
  * Bu betik, tüm örnek verileri eklemek için diğer betikleri sırayla çalıştırır
  */
 async function setupAllExamples() {
   try {
-    console.log('Örnek verileri yükleme işlemi başlatılıyor...');
+    console.log("🚀 Tüm örnek veriler yükleniyor...");
     
-    // 1. Önce kullanıcıları yükle
-    console.log('\n1. Örnek kullanıcılar yükleniyor...');
-    execSync('npx tsx insert-example-users.ts', { stdio: 'inherit' });
+    // 1. Önce kategorileri oluştur
+    console.log("\n📁 Örnek kategoriler ekleniyor...");
+    await execAsync('npx tsx insert-example-categories.ts');
     
-    // 2. Kategorileri yükle
-    console.log('\n2. Örnek kategoriler yükleniyor...');
-    execSync('npx tsx insert-example-categories.ts', { stdio: 'inherit' });
+    // 2. Kullanıcıları ekle
+    console.log("\n👤 Örnek kullanıcılar ekleniyor...");
+    await execAsync('npx tsx insert-example-users.ts');
     
-    // 3. Görselleri yükle
-    console.log('\n3. Örnek görseller yükleniyor...');
-    execSync('npx tsx insert-example-images.ts', { stdio: 'inherit' });
+    // 3. Resimleri ekle
+    console.log("\n🖼️ Örnek resimler ekleniyor...");
+    await execAsync('npx tsx insert-example-images.ts');
     
-    // 4. Testleri yükle
-    console.log('\n4. Örnek testler yükleniyor...');
-    execSync('npx tsx insert-example-tests.ts', { stdio: 'inherit' });
+    // 4. Testleri ekle
+    console.log("\n🧪 Örnek testler ekleniyor...");
+    await execAsync('npx tsx insert-example-tests.ts');
     
-    console.log('\nTüm örnek veriler başarıyla yüklendi!');
+    console.log("\n✅ Tüm örnek veriler başarıyla yüklendi!");
   } catch (error) {
-    console.error('Örnek veriler yüklenirken hata oluştu:', error);
+    console.error("❌ Örnek veriler yüklenirken hata oluştu:", error);
   }
 }
 
+// Çalıştır
 setupAllExamples();

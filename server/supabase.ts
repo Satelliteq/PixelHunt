@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
+// Supabase Bağlantısı
 export const supabase = createClient(
   process.env.SUPABASE_URL || '',
   process.env.SUPABASE_SERVICE_ROLE_KEY || '',
@@ -14,31 +15,28 @@ export const supabase = createClient(
   }
 );
 
-// SQL hata yakalama için wrapper fonksiyon
-export const executeSql = async (query: string, values?: any[]) => {
-  try {
-    const { data, error } = await supabase.from('rpc').select().rpc('exec_sql', { query, values });
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    console.error('SQL execution error:', error);
-    throw error;
-  }
-};
+// Hata yakalama için ayrı bir hata işleme mekanizması kullanın
+// Supabase istemcisi bir event emitter değil, bu nedenle .on() kullanılamaz
 
+// Drizzle ORM'den kalan db nesnesini kaldırıyoruz, 
+// artık bunu kullanmak yerine doğrudan supabase nesnesini kullanıyoruz
+export const db = supabase;
 
+// Supabase Storage
 export const storage = {
+  // Resim yükleme
   uploadImage: async (
     file: File | Blob,
     bucketName: string = 'images',
     folderPath: string = ''
   ): Promise<{ url: string; key: string } | null> => {
     if (!file) return null;
-
+    
+    // File name oluştur (rastgele)
     const fileExt = file.type.split('/')[1];
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
     const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
-
+    
     const { data, error } = await supabase
       .storage
       .from(bucketName)
@@ -46,34 +44,35 @@ export const storage = {
         cacheControl: '3600',
         upsert: true
       });
-
+      
     if (error) {
       console.error('Error uploading file:', error);
       return null;
     }
-
+    
     const { data: urlData } = supabase
       .storage
       .from(bucketName)
       .getPublicUrl(data.path);
-
+    
     return {
       url: urlData.publicUrl,
       key: data.path
     };
   },
-
+  
+  // Resim silme
   deleteImage: async (filePath: string, bucketName: string = 'images'): Promise<boolean> => {
     const { error } = await supabase
       .storage
       .from(bucketName)
       .remove([filePath]);
-
+    
     if (error) {
       console.error('Error deleting file:', error);
       return false;
     }
-
+    
     return true;
   }
 };
@@ -98,12 +97,12 @@ export const recordUserActivity = async (
         .eq('id', userId)
         .limit(1)
         .single();
-
+      
       if (!error && userData) {
         resolvedUserName = userData.username;
       }
     }
-
+    
     const { error } = await supabase
       .from('user_activities')
       .insert({
@@ -115,7 +114,7 @@ export const recordUserActivity = async (
         entity_type: entityType || null,
         metadata: metadata ? JSON.stringify(metadata) : null
       });
-
+      
     if (error) {
       console.error('Error inserting user activity:', error);
     }

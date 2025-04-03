@@ -267,26 +267,26 @@ export default function Home() {
       <section className="max-w-content mx-auto mb-6">
         <div className="bg-card rounded-xl overflow-hidden shadow-lg border">
           {/* Hero Banner - Switch Style with multiple test cards */}
-          <div className="relative w-full aspect-[21/9] md:aspect-[16/6] overflow-hidden">
+          <div className="relative w-full aspect-[21/9] md:aspect-[21/8] lg:aspect-[21/7] overflow-hidden">
             {/* Background gradient */}
             <div className="absolute inset-0 bg-gradient-to-b from-primary/10 to-background/5"></div>
             
             {/* Content Container */}
-            <div className="absolute inset-0 p-4 sm:p-6 lg:p-8 flex flex-col justify-center">
-              <div className="flex flex-col lg:flex-row items-start max-w-5xl mx-auto">
+            <div className="absolute inset-0 p-4 md:p-6 flex flex-col justify-center">
+              <div className="flex flex-col md:flex-row items-start max-w-4xl">
                 {/* Left side: Text Content */}
-                <div className="w-full lg:w-1/2 lg:pr-8 z-10 mb-6 lg:mb-0 space-y-4">
-                  <div className="inline-block mb-3">
+                <div className="w-full md:w-1/2 md:pr-8 z-10 mb-6 md:mb-0">
+                  <div className="inline-block mb-2">
                     <Badge className="bg-primary text-primary-foreground py-1 px-3 text-xs font-bold">
                       ✨ Görsel Tahmin Oyunu
                     </Badge>
                   </div>
                   
-                  <h1 className="text-card-foreground text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight mb-3">
+                  <h1 className="text-card-foreground text-xl sm:text-2xl lg:text-3xl font-bold leading-tight mb-2">
                     Hemen <span className="text-primary font-extrabold">Test Çözmeye</span> Başlayın!
                   </h1>
                   
-                  <p className="text-muted-foreground text-sm max-w-xl mb-4">
+                  <p className="text-muted-foreground text-xs sm:text-sm max-w-xl mb-3">
                     Görsel algınızı test edin, farklı kategorilerde testler çözün ve kendi testlerinizi oluşturarak arkadaşlarınızla paylaşın.
                   </p>
                   
@@ -314,8 +314,8 @@ export default function Home() {
                 </div>
                 
                 {/* Right side: Featured Test Cards Carousel */}
-                <div className="w-full lg:w-1/2 relative">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div className="w-full md:w-1/2 relative">
+                  <div className="grid grid-cols-2 gap-3">
                     {featuredTests && featuredTests.slice(0, 2).map((test, idx) => (
                       <div 
                         key={`featured-card-${idx}`}
