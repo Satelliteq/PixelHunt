@@ -60,21 +60,24 @@ export const images = pgTable("images", {
 
 export const tests = pgTable("tests", {
   id: serial("id").primaryKey(),
-  uuid: text("uuid").notNull().unique(), // For public sharing
+  uuid: text("uuid").notNull().unique(),
   title: text("title").notNull(),
   description: text("description"),
-  creatorId: integer("creator_id").references(() => users.id), // null if created by system (anonymous)
-  categoryId: integer("category_id").references(() => categories.id),
-  imageUrl: text("image_url"), // Test kapak resmi
-  questions: jsonb("questions").notNull(), // Soru dizisi
-  playCount: integer("play_count").default(0),
-  likeCount: integer("like_count").default(0),
-  isPublic: boolean("is_public").default(true),
-  isAnonymous: boolean("is_anonymous").default(false), // İsimsiz paylaşım (kullanıcı bilgileri gösterilmez)
-  approved: boolean("approved").default(true), // Admin onaylı mı? (default: true)
-  featured: boolean("featured").default(false), // Öne çıkarıldı mı?
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at"),
+  creator_id: integer("creator_id").references(() => users.id),
+  category_id: integer("category_id").references(() => categories.id),
+  image_ids: jsonb("image_ids").notNull(),
+  questions: jsonb("questions").notNull(),
+  difficulty: integer("difficulty").default(2),
+  play_count: integer("play_count").default(0),
+  like_count: integer("like_count").default(0),
+  is_public: boolean("is_public").default(true),
+  is_anonymous: boolean("is_anonymous").default(false),
+  approved: boolean("approved").default(true),
+  featured: boolean("featured").default(false),
+  thumbnail: text("thumbnail"),
+  settings: jsonb("settings"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at")
 });
 
 export const testComments = pgTable("test_comments", {

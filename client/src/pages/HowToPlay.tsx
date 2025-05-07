@@ -15,20 +15,6 @@ export default function HowToPlay() {
       </div>
       
       <div className="bg-card border rounded-xl overflow-hidden shadow-lg mb-12">
-        <div className="aspect-[21/9] relative overflow-hidden">
-          <img 
-            src="/attached_assets/ba1f50f644077acc8bedb8b0634c1af8.jpg" 
-            alt="Nintendo Switch Style Card Game" 
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/70 flex items-end p-6">
-            <div className="text-white">
-              <h2 className="text-2xl font-bold">Test Oyun Sistemi</h2>
-              <p className="opacity-80">Tahmin yeteneğinizi geliştirin, puan kazanın!</p>
-            </div>
-          </div>
-        </div>
-        
         <div className="p-6 space-y-6">
           <div className="space-y-4">
             <p className="text-lg">Pixelhunt'ta testler aracılığıyla görsellerinizi tanıma yeteneklerinizi geliştirirsiniz:</p>
@@ -110,19 +96,6 @@ export default function HowToPlay() {
         <TabsContent value="browse">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-card border rounded-lg overflow-hidden shadow-md">
-              <div className="aspect-[16/9] relative overflow-hidden">
-                <img 
-                  src="/attached_assets/86b4065a7c34a1c78de57b71078b4f5b.jpg" 
-                  alt="Game selection interface" 
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-4">
-                  <div className="text-white">
-                    <h3 className="text-lg font-bold">Keşfet ve Seç</h3>
-                    <p className="text-xs opacity-80">İlgi alanınıza göre testler bulun</p>
-                  </div>
-                </div>
-              </div>
               <div className="p-4">
                 <h3 className="font-bold text-lg flex items-center mb-2">
                   <BookText className="mr-2 h-5 w-5 text-primary" /> Test Bulma ve Keşfetme

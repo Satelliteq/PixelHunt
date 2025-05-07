@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Sun, Moon } from "lucide-react";
-import { IconButton } from "@/components/ui/icon-button";
+import { Toggle } from "@/components/ui/toggle";
 
 export default function ThemeToggle() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
@@ -21,12 +21,13 @@ export default function ThemeToggle() {
   };
 
   return (
-    <IconButton
-      variant="ghost"
-      icon={theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-      className="text-zinc-300 hover:text-white"
+    <Toggle
+      pressed={theme === "dark"}
+      onPressedChange={toggleTheme}
+      className="h-8 w-8 p-0"
       aria-label="Tema Değiştir"
-      onClick={toggleTheme}
-    />
+    >
+      {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+    </Toggle>
   );
 }

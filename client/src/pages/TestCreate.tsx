@@ -206,36 +206,139 @@ export default function TestCreate() {
     try {
       setUploading(true);
       
+      // Kapak fotoğrafı işleme
+      let finalThumbnail = thumbnail;
+      if (thumbnail && thumbnail.startsWith('data:image/')) {
+        try {
+          // Base64'ü blob'a çevir
+          const res = await fetch(thumbnail);
+          const blob = await res.blob();
+          
+          // Dosya adı oluştur
+          const fileExt = thumbnail.split(';')[0].split('/')[1];
+          const fileName = `thumbnail-${Date.now()}.${fileExt}`;
+          const filePath = `test-thumbnails/${fileName}`;
+          
+          // Supabase Storage'a yükleme
+          const { data: thumbnailData, error: thumbnailError } = await supabase.storage
+            .from('images')
+            .upload(filePath, blob, {
+              contentType: blob.type,
+              upsert: true
+            });
+          
+          if (thumbnailError) throw thumbnailError;
+          
+          // Public URL'yi al
+          const { data: { publicUrl: thumbnailUrl } } = supabase.storage
+            .from('images')
+            .getPublicUrl(filePath);
+          
+          finalThumbnail = thumbnailUrl;
+          console.log("Kapak fotoğrafı başarıyla yüklendi:", finalThumbnail);
+        } catch (error) {
+          console.error('Kapak fotoğrafı işleme hatası:', error);
+          toast({
+            title: "Hata",
+            description: "Kapak fotoğrafı yüklenirken bir hata oluştu.",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+      
       // Görselleri işle
       const processedImages = await Promise.all(
-        imageInputs.map(async (img, index) => ({
-          imageUrl: img.imageUrl,
-          answers: img.answers
+        imageInputs.map(async (img, index) => {
+          let finalImageUrl = img.imageUrl;
+          
+          // Eğer görsel Base64 formatındaysa, Supabase'e yükle
+          if (img.imageUrl.startsWith('data:image/')) {
+            try {
+              const res = await fetch(img.imageUrl);
+              const blob = await res.blob();
+              
+              const fileExt = img.imageUrl.split(';')[0].split('/')[1];
+              const fileName = `test-image-${Date.now()}-${index}.${fileExt}`;
+              const filePath = `test-images/${fileName}`;
+              
+              const { data: imageData, error: imageError } = await supabase.storage
+                .from('images')
+                .upload(filePath, blob, {
+                  contentType: blob.type,
+                  upsert: true
+                });
+              
+              if (imageError) throw imageError;
+              
+              const { data: { publicUrl: imageUrl } } = supabase.storage
+                .from('images')
+                .getPublicUrl(filePath);
+              
+              finalImageUrl = imageUrl;
+            } catch (error) {
+              console.error(`Görsel #${index + 1} yükleme hatası:`, error);
+              throw error;
+            }
+          }
+          
+          return {
+            imageUrl: finalImageUrl,
+            answers: img.answers,
+            question: img.question || "Bu görselde ne görüyorsunuz?"
+          };
+        })
+      );
+      
+      // Supabase'e test verilerini kaydet
+      const { data: testData, error: testError } = await supabase
+        .from('tests')
+        .insert({
+          title,
+          description: description || "",
+          category_id: categoryId,
+          creator_id: isAnonymous ? null : user?.id,
+          is_public: isPublic,
+          is_anonymous: isAnonymous,
+          thumbnail: finalThumbnail,
+          difficulty: 2,
+          approved: true,
+          featured: false
+        })
+        .select()
+        .single();
+      
+      if (testError) throw testError;
+      
+      // Soruları kaydet
+      const questionsToInsert = processedImages.map((img, index) => ({
+        test_id: testData.id,
+        image_url: img.imageUrl,
+        question: img.question,
+        order_index: index
+      }));
+      
+      const { error: questionsError } = await supabase
+        .from('questions')
+        .insert(questionsToInsert);
+      
+      if (questionsError) throw questionsError;
+      
+      // Cevapları kaydet
+      const answersToInsert = processedImages.flatMap((img, questionIndex) =>
+        img.answers.map(answer => ({
+          test_id: testData.id,
+          question_id: testData.id + questionIndex,
+          answer_text: answer,
+          is_correct: true
         }))
       );
       
-      // API'ye gönderilecek veri
-      const formData = {
-        title,
-        description: description || "",
-        category_id: categoryId,
-        creator_id: 1, // Sabit bir değer kullanıyoruz, çünkü UUID değil sayısal bir değer bekleniyor
-        is_public: isPublic,
-        is_anonymous: isAnonymous,
-        questions: processedImages,
-        thumbnail: thumbnail, // image_url olarak değil thumbnail olarak gönderiyoruz
-        imageUrl: thumbnail // imageUrl alanını da ekleyelim
-      };
+      const { error: answersError } = await supabase
+        .from('answers')
+        .insert(answersToInsert);
       
-      console.log("Manuel olarak hazırlanan form verileri:", formData);
-      
-      // API isteği
-      const response = await apiRequest("/api/tests", {
-        method: "POST",
-        data: formData,
-      });
-      
-      console.log("API yanıtı:", response);
+      if (answersError) throw answersError;
       
       toast({
         title: "Test başarıyla oluşturuldu",
@@ -243,12 +346,9 @@ export default function TestCreate() {
         variant: "default",
       });
       
-      // Test sayfasına UUID ile yönlendir
-      if (response.uuid) {
-        navigate(`/tests/u/${response.uuid}`);
-      } else {
-        navigate(`/tests/${response.id}`);
-      }
+      // Test sayfasına yönlendir
+      navigate(`/tests/${testData.id}`);
+      
     } catch (error) {
       console.error("Test oluşturma hatası:", error);
       toast({

@@ -264,27 +264,31 @@ export default function Home() {
   return (
     <div className="space-y-12">
       {/* Basitleştirilmiş Hero Bölümü */}
-      <section className="max-w-content mx-auto mb-6">
-        <div className="bg-card rounded-xl overflow-hidden shadow border">
+      <section className="max-w-content mx-auto mb-12 md:mb-16">
+        <div className="bg-card rounded-xl overflow-hidden shadow-lg border border-border/50">
           <div className="flex flex-col md:flex-row">
             {/* Sol taraf - İçerik */}
             <div className="p-6 md:p-8 flex flex-col justify-center w-full md:w-1/2">
-              <Badge className="bg-primary text-primary-foreground py-1 px-3 text-xs w-fit font-bold mb-4">
-                ✨ Görsel Tahmin Platformu
-              </Badge>
+              <div className="flex items-center gap-2 mb-4">
+                <Badge className="bg-primary/10 text-primary py-1 px-3 text-xs font-medium">
+                  ✨ Görsel Tahmin Platformu
+                </Badge>
+                <div className="h-4 w-px bg-border/50"></div>
+                <span className="text-xs text-muted-foreground">Yeni Testler Her Gün</span>
+              </div>
               
-              <h1 className="text-2xl md:text-3xl font-bold mb-3">
+              <h1 className="text-2xl md:text-3xl font-bold mb-3 bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
                 Bilginizi Test Edin, <span className="text-primary">Yeni Testler Keşfedin</span>
               </h1>
               
-              <p className="text-muted-foreground mb-6">
+              <p className="text-muted-foreground mb-6 leading-relaxed">
                 Farklı kategorilerdeki görsel tahmin testleriyle kendinizi sınayın ve kendi testlerinizi oluşturarak platformumuza katkıda bulunun.
               </p>
               
               <div className="flex flex-wrap gap-3">
                 <Button 
                   onClick={() => navigate("/tests")}
-                  className="bg-primary hover:bg-primary/90"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
                 >
                   <BookOpen className="mr-2 h-4 w-4" />
                   Testleri Keşfet
@@ -293,6 +297,7 @@ export default function Home() {
                 <Button 
                   variant="outline"
                   onClick={() => navigate("/create-test")}
+                  className="border-border/50 hover:bg-accent/50"
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   Test Oluştur
@@ -301,48 +306,56 @@ export default function Home() {
             </div>
             
             {/* Sağ taraf - Görsel */}
-            <div className="w-full md:w-1/2 bg-gradient-to-r from-primary/5 to-primary/10 relative md:h-auto min-h-[200px] md:min-h-0">
-              {/* Öne çıkan test kartları */}
+            <div className="w-full md:w-1/2 bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 relative md:h-auto min-h-[200px] md:min-h-0">
               <div className="absolute inset-0 flex items-center justify-center p-6">
-                <div className="grid grid-cols-2 gap-4 max-w-sm md:max-w-md relative">
-                  {/* Decorative elements */}
-                  <div className="absolute w-24 h-24 bg-primary/20 rounded-full -top-8 -left-8 blur-xl"></div>
-                  <div className="absolute w-32 h-32 bg-primary/10 rounded-full -bottom-12 -right-12 blur-xl"></div>
+                <div className="relative w-full max-w-md">
+                  {/* Ana dekoratif element */}
+                  <div className="absolute w-48 h-48 bg-primary/20 rounded-full -top-12 -left-12 blur-2xl"></div>
+                  <div className="absolute w-48 h-48 bg-primary/10 rounded-full -bottom-12 -right-12 blur-2xl"></div>
                   
-                  {/* Test cards */}
-                  {featuredTests && featuredTests.slice(0, 4).map((test, idx) => (
-                    <div 
-                      key={`featured-card-${idx}`}
-                      className={`bg-card shadow-md border rounded-lg overflow-hidden cursor-pointer transform hover:-translate-y-1 transition duration-300 ${idx >= 2 ? 'hidden md:block' : ''}`}
-                      onClick={() => navigate(`/tests/${test.uuid}`)}
-                      style={{transform: `rotate(${idx % 2 === 0 ? '-3deg' : '3deg'})`}}
-                    >
-                      <div className="aspect-video relative">
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                        <img 
-                          src={test.imageUrl || `/attached_assets/ba1f50f644077acc8bedb8b0634c1af8.jpg`} 
-                          alt={test.title}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute bottom-0 left-0 p-2">
-                          <h3 className="text-xs font-medium text-white truncate max-w-[95%]">{test.title}</h3>
+                  {/* Test kartları grid */}
+                  <div className="grid grid-cols-2 gap-4 relative z-10">
+                    {featuredTests && featuredTests.slice(0, 4).map((test, idx) => (
+                      <div 
+                        key={`featured-card-${idx}`}
+                        className={`bg-card/90 backdrop-blur-sm shadow-lg border border-border/50 rounded-xl overflow-hidden cursor-pointer transform hover:-translate-y-1 transition-all duration-300 ${idx >= 2 ? 'hidden md:block' : ''}`}
+                        onClick={() => navigate(`/tests/${test.uuid}`)}
+                        style={{
+                          transform: `rotate(${idx % 2 === 0 ? '-2deg' : '2deg'})`,
+                          zIndex: idx === 1 ? 2 : 1
+                        }}
+                      >
+                        <div className="aspect-video relative group">
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-80 group-hover:opacity-60 transition-opacity"></div>
+                          <img 
+                            src={test.imageUrl || `/attached_assets/ba1f50f644077acc8bedb8b0634c1af8.jpg`} 
+                            alt={test.title}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute bottom-0 left-0 right-0 p-3">
+                            <div className="flex items-center gap-2 mb-1">
+                              <div className="w-2 h-2 rounded-full bg-primary"></div>
+                              <span className="text-xs font-medium text-white/90">Öne Çıkan</span>
+                            </div>
+                            <h3 className="text-sm font-medium text-white truncate">{test.title}</h3>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                  
-                  {/* Fallback cards if not enough tests */}
-                  {(!featuredTests || featuredTests.length < 2) && (
-                    <div 
-                      className="bg-primary/10 border border-primary/20 rounded-lg overflow-hidden cursor-pointer flex items-center justify-center p-4 aspect-video"
-                      onClick={() => navigate('/tests')}
-                    >
-                      <div className="text-center">
-                        <Award className="h-8 w-8 mx-auto text-primary mb-1" />
-                        <span className="text-xs font-medium">Testleri Keşfet</span>
+                    ))}
+                    
+                    {/* Fallback cards if not enough tests */}
+                    {(!featuredTests || featuredTests.length < 2) && (
+                      <div 
+                        className="bg-primary/10 border border-primary/20 rounded-xl overflow-hidden cursor-pointer flex items-center justify-center p-4 aspect-video backdrop-blur-sm"
+                        onClick={() => navigate('/tests')}
+                      >
+                        <div className="text-center">
+                          <Award className="h-8 w-8 mx-auto text-primary mb-2" />
+                          <span className="text-sm font-medium text-primary">Testleri Keşfet</span>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -350,7 +363,7 @@ export default function Home() {
         </div>
         
         {/* Kategori kartları - daha küçük ve sade */}
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 sm:gap-3 mb-6">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 sm:gap-3 mt-8 md:mt-12">
           {categories.slice(0, 6).map((category, index) => (
             <Card 
               key={category.id || index}

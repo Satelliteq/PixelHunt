@@ -42,7 +42,9 @@ import {
   PlayCircle,
   Settings,
   Loader2,
-  Filter
+  Filter,
+  Sun,
+  LogOut
 } from "lucide-react";
 
 export default function Header() {
@@ -50,7 +52,7 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isMobile = useIsMobile();
   const { t } = useLanguage();
-  const { user, loading, initialized, signOut } = useAuth();
+  const { user, loading, signOut } = useAuth();
   const { toast } = useToast();
   
   // Arama işlemleri için state'ler
@@ -91,14 +93,19 @@ export default function Header() {
   const handleSignOut = async () => {
     try {
       await signOut();
-      navigate('/');
-      // Local storage'dan token ve user bilgilerini de temizle
-      localStorage.removeItem('supabase.auth.token');
-      localStorage.removeItem('supabase.auth.user');
-      // Sayfayı yenileme eklendi - session temizleme için
-      window.location.href = '/';
+      toast({
+        title: "Çıkış Yapıldı",
+        description: "Başarıyla çıkış yaptınız.",
+        variant: "default"
+      });
+      navigate("/");
     } catch (error) {
-      console.error('Çıkış yapılırken hata oluştu:', error);
+      console.error("Çıkış yapılırken hata oluştu:", error);
+      toast({
+        title: "Hata",
+        description: "Çıkış yapılırken bir hata oluştu. Lütfen tekrar deneyin.",
+        variant: "destructive"
+      });
     }
   };
   
@@ -149,7 +156,7 @@ export default function Header() {
             {/* Simplified Navigation */}
             <Button
               variant="ghost"
-              className="text-foreground hover:text-primary text-sm font-medium"
+              className="text-foreground hover:bg-accent text-sm font-medium"
               onClick={() => handleNavigation("/categories")}
             >
               <Grid2X2 className="w-4 h-4 mr-2" />
@@ -158,7 +165,7 @@ export default function Header() {
             
             <Button
               variant="ghost"
-              className="text-foreground hover:text-primary text-sm font-medium"
+              className="text-foreground hover:bg-accent text-sm font-medium"
               onClick={() => handleNavigation("/tests")}
             >
               <BookOpen className="w-4 h-4 mr-2" />
@@ -167,7 +174,7 @@ export default function Header() {
             
             <Button
               variant="ghost"
-              className="text-foreground hover:text-primary text-sm font-medium"
+              className="text-foreground hover:bg-accent text-sm font-medium"
               onClick={() => handleNavigation("/how-to-play")}
             >
               <PlayCircle className="w-4 h-4 mr-2" />
@@ -176,7 +183,7 @@ export default function Header() {
             
             <Button
               variant="ghost"
-              className="text-foreground hover:text-primary text-sm font-medium"
+              className="text-foreground hover:bg-accent text-sm font-medium"
               onClick={() => handleNavigation("/support")}
             >
               <HelpCircle className="w-4 h-4 mr-2" />
@@ -185,7 +192,7 @@ export default function Header() {
             
             <Button
               variant="ghost"
-              className="text-foreground hover:text-primary text-sm font-medium"
+              className="text-foreground hover:bg-accent text-sm font-medium"
               onClick={() => handleNavigation("/contact")}
             >
               <Mail className="w-4 h-4 mr-2" />
@@ -327,22 +334,41 @@ export default function Header() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => handleNavigation("/profile")}>
-                  Profilim
-                </DropdownMenuItem>
-                {user.app_metadata?.role === 'admin' || user.user_metadata?.isAdmin ? (
-                  <DropdownMenuItem onClick={() => handleNavigation("/admin")}>
-                    <Settings className="w-4 h-4 mr-2" /> Admin Paneli
+                <DropdownMenuGroup>
+                  <DropdownMenuItem onClick={() => handleNavigation("/profile")}>
+                    <User className="w-4 h-4 mr-2" />
+                    Profilim
                   </DropdownMenuItem>
-                ) : null}
-                <DropdownMenuItem onClick={handleSignOut}>
+                  {user.app_metadata?.role === 'admin' || user.user_metadata?.isAdmin ? (
+                    <DropdownMenuItem onClick={() => handleNavigation("/admin")}>
+                      <Settings className="w-4 h-4 mr-2" />
+                      Admin Paneli
+                    </DropdownMenuItem>
+                  ) : null}
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem asChild>
+                    <div className="flex items-center justify-between w-full px-2 py-1.5">
+                      <div className="flex items-center gap-2">
+                        <Sun className="w-4 h-4" />
+                        <span className="text-sm">Tema</span>
+                      </div>
+                      <ThemeToggle />
+                    </div>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  onClick={handleSignOut} 
+                  className="text-red-600 focus:text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
                   Çıkış Yap
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : null}
-          
-          <ThemeToggle />
         </div>
       </div>
       

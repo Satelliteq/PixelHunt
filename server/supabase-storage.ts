@@ -648,48 +648,53 @@ export class SupabaseStorage implements IStorage {
   }
 
   async createTest(test: InsertTest): Promise<Test> {
-    // UUID oluştur
-    console.log("Test oluşturma başlıyor:", test);
-    
-    const testUuid = createId();
-    const testWithUuid = {
-      ...test,
-      uuid: testUuid
-    };
-
-    // Schema cache sorunu nedeniyle rename ediyoruz
-    // isAnonymous -> is_anonymous dönüşümü
-    if (testWithUuid.isAnonymous !== undefined) {
-      testWithUuid.is_anonymous = testWithUuid.isAnonymous;
-      delete testWithUuid.isAnonymous;
-    }
-
-    console.log("Veritabanına kaydedilecek test verisi:", testWithUuid);
-
-    const { data, error } = await supabase
-      .from('tests')
-      .insert(testWithUuid)
-      .select('*, category:categories(*)')
-      .single();
+    try {
+      // UUID oluştur
+      const testUuid = createId();
       
-    if (error) {
-      console.error('Error creating test:', error);
-      throw new Error(`Test creation failed: ${error.message}`);
+      // Test verisini hazırla
+      const testData = {
+        ...test,
+        uuid: testUuid,
+        difficulty: test.difficulty || 2, // Varsayılan zorluk seviyesi
+        play_count: 0,
+        like_count: 0,
+        approved: true,
+        featured: false,
+        created_at: new Date().toISOString()
+      };
+
+      console.log("Veritabanına kaydedilecek test verisi:", testData);
+
+      const { data, error } = await supabase
+        .from('tests')
+        .insert(testData)
+        .select('*, category:categories(*)')
+        .single();
+        
+      if (error) {
+        console.error('Error creating test:', error);
+        throw new Error(`Test creation failed: ${error.message}`);
+      }
+      
+      console.log("Test başarıyla oluşturuldu:", data);
+      
+      // Kullanıcı aktivitesini kaydet
+      if (test.creator_id) {
+        await recordUserActivity(
+          test.creator_id, 
+          'create_test', 
+          `Yeni test oluşturuldu: ${test.title}`,
+          data.id, 
+          'test'
+        );
+      }
+      
+      return data as Test;
+    } catch (error) {
+      console.error('Error in createTest:', error);
+      throw error;
     }
-    
-    console.log("Test başarıyla oluşturuldu:", data);
-    
-    if (test.creator_id) {
-      await recordUserActivity(
-        test.creator_id, 
-        'create_test', 
-        `Yeni test oluşturuldu: ${test.title}`,
-        data.id, 
-        'test'
-      );
-    }
-    
-    return data as Test;
   }
 
   async updateTest(id: number, test: Partial<InsertTest>): Promise<Test | undefined> {

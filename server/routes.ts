@@ -394,103 +394,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.post("/api/tests", async (req: Request, res: Response) => {
     try {
-      console.log("Test oluşturma isteği:", req.body);
+      console.log("Test oluşturma isteği alındı:", req.body);
       
-      // Check if this is an anonymous test
-      const isAnonymous = req.body.isAnonymous === true;
-      
-      // Transform data - rename properties to match database schema
-      // Don't include is_anonymous field here as it causes issues with Supabase schema cache
-      let questions = req.body.images || req.body.questions || [];
-      
-      // Özel format dönüşümü: Form yapısından veritabanı yapısına
-      if (req.body.images && Array.isArray(req.body.images)) {
-        // Form'dan gelen görseller dizisini questions formatına dönüştür
-        questions = req.body.images.map((image: any, index: number) => ({
-          id: String(index + 1),
-          imageUrl: image.imageUrl,
-          answers: image.answers || [],
-        }));
-        console.log("Görsel formatı dönüştürüldü:", questions);
+      // Gerekli alanları kontrol et
+      if (!req.body.title || !req.body.categoryId) {
+        return res.status(400).json({ error: 'Başlık ve kategori zorunludur' });
       }
       
-      // Görsel ID'lerini oluştur
-      const imageIds = questions.map((q: any, index: number) => index + 1);
+      // Görselleri işle
+      const questions = req.body.images?.map((img: any) => ({
+        imageUrl: img.imageUrl,
+        answers: img.answers,
+        question: img.question || "Bu görselde ne görüyorsunuz?"
+      })) || [];
       
+      // Görsel ID'lerini oluştur
+      const imageIds = questions.map((_, index) => index + 1);
+      
+      // is_anonymous kontrolü
+      const isAnonymous = req.body.isAnonymous !== undefined ? req.body.isAnonymous : false;
+      
+      // Veriyi dönüştür
       const transformedData = {
         title: req.body.title,
         description: req.body.description || "",
-        category_id: req.body.categoryId || req.body.category_id,
-        creator_id: typeof req.body.creator_id === 'string' ? 1 : (req.body.creator_id || req.body.creatorId || 1), // Ensure creator_id is not a string/UUID
-        // difficulty field has been removed from schema
-        duration: req.body.duration || null,
-        image_url: req.body.thumbnail || req.body.image_url || null,
+        category_id: req.body.categoryId,
+        creator_id: 1, // Varsayılan olarak 1 kullanıyoruz
+        image_ids: imageIds,
         questions: questions,
-        image_ids: imageIds, // Görsel ID'lerini ekle
-        imageIds: imageIds, // İsim uyumluluğu için alternatif sürüm
-        approved: true, // Auto-approve for now
-        is_public: req.body.isPublic !== undefined ? req.body.isPublic : (req.body.is_public !== undefined ? req.body.is_public : true),
+        is_public: req.body.isPublic !== undefined ? req.body.isPublic : true,
+        is_anonymous: isAnonymous,
+        approved: true,
         featured: false,
-        is_anonymous: isAnonymous // Include is_anonymous directly in the main data
+        thumbnail: req.body.thumbnail || null
       };
       
       console.log("Dönüştürülmüş veri:", transformedData);
       
-      // Create the test first - excluding the problematic is_anonymous field
+      // Testi oluştur
       let createdTest: any = null;
       
       try {
-        // Try using PostgreSQL storage first (more reliable)
-        createdTest = await pgStorage.createTest(transformedData);
-        console.log("Test PostgreSQL storage'a kaydedildi:", createdTest);
-      } catch (pgError) {
-        console.error("PostgreSQL kaydetme hatası:", pgError);
+        // Önce Supabase'e kaydetmeyi dene
+        createdTest = await supabaseStorage.createTest(transformedData);
+        console.log("Test Supabase'e kaydedildi:", createdTest);
+      } catch (supabaseError) {
+        console.error("Supabase kaydetme hatası:", supabaseError);
         
         try {
-          // Try with Supabase storage next
-          createdTest = await supabaseStorage.createTest(transformedData);
-          console.log("Test Supabase'e kaydedildi:", createdTest);
-        } catch (supabaseError) {
-          console.error("Supabase kaydetme hatası:", supabaseError);
-          
-          // Last resort - in-memory storage
-          createdTest = await memStorage.createTest(transformedData);
-          console.log("Test memory storage'a kaydedildi:", createdTest);
+          // Sonra PostgreSQL'e kaydetmeyi dene
+          createdTest = await pgStorage.createTest(transformedData);
+          console.log("Test PostgreSQL'e kaydedildi:", createdTest);
+        } catch (pgError) {
+          console.error("PostgreSQL kaydetme hatası:", pgError);
+          throw new Error("Test oluşturulamadı");
         }
       }
       
-      // Bu kısım artık gerekli değil çünkü is_anonymous direkt olarak ana sorguda gönderiliyor
-      // ve veritabanına doğrudan kaydediliyor
-      console.log(`Test created (ID: ${createdTest?.id}), anonymous status: ${createdTest?.is_anonymous}`);
+      // Başarılı yanıt döndür
+      res.status(201).json({
+        success: true,
+        test: createdTest
+      });
       
-      // İhtiyaç halinde hata durumlarında kullanmak için korunan bir yedek yaklaşım
-      if (isAnonymous && createdTest && createdTest.id && createdTest.is_anonymous !== true) {
-        console.log(`Test anonymous status needs fixing (ID: ${createdTest.id})...`);
-        
-        try {
-          // Direct approach with db
-          console.log("Fixing anonymous status via direct SQL update");
-          const { data, error: directError } = await db
-            .from('tests')
-            .update({ is_anonymous: true })
-            .eq('id', createdTest.id)
-            .select()
-            .single();
-            
-          if (!directError && data) {
-            console.log("Successfully fixed anonymous status");
-            createdTest = data;
-          }
-        } catch (anonymousError) {
-          console.error("Error fixing anonymous status (non-critical):", anonymousError);
-          // Continue with the created test anyway
-        }
-      }
-      
-      return res.status(201).json(createdTest);
     } catch (error) {
       console.error("Test oluşturma hatası:", error);
-      res.status(500).json({ message: "Test oluşturma hatası", error: String(error) });
+      res.status(500).json({
+        error: "Test oluşturulurken bir hata oluştu",
+        details: error instanceof Error ? error.message : "Bilinmeyen hata"
+      });
     }
   });
   
