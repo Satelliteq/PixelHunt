@@ -1,21 +1,24 @@
 # PixelHunt - Görsel Bilgi Testi Platformu
 
-PixelHunt (İmgesel), çeşitli kategorilerdeki görselleri tahmin etmeye dayalı interaktif ve eğlenceli bir web platformudur. Kullanıcılar hem hazır testleri oynayabilir hem de kendi testlerini oluşturup paylaşabilirler.
+PixelHunt (İmgesel), çeşitli kategorilerdeki görselleri tahmin etmeye dayalı interaktif ve eğlenceli bir web ve mobil ortak platformudur. Kullanıcılar hem hazır testleri oynayabilir hem de kendi testlerini oluşturup paylaşabilirler.
 
 ## Özellikler
 
-- **Farklı Oyun Modları**: 
+- **Farklı Oyun Modları**:
+
   - **Klasik Mod**: Bir görselin kademeli olarak açılmasıyla doğru tahmin yapmaya çalışın
   - **Hızlı Mod**: En kısa sürede doğru cevabı bulmaya çalışın
   - **Zamanlı Mod**: Belirli bir süre içinde mümkün olduğunca çok soruyu doğru cevaplayın
   - **Test Modu**: Kullanıcılar tarafından oluşturulan özel testleri çözün
 
-- **Test Oluşturma ve Paylaşma**: 
+- **Test Oluşturma ve Paylaşma**:
+
   - Kolay kullanımlı test oluşturma arayüzü
   - Testleri UUID bağlantıları ile paylaşma
   - Test sonuçlarını görüntüleme ve puanlama
 
 - **Sosyal Özellikler**:
+
   - Testleri beğenme ve yorum yapma
   - Liderlik tablosu ve kullanıcı profilleri
   - Anonim test paylaşımı seçeneği
@@ -27,12 +30,14 @@ PixelHunt (İmgesel), çeşitli kategorilerdeki görselleri tahmin etmeye dayal�
 
 ## Teknolojiler
 
-- **Frontend**: 
+- **Frontend**:
+
   - React 18 with TypeScript
   - Tailwind CSS & Shadcn UI bileşenleri
   - Framer Motion animasyonları
 
-- **Backend**: 
+- **Backend**:
+
   - Node.js & Express
   - PostgreSQL veritabanı (Drizzle ORM)
   - RESTful API mimarisi
