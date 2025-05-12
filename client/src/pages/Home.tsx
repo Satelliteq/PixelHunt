@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Heart, Trophy, BookOpen, Filter, Clock, Users, Sparkles, Award, ChevronLeft, ChevronRight, Plus, Search, X, Loader2, Layers, Film, Music, Palette, Gamepad2, Dumbbell, FlaskConical, Landmark } from "lucide-react";
 import { Test, Category } from "@shared/schema";
 import { useLanguage } from "@/lib/LanguageContext";
+import { getAllCategories, getPopularTests, getNewestTests, getFeaturedTests, searchTests } from "@/lib/firebaseHelpers";
 
 import ContentCard from "@/components/game/ContentCard";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,33 @@ export default function Home() {
   const [searchResults, setSearchResults] = useState<Test[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
   
+  // Fetch categories
+  const { data: categoriesData } = useQuery<Category[]>({
+    queryKey: ["/api/categories"],
+    queryFn: () => getAllCategories()
+  });
+
+  // Fetch popular tests
+  const { data: popularTests, isLoading: isPopularTestsLoading } = useQuery<Test[]>({
+    queryKey: ["/api/tests/popular"],
+    queryFn: () => getPopularTests(10),
+    enabled: activeTab === "popular" || activeTab === "featured",
+  });
+
+  // Fetch newest tests
+  const { data: newestTests, isLoading: isNewestTestsLoading } = useQuery<Test[]>({
+    queryKey: ["/api/tests/newest"],
+    queryFn: () => getNewestTests(10),
+    enabled: activeTab === "newest" || activeTab === "featured",
+  });
+
+  // Fetch featured tests
+  const { data: featuredTests, isLoading: isFeaturedTestsLoading } = useQuery<Test[]>({
+    queryKey: ["/api/tests/featured"],
+    queryFn: () => getFeaturedTests(10),
+    enabled: activeTab === "featured",
+  });
+  
   // Arama fonksiyonu
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,9 +69,8 @@ export default function Home() {
     
     try {
       // API'ye arama sorgusu gönder
-      const response = await fetch(`/api/tests?q=${encodeURIComponent(searchQuery)}`);
-      const data = await response.json();
-      setSearchResults(data);
+      const results = await searchTests(searchQuery);
+      setSearchResults(results);
     } catch (error) {
       console.error("Arama hatası:", error);
       // Hata durumunda boş sonuç göster
@@ -174,44 +201,21 @@ export default function Home() {
     });
   };
 
-  // Fetch popular tests
-  const { data: popularTests, isLoading: isPopularTestsLoading } = useQuery<Test[]>({
-    queryKey: ["/api/tests/popular"],
-    enabled: activeTab === "popular" || activeTab === "featured",
-  });
-
-  // Fetch newest tests
-  const { data: newestTests, isLoading: isNewestTestsLoading } = useQuery<Test[]>({
-    queryKey: ["/api/tests/newest"],
-    enabled: activeTab === "newest" || activeTab === "featured",
-  });
-
-  // Fetch featured tests
-  const { data: featuredTests, isLoading: isFeaturedTestsLoading } = useQuery<Test[]>({
-    queryKey: ["/api/tests/featured"],
-    enabled: activeTab === "featured",
-  });
-
-  // Fetch categories
-  const { data: categoriesData } = useQuery<Category[]>({
-    queryKey: ["/api/categories"],
-  });
-
   // Örnek kategoriler (API'den veri gelmezse kullanılacak)
-  const defaultCategories: Array<{id?: number, name: string, iconname?: string}> = [
-    { id: 1, name: "Film & TV", iconname: "film" },
-    { id: 2, name: "Müzik", iconname: "music" },
-    { id: 3, name: "Sanat", iconname: "palette" },
-    { id: 4, name: "Oyunlar", iconname: "gamepad-2" },
-    { id: 5, name: "Spor", iconname: "dumbbell" },
-    { id: 6, name: "Bilim", iconname: "flask-conical" },
+  const defaultCategories: Array<{id?: string, name: string, iconName?: string}> = [
+    { id: "1", name: "Film & TV", iconName: "film" },
+    { id: "2", name: "Müzik", iconName: "music" },
+    { id: "3", name: "Sanat", iconName: "palette" },
+    { id: "4", name: "Oyunlar", iconName: "gamepad-2" },
+    { id: "5", name: "Spor", iconName: "dumbbell" },
+    { id: "6", name: "Bilim", iconName: "flask-conical" },
   ];
 
   // Kategorileri API'den veya varsayılan veriden al
   const categories = categoriesData || defaultCategories;
 
-  const handleTestClick = (testUuid: string) => {
-    navigate(`/tests/${testUuid}`);
+  const handleTestClick = (testId: string) => {
+    navigate(`/test/${testId}`);
   };
   
   // Kategori adına göre emoji döndüren yardımcı fonksiyon
@@ -236,7 +240,7 @@ export default function Home() {
   };
   
   // Icon ismine göre Lucide icon komponenti döndüren yardımcı fonksiyon
-  const getCategoryIcon = (iconName: string | null) => {
+  const getCategoryIcon = (iconName: string | null | undefined) => {
     if (!iconName) return null;
     
     switch (iconName) {
@@ -258,8 +262,6 @@ export default function Home() {
         return <Layers className="w-6 h-6" />;
     }
   };
-
-  // Helper functions were refactored directly into the component rendering
 
   return (
     <div className="space-y-12">
@@ -319,7 +321,7 @@ export default function Home() {
                       <div 
                         key={`featured-card-${idx}`}
                         className={`bg-card/90 backdrop-blur-sm shadow-lg border border-border/50 rounded-xl overflow-hidden cursor-pointer transform hover:-translate-y-1 transition-all duration-300 ${idx >= 2 ? 'hidden md:block' : ''}`}
-                        onClick={() => navigate(`/tests/${test.uuid}`)}
+                        onClick={() => navigate(`/test/${test.id}`)}
                         style={{
                           transform: `rotate(${idx % 2 === 0 ? '-2deg' : '2deg'})`,
                           zIndex: idx === 1 ? 2 : 1
@@ -328,7 +330,7 @@ export default function Home() {
                         <div className="aspect-video relative group">
                           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-80 group-hover:opacity-60 transition-opacity"></div>
                           <img 
-                            src={test.imageUrl || `/attached_assets/ba1f50f644077acc8bedb8b0634c1af8.jpg`} 
+                            src={test.thumbnailUrl || `/attached_assets/ba1f50f644077acc8bedb8b0634c1af8.jpg`} 
                             alt={test.title}
                             className="w-full h-full object-cover"
                           />
@@ -381,15 +383,13 @@ export default function Home() {
                     "bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-400"
                   }`}
                 >
-                  {category.iconname ? getCategoryIcon(category.iconname) : getCategoryEmoji(category.name || "", index)}
+                  {category.iconName ? getCategoryIcon(category.iconName) : getCategoryEmoji(category.name || "", index)}
                 </div>
                 <h3 className="text-card-foreground font-medium text-xs sm:text-sm">{category.name}</h3>
               </CardContent>
             </Card>
           ))}
         </div>
-        
-
       </section>
 
       {/* Search Results (hidden by default, shown when search is activated) */}
@@ -421,11 +421,11 @@ export default function Home() {
                     <ContentCard
                       key={test.id}
                       title={test.title}
-                      imageUrl={test.imageUrl || '/default-test-thumb.jpg'}
+                      imageUrl={test.thumbnailUrl || '/default-test-thumb.jpg'}
                       playCount={test.playCount}
                       likeCount={test.likeCount}
                       duration={`${test.questions && Array.isArray(test.questions) ? test.questions.length : 0} ${t('question')}`}
-                      onClick={() => handleTestClick(test.uuid)}
+                      onClick={() => handleTestClick(test.id)}
                     />
                   ))}
                 </div>
@@ -497,11 +497,11 @@ export default function Home() {
                       <ContentCard
                         key={test.id}
                         title={test.title}
-                        imageUrl={test.imageUrl || '/default-test-thumb.jpg'}
+                        imageUrl={test.thumbnailUrl || '/default-test-thumb.jpg'}
                         playCount={test.playCount || 0}
                         likeCount={test.likeCount || 0}
                         duration={`${test.questions && Array.isArray(test.questions) ? test.questions.length : 0} ${t('question')}`}
-                        onClick={() => handleTestClick(test.uuid)}
+                        onClick={() => handleTestClick(test.id)}
                       />
                     ))
                   )}
@@ -519,11 +519,11 @@ export default function Home() {
                       <ContentCard
                         key={test.id}
                         title={test.title}
-                        imageUrl={test.imageUrl || '/default-test-thumb.jpg'}
+                        imageUrl={test.thumbnailUrl || '/default-test-thumb.jpg'}
                         playCount={test.playCount || 0}
                         likeCount={test.likeCount || 0}
                         duration={`${test.questions && Array.isArray(test.questions) ? test.questions.length : 0} ${t('question')}`}
-                        onClick={() => handleTestClick(test.uuid)}
+                        onClick={() => handleTestClick(test.id)}
                       />
                     ))
                   )}
@@ -541,11 +541,11 @@ export default function Home() {
                       <ContentCard
                         key={test.id}
                         title={test.title}
-                        imageUrl={test.imageUrl || '/default-test-thumb.jpg'}
+                        imageUrl={test.thumbnailUrl || '/default-test-thumb.jpg'}
                         playCount={test.playCount || 0}
                         likeCount={test.likeCount || 0}
                         duration={`${test.questions && Array.isArray(test.questions) ? test.questions.length : 0} ${t('question')}`}
-                        onClick={() => handleTestClick(test.uuid)}
+                        onClick={() => handleTestClick(test.id)}
                       />
                     ))
                   )}

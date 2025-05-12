@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Test } from "@shared/schema";
 import { getDifficultyText } from "@/lib/gameHelpers";
 import ContentCard from "@/components/game/ContentCard";
+import { getAllTests, getPopularTests, getNewestTests, getFeaturedTests, getAllCategories } from "@/lib/firebaseHelpers";
 
 export default function Tests() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -22,12 +23,14 @@ export default function Tests() {
   
   // Fetch tests data
   const { data: tests = [], isLoading: testsLoading } = useQuery<Test[]>({
-    queryKey: ['/api/tests']
+    queryKey: ['/api/tests'],
+    queryFn: () => getAllTests()
   });
   
   // Fetch categories for filter
   const { data: categories = [], isLoading: categoriesLoading } = useQuery<any[]>({
-    queryKey: ['/api/categories']
+    queryKey: ['/api/categories'],
+    queryFn: () => getAllCategories()
   });
   
   // Filter tests based on search term and other filters
@@ -62,15 +65,18 @@ export default function Tests() {
 
   // Tabs content: popular, newest, featured
   const { data: popularTests = [], isLoading: popularLoading } = useQuery<Test[]>({
-    queryKey: ['/api/tests/popular']
+    queryKey: ['/api/tests/popular'],
+    queryFn: () => getPopularTests(10)
   });
   
   const { data: newestTests = [], isLoading: newestLoading } = useQuery<Test[]>({
-    queryKey: ['/api/tests/newest']
+    queryKey: ['/api/tests/newest'],
+    queryFn: () => getNewestTests(10)
   });
   
   const { data: featuredTests = [], isLoading: featuredLoading } = useQuery<Test[]>({
-    queryKey: ['/api/tests/featured']
+    queryKey: ['/api/tests/featured'],
+    queryFn: () => getFeaturedTests(10)
   });
 
   // Date formatter helper
@@ -103,7 +109,7 @@ export default function Tests() {
             </div>
           </div>
           <Badge variant="secondary" className="text-xs">
-            {getQuestionCount(test.imageIds)} Soru
+            {getQuestionCount(test.questions)} Soru
           </Badge>
         </div>
         
@@ -143,7 +149,7 @@ export default function Tests() {
           <div className="flex items-center gap-2 mb-1">
             <h3 className="font-medium">{test.title}</h3>
             <Badge variant="secondary" className="text-xs">
-              {getQuestionCount(test.imageIds)} Soru
+              {getQuestionCount(test.questions)} Soru
             </Badge>
           </div>
           <p className="text-sm text-muted-foreground line-clamp-1">
@@ -202,17 +208,17 @@ export default function Tests() {
     </div>
   );
 
-  // Helper function to get the number of questions from imageIds
-  const getQuestionCount = (imageIds: unknown): number => {
-    if (Array.isArray(imageIds)) {
-      return imageIds.length;
+  // Helper function to get the number of questions from questions array
+  const getQuestionCount = (questions: unknown): number => {
+    if (Array.isArray(questions)) {
+      return questions.length;
     }
     return 0;
   };
 
   // Handle test click
   const [_, navigate] = useLocation();
-  const handleTestClick = (testId: number) => {
+  const handleTestClick = (testId: string) => {
     navigate(`/test/${testId}`);
   };
 
@@ -344,10 +350,10 @@ export default function Tests() {
                   <ContentCard
                     key={test.id}
                     title={test.title}
-                    imageUrl={test.thumbnail || '/default-test-thumb.jpg'}
+                    imageUrl={test.thumbnailUrl || '/default-test-thumb.jpg'}
                     playCount={test.playCount}
                     likeCount={test.likeCount}
-                    duration={`${getQuestionCount(test.imageIds)} soru`}
+                    duration={`${getQuestionCount(test.questions)} soru`}
                     onClick={() => handleTestClick(test.id)}
                   />
                 ))}
@@ -371,10 +377,10 @@ export default function Tests() {
                       <ContentCard
                         key={test.id}
                         title={test.title}
-                        imageUrl={test.thumbnail || '/default-test-thumb.jpg'}
+                        imageUrl={test.thumbnailUrl || '/default-test-thumb.jpg'}
                         playCount={test.playCount}
                         likeCount={test.likeCount}
-                        duration={`${getQuestionCount(test.imageIds)} soru`}
+                        duration={`${getQuestionCount(test.questions)} soru`}
                         onClick={() => handleTestClick(test.id)}
                       />
                     ))
@@ -399,10 +405,10 @@ export default function Tests() {
                       <ContentCard
                         key={test.id}
                         title={test.title}
-                        imageUrl={test.thumbnail || '/default-test-thumb.jpg'}
+                        imageUrl={test.thumbnailUrl || '/default-test-thumb.jpg'}
                         playCount={test.playCount}
                         likeCount={test.likeCount}
-                        duration={`${getQuestionCount(test.imageIds)} soru`}
+                        duration={`${getQuestionCount(test.questions)} soru`}
                         onClick={() => handleTestClick(test.id)}
                       />
                     ))
@@ -427,10 +433,10 @@ export default function Tests() {
                       <ContentCard
                         key={test.id}
                         title={test.title}
-                        imageUrl={test.thumbnail || '/default-test-thumb.jpg'}
+                        imageUrl={test.thumbnailUrl || '/default-test-thumb.jpg'}
                         playCount={test.playCount}
                         likeCount={test.likeCount}
-                        duration={`${getQuestionCount(test.imageIds)} soru`}
+                        duration={`${getQuestionCount(test.questions)} soru`}
                         onClick={() => handleTestClick(test.id)}
                       />
                     ))

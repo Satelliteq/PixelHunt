@@ -9,6 +9,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Category } from "@shared/schema";
+import { getAllCategories } from "@/lib/firebaseHelpers";
 
 export default function Categories() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -16,7 +17,8 @@ export default function Categories() {
   
   // Fetch categories
   const { data: categories = [], isLoading } = useQuery<Category[]>({
-    queryKey: ['/api/categories']
+    queryKey: ['/api/categories'],
+    queryFn: () => getAllCategories()
   });
   
   // Filter categories based on search term
