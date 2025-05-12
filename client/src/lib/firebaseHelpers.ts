@@ -83,7 +83,6 @@ export interface Test {
   isAnonymous: boolean;
   approved: boolean;
   featured: boolean;
-  difficulty: number;
   createdAt: Date;
   updatedAt?: Date;
 }
@@ -220,6 +219,61 @@ export async function initializeSampleData() {
         likeCount: 95,
         active: true,
         createdAt: serverTimestamp()
+      },
+      {
+        title: 'Mona Lisa',
+        imageUrl: 'https://images.unsplash.com/photo-1423742774270-6884aac775fa?w=800',
+        categoryId: '4', // Will be updated after categories are created
+        answers: ['Mona Lisa', 'Leonardo da Vinci', 'da Vinci'],
+        difficulty: 1,
+        playCount: 150,
+        likeCount: 67,
+        active: true,
+        createdAt: serverTimestamp()
+      },
+      {
+        title: 'Minecraft',
+        imageUrl: 'https://images.unsplash.com/photo-1607853202273-797f1c22a38e?w=800',
+        categoryId: '5', // Will be updated after categories are created
+        answers: ['Minecraft', 'Mine Craft'],
+        difficulty: 1,
+        playCount: 250,
+        likeCount: 120,
+        active: true,
+        createdAt: serverTimestamp()
+      },
+      {
+        title: 'Lamborghini Aventador',
+        imageUrl: 'https://images.unsplash.com/photo-1544829099-b9a0c07fad1a?w=800',
+        categoryId: '1', // Will be updated after categories are created
+        answers: ['Lamborghini', 'Lamborghini Aventador', 'Aventador'],
+        difficulty: 2,
+        playCount: 180,
+        likeCount: 95,
+        active: true,
+        createdAt: serverTimestamp()
+      },
+      {
+        title: 'Eyfel Kulesi',
+        imageUrl: 'https://images.unsplash.com/photo-1543349689-9a4d426bee8e?w=800',
+        categoryId: '2', // Will be updated after categories are created
+        answers: ['Eyfel Kulesi', 'Eiffel Tower', 'Paris'],
+        difficulty: 1,
+        playCount: 220,
+        likeCount: 110,
+        active: true,
+        createdAt: serverTimestamp()
+      },
+      {
+        title: 'Harry Potter',
+        imageUrl: 'https://images.unsplash.com/photo-1551269901-5c5e14c25df7?w=800',
+        categoryId: '3', // Will be updated after categories are created
+        answers: ['Harry Potter', 'Hogwarts'],
+        difficulty: 1,
+        playCount: 240,
+        likeCount: 130,
+        active: true,
+        createdAt: serverTimestamp()
       }
     ];
 
@@ -248,12 +302,17 @@ export async function initializeSampleData() {
         title: 'Arabalar Testi',
         description: 'Otomobil markaları ve modelleri hakkında bilginizi test edin',
         creatorId: null,
-        categoryId: categoryIds['1'],
+        categoryId: categoryIds['1'] || Object.values(categoryIds)[0],
         questions: [
           {
             imageUrl: 'https://images.unsplash.com/photo-1592198084033-aade902d1aae?w=800',
             answers: ['Ferrari', 'Ferrari 458', '458 Italia'],
             question: 'Bu görselde ne görüyorsunuz?'
+          },
+          {
+            imageUrl: 'https://images.unsplash.com/photo-1544829099-b9a0c07fad1a?w=800',
+            answers: ['Lamborghini', 'Lamborghini Aventador', 'Aventador'],
+            question: 'Bu araba hangi markaya ait?'
           }
         ],
         thumbnailUrl: 'https://images.unsplash.com/photo-1592198084033-aade902d1aae?w=800',
@@ -263,7 +322,6 @@ export async function initializeSampleData() {
         isAnonymous: false,
         approved: true,
         featured: true,
-        difficulty: 2,
         createdAt: serverTimestamp()
       },
       {
@@ -271,12 +329,17 @@ export async function initializeSampleData() {
         title: 'Dünya Coğrafyası',
         description: 'Dünya üzerindeki önemli yerleri tanıyabilecek misiniz?',
         creatorId: null,
-        categoryId: categoryIds['2'],
+        categoryId: categoryIds['2'] || Object.values(categoryIds)[1],
         questions: [
           {
             imageUrl: 'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=800',
             answers: ['İstanbul', 'Istanbul', 'Boğaz', 'Bogazici', 'Bosphorus'],
             question: 'Bu görselde hangi şehir görünüyor?'
+          },
+          {
+            imageUrl: 'https://images.unsplash.com/photo-1543349689-9a4d426bee8e?w=800',
+            answers: ['Eyfel Kulesi', 'Eiffel Tower', 'Paris'],
+            question: 'Bu ünlü yapı nedir?'
           }
         ],
         thumbnailUrl: 'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=800',
@@ -294,12 +357,17 @@ export async function initializeSampleData() {
         title: 'Film Karakterleri',
         description: 'Popüler film karakterlerini tanıyabilecek misiniz?',
         creatorId: null,
-        categoryId: categoryIds['3'],
+        categoryId: categoryIds['3'] || Object.values(categoryIds)[2],
         questions: [
           {
             imageUrl: 'https://images.unsplash.com/photo-1608889825103-eb5ed706fc64?w=800',
             answers: ['Star Wars', 'Darth Vader', 'Vader'],
             question: 'Bu görselde hangi film karakteri görünüyor?'
+          },
+          {
+            imageUrl: 'https://images.unsplash.com/photo-1551269901-5c5e14c25df7?w=800',
+            answers: ['Harry Potter', 'Hogwarts'],
+            question: 'Bu hangi film serisine ait?'
           }
         ],
         thumbnailUrl: 'https://images.unsplash.com/photo-1608889825103-eb5ed706fc64?w=800',
@@ -310,6 +378,52 @@ export async function initializeSampleData() {
         approved: true,
         featured: true,
         difficulty: 2,
+        createdAt: serverTimestamp()
+      },
+      {
+        uuid: createId(),
+        title: 'Sanat Eserleri',
+        description: 'Ünlü sanat eserlerini tanıyabilecek misiniz?',
+        creatorId: null,
+        categoryId: categoryIds['4'] || Object.values(categoryIds)[3],
+        questions: [
+          {
+            imageUrl: 'https://images.unsplash.com/photo-1423742774270-6884aac775fa?w=800',
+            answers: ['Mona Lisa', 'Leonardo da Vinci', 'da Vinci'],
+            question: 'Bu ünlü tablo nedir?'
+          }
+        ],
+        thumbnailUrl: 'https://images.unsplash.com/photo-1423742774270-6884aac775fa?w=800',
+        playCount: 42,
+        likeCount: 18,
+        isPublic: true,
+        isAnonymous: false,
+        approved: true,
+        featured: true,
+        difficulty: 1,
+        createdAt: serverTimestamp()
+      },
+      {
+        uuid: createId(),
+        title: 'Video Oyunları',
+        description: 'Popüler video oyunlarını tanıyabilecek misiniz?',
+        creatorId: null,
+        categoryId: categoryIds['5'] || Object.values(categoryIds)[4],
+        questions: [
+          {
+            imageUrl: 'https://images.unsplash.com/photo-1607853202273-797f1c22a38e?w=800',
+            answers: ['Minecraft', 'Mine Craft'],
+            question: 'Bu hangi oyun?'
+          }
+        ],
+        thumbnailUrl: 'https://images.unsplash.com/photo-1607853202273-797f1c22a38e?w=800',
+        playCount: 65,
+        likeCount: 30,
+        isPublic: true,
+        isAnonymous: false,
+        approved: true,
+        featured: false,
+        difficulty: 1,
         createdAt: serverTimestamp()
       }
     ];
@@ -558,7 +672,6 @@ export async function getAllTests(): Promise<Test[]> {
         isAnonymous: data.isAnonymous === true,
         approved: data.approved === true,
         featured: data.featured === true,
-        difficulty: data.difficulty || 2,
         createdAt: data.createdAt?.toDate() || new Date(),
         updatedAt: data.updatedAt?.toDate()
       };
@@ -591,7 +704,6 @@ export async function getTest(id: string): Promise<Test | null> {
         isAnonymous: data.isAnonymous === true,
         approved: data.approved === true,
         featured: data.featured === true,
-        difficulty: data.difficulty || 2,
         createdAt: data.createdAt?.toDate() || new Date(),
         updatedAt: data.updatedAt?.toDate()
       };
@@ -628,7 +740,6 @@ export async function getTestByUuid(uuid: string): Promise<Test | null> {
         isAnonymous: data.isAnonymous === true,
         approved: data.approved === true,
         featured: data.featured === true,
-        difficulty: data.difficulty || 2,
         createdAt: data.createdAt?.toDate() || new Date(),
         updatedAt: data.updatedAt?.toDate()
       };
@@ -638,6 +749,46 @@ export async function getTestByUuid(uuid: string): Promise<Test | null> {
   } catch (error) {
     console.error(`Error fetching test by UUID ${uuid}:`, error);
     return null;
+  }
+}
+
+export async function getTestsByCategory(categoryId: string): Promise<Test[]> {
+  try {
+    const testsRef = collection(db, 'tests');
+    const q = query(
+      testsRef,
+      where('categoryId', '==', categoryId),
+      where('isPublic', '==', true),
+      where('approved', '==', true),
+      orderBy('createdAt', 'desc')
+    );
+    
+    const querySnapshot = await getDocs(q);
+    
+    return querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        uuid: data.uuid,
+        title: data.title,
+        description: data.description || '',
+        creatorId: data.creatorId,
+        categoryId: data.categoryId,
+        questions: data.questions || [],
+        thumbnailUrl: data.thumbnailUrl || getDefaultThumbnail(),
+        playCount: data.playCount || 0,
+        likeCount: data.likeCount || 0,
+        isPublic: data.isPublic !== false,
+        isAnonymous: data.isAnonymous === true,
+        approved: data.approved === true,
+        featured: data.featured === true,
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate()
+      };
+    });
+  } catch (error) {
+    console.error(`Error fetching tests for category ${categoryId}:`, error);
+    return [];
   }
 }
 
@@ -742,7 +893,6 @@ export async function getPopularTests(limitCount: number = 5): Promise<Test[]> {
         isAnonymous: data.isAnonymous === true,
         approved: data.approved === true,
         featured: data.featured === true,
-        difficulty: data.difficulty || 2,
         createdAt: data.createdAt?.toDate() || new Date(),
         updatedAt: data.updatedAt?.toDate()
       };
@@ -783,7 +933,6 @@ export async function getNewestTests(limitCount: number = 5): Promise<Test[]> {
         isAnonymous: data.isAnonymous === true,
         approved: data.approved === true,
         featured: data.featured === true,
-        difficulty: data.difficulty || 2,
         createdAt: data.createdAt?.toDate() || new Date(),
         updatedAt: data.updatedAt?.toDate()
       };
@@ -825,7 +974,6 @@ export async function getFeaturedTests(limitCount: number = 5): Promise<Test[]> 
         isAnonymous: data.isAnonymous === true,
         approved: data.approved === true,
         featured: data.featured === true,
-        difficulty: data.difficulty || 2,
         createdAt: data.createdAt?.toDate() || new Date(),
         updatedAt: data.updatedAt?.toDate()
       };
@@ -872,7 +1020,6 @@ export async function searchTests(query: string, categoryId?: string): Promise<T
         isAnonymous: data.isAnonymous === true,
         approved: data.approved === true,
         featured: data.featured === true,
-        difficulty: data.difficulty || 2,
         createdAt: data.createdAt?.toDate() || new Date(),
         updatedAt: data.updatedAt?.toDate()
       };

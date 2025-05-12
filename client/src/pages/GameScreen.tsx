@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +8,6 @@ import {
   AlertTriangle, Heart, Share2, Trophy, Award, Clock, ThumbsUp,
   MessageSquare, Star, ListOrdered, ArrowLeft, LayoutGrid
 } from 'lucide-react';
-import type { Image, Test, TestComment, GameScore } from '@shared/schema';
 import { toast } from '@/hooks/use-toast';
 import { formatTime, checkAnswer, calculateScore, playSoundEffect } from '@/lib/gameHelpers';
 import ScoreDisplay from '@/components/game/ScoreDisplay';
@@ -17,10 +15,14 @@ import ImageReveal from '@/components/game/ImageReveal';
 import ContentCard from '@/components/game/ContentCard';
 import { Separator } from '@/components/ui/separator';
 import { useLanguage } from '@/lib/LanguageContext';
+import { doc, getDoc, collection, addDoc, query, where, orderBy, getDocs, updateDoc, increment, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useAuth } from '@/lib/AuthContext';
 
 export default function GameScreen() {
   const [, setLocation] = useLocation();
   const { testId } = useParams<{ testId: string }>();
+  const { user } = useAuth();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [userAnswer, setUserAnswer] = useState('');
   const [score, setScore] = useState(0);
@@ -37,43 +39,151 @@ export default function GameScreen() {
   const correctAnswersRef = useRef<string[]>([]);
   
   // Fetch test data
-  const { data: test, isLoading: isTestLoading } = useQuery<Test>({
-    queryKey: [`/api/tests/${testId}`],
-    enabled: !!testId,
-  });
-
-  // Fetch current image data
-  const { data: currentImage, isLoading: isImageLoading } = useQuery<Image>({
-    queryKey: [`/api/images/${test?.imageIds?.[currentImageIndex]}`],
-    enabled: !!test && Array.isArray(test.imageIds) && test.imageIds.length > 0 && currentImageIndex < test.imageIds.length,
+  const { data: test, isLoading: isTestLoading } = useQuery({
+    queryKey: [`test-${testId}`],
+    queryFn: async () => {
+      if (!testId) return null;
+      
+      try {
+        const testRef = doc(db, 'tests', testId);
+        const testDoc = await getDoc(testRef);
+        
+        if (!testDoc.exists()) {
+          return null;
+        }
+        
+        const testData = testDoc.data();
+        
+        // Fetch category if categoryId exists
+        let category = null;
+        if (testData.categoryId) {
+          const categoryRef = doc(db, 'categories', testData.categoryId);
+          const categoryDoc = await getDoc(categoryRef);
+          if (categoryDoc.exists()) {
+            category = {
+              id: categoryDoc.id,
+              ...categoryDoc.data()
+            };
+          }
+        }
+        
+        // Increment play count
+        await updateDoc(testRef, {
+          playCount: increment(1)
+        });
+        
+        return {
+          id: testDoc.id,
+          ...testData,
+          category
+        };
+      } catch (error) {
+        console.error("Error fetching test:", error);
+        return null;
+      }
+    },
+    enabled: !!testId
   });
   
   // Fetch similar tests (for game completion screen)
-  const { data: similarTests } = useQuery<Test[]>({
-    queryKey: [`/api/tests/category/${test?.categoryId}`],
-    enabled: !!test && gameStatus === 'finished',
+  const { data: similarTests } = useQuery({
+    queryKey: [`similar-tests-${test?.categoryId}`],
+    queryFn: async () => {
+      if (!test?.categoryId) return [];
+      
+      try {
+        const testsRef = collection(db, 'tests');
+        const q = query(
+          testsRef,
+          where('categoryId', '==', test.categoryId),
+          where('isPublic', '==', true),
+          where('approved', '==', true),
+          limit(4)
+        );
+        
+        const querySnapshot = await getDocs(q);
+        
+        return querySnapshot.docs
+          .map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }))
+          .filter(t => t.id !== testId);
+      } catch (error) {
+        console.error("Error fetching similar tests:", error);
+        return [];
+      }
+    },
+    enabled: !!test?.categoryId && gameStatus === 'finished'
   });
   
   // Fetch test comments
-  const { data: comments } = useQuery<TestComment[]>({
-    queryKey: [`/api/tests/${testId}/comments`],
-    enabled: !!testId && gameStatus === 'finished',
+  const { data: comments } = useQuery({
+    queryKey: [`test-comments-${testId}`],
+    queryFn: async () => {
+      if (!testId) return [];
+      
+      try {
+        const commentsRef = collection(db, 'testComments');
+        const q = query(
+          commentsRef,
+          where('testId', '==', testId),
+          orderBy('createdAt', 'desc'),
+          limit(10)
+        );
+        
+        const querySnapshot = await getDocs(q);
+        
+        return querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+      } catch (error) {
+        console.error("Error fetching test comments:", error);
+        return [];
+      }
+    },
+    enabled: !!testId && gameStatus === 'finished'
   });
   
   // Fetch top scores
-  const { data: topScores } = useQuery<GameScore[]>({
-    queryKey: [`/api/game/scores/top`],
-    enabled: gameStatus === 'finished',
+  const { data: topScores } = useQuery({
+    queryKey: [`top-scores-${testId}`],
+    queryFn: async () => {
+      if (!testId) return [];
+      
+      try {
+        const scoresRef = collection(db, 'gameScores');
+        const q = query(
+          scoresRef,
+          where('testId', '==', testId),
+          orderBy('score', 'desc'),
+          limit(5)
+        );
+        
+        const querySnapshot = await getDocs(q);
+        
+        return querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+      } catch (error) {
+        console.error("Error fetching top scores:", error);
+        return [];
+      }
+    },
+    enabled: gameStatus === 'finished'
   });
 
-  // Update correct answers when image changes
+  // Update correct answers when current question changes
   useEffect(() => {
-    if (currentImage?.correctAnswers) {
-      correctAnswersRef.current = Array.isArray(currentImage.correctAnswers) 
-        ? currentImage.correctAnswers 
-        : [currentImage.correctAnswers];
+    if (test?.questions && test.questions.length > currentImageIndex) {
+      const currentQuestion = test.questions[currentImageIndex];
+      correctAnswersRef.current = Array.isArray(currentQuestion.answers) 
+        ? currentQuestion.answers 
+        : [currentQuestion.answers];
     }
-  }, [currentImage]);
+  }, [test, currentImageIndex]);
 
   // Timer effect
   useEffect(() => {
@@ -87,7 +197,7 @@ export default function GameScreen() {
 
   // Handle guess submission
   const handleGuess = (guess: string) => {
-    if (!guess.trim() || !currentImage) return;
+    if (!guess.trim() || !test?.questions) return;
     
     // Check if answer is correct using our utility
     const answerResult = checkAnswer(guess, correctAnswersRef.current);
@@ -108,34 +218,33 @@ export default function GameScreen() {
       // Play sound for correct answer
       playSoundEffect('correct', 0.5);
       
-      // Calculate score - fixed score based only on reveal percentage (no time factor)
+      // Calculate score based on reveal percentage
       const earnedScore = calculateScore(revealPercent);
       
       // Update score
       setScore(prev => prev + earnedScore);
       
+      toast({
+        title: "Doğru!",
+        description: `+${earnedScore} puan kazandınız.`,
+        variant: "success",
+      });
+      
+      // Save game score in the background
+      saveGameScore(earnedScore, true);
+      
       // Move to next image or finish game
-      if (test && Array.isArray(test.imageIds) && currentImageIndex < test.imageIds.length - 1) {
-        setCurrentImageIndex(prev => prev + 1);
-        setUserAnswer('');
-        setGuessHistory([]);
+      if (test && Array.isArray(test.questions) && currentImageIndex < test.questions.length - 1) {
+        setTimeout(() => {
+          setCurrentImageIndex(prev => prev + 1);
+          setUserAnswer('');
+          setGuessHistory([]);
+          setRevealPercent(30); // Reset reveal percentage for next question
+        }, 1500);
       } else {
         // End of game
         setGameStatus('finished');
         playSoundEffect('complete', 0.7);
-        
-        // Save score to backend
-        apiRequest('/api/game/scores', {
-          method: 'POST',
-          body: JSON.stringify({
-            testId: Number(testId),
-            score,
-            completionTime: timeElapsed,
-            completed: true
-          })
-        }).catch(err => {
-          console.error("Error saving score:", err);
-        });
       }
     } else {
       // Play sound for incorrect answer
@@ -145,24 +254,75 @@ export default function GameScreen() {
         playSoundEffect('incorrect', 0.5);
       }
       
-      // Wrong answers don't affect reveal percentage anymore
+      // Increase reveal percentage on wrong guess
+      setRevealPercent(prev => Math.min(prev + 10, 100));
+      
       setUserAnswer('');
+    }
+  };
+
+  // Save game score
+  const saveGameScore = async (earnedScore: number, completed: boolean) => {
+    try {
+      if (!testId) return;
+      
+      const scoreData = {
+        testId: testId,
+        userId: user?.uid,
+        score: earnedScore,
+        completionTime: timeElapsed,
+        attemptsCount: guessHistory.length,
+        completed: completed,
+        createdAt: serverTimestamp()
+      };
+      
+      await addDoc(collection(db, 'gameScores'), scoreData);
+      
+      // Add user activity if logged in
+      if (user) {
+        await addDoc(collection(db, 'userActivities'), {
+          userId: user.uid,
+          userName: user.displayName || user.email?.split('@')[0],
+          activityType: 'play_test',
+          details: `Test oynandı: ${test?.title}, Skor: ${earnedScore}`,
+          entityId: testId,
+          entityType: 'test',
+          createdAt: serverTimestamp()
+        });
+      }
+    } catch (error) {
+      console.error("Error saving game score:", error);
     }
   };
 
   // Handle skip button
   const handleSkip = () => {
-    if (test && Array.isArray(test.imageIds) && currentImageIndex < test.imageIds.length - 1) {
+    if (!test?.questions) return;
+    
+    // Save a score of 0 for skipping
+    saveGameScore(0, false);
+    
+    // Show correct answer
+    toast({
+      title: "Görsel Atlandı",
+      description: `Doğru cevap: ${correctAnswersRef.current[0]}`,
+      variant: "warning",
+    });
+    
+    // Move to next image or finish game
+    if (test && Array.isArray(test.questions) && currentImageIndex < test.questions.length - 1) {
       setCurrentImageIndex(prev => prev + 1);
       setUserAnswer('');
       setGuessHistory([]);
+      setRevealPercent(30); // Reset reveal percentage for next question
     } else {
+      // End of game
       setGameStatus('finished');
     }
   };
 
   // Loading state
-  if (isTestLoading || isImageLoading) {
+  if (isTestLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-8">
         <div className="text-center max-w-2xl w-full">
@@ -175,7 +335,7 @@ export default function GameScreen() {
   }
 
   // Error state
-  if (!test || (!currentImage && gameStatus === 'playing')) {
+  if (!test) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-8">
         <div className="text-center max-w-md">
@@ -188,10 +348,15 @@ export default function GameScreen() {
     );
   }
 
+  // Get current question
+  const currentQuestion = test.questions && test.questions.length > currentImageIndex 
+    ? test.questions[currentImageIndex] 
+    : null;
+
   // Game content
   return (
     <div className="max-w-content mx-auto pb-12 px-4 space-y-8">
-      {gameStatus === 'playing' && currentImage ? (
+      {gameStatus === 'playing' && currentQuestion ? (
         <>
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 py-6">
             <div>
@@ -217,7 +382,7 @@ export default function GameScreen() {
               
               <div className="flex items-center gap-1 px-3 py-2 rounded-full bg-secondary">
                 <LayoutGrid className="w-4 h-4 mr-1" />
-                <span className="text-sm font-medium">{currentImageIndex + 1}/{test?.imageIds?.length || 0}</span>
+                <span className="text-sm font-medium">{currentImageIndex + 1}/{test?.questions?.length || 0}</span>
               </div>
             </div>
           </div>
@@ -243,7 +408,7 @@ export default function GameScreen() {
                   {/* Image Reveal */}
                   <div className="rounded-lg overflow-hidden border border-border">
                     <ImageReveal 
-                      imageUrl={currentImage?.imageUrl || ''}
+                      imageUrl={currentQuestion.imageUrl}
                       revealPercent={revealPercent}
                       gridSize={5}
                       className="w-full aspect-[4/3] object-cover object-center"
@@ -315,8 +480,8 @@ export default function GameScreen() {
                 mode="test"
                 extraInfo={{
                   revealPercent: revealPercent,
-                  correctAnswers: guessHistory.filter(g => g.isCorrect).length,
-                  totalQuestions: test?.imageIds?.length || 0,
+                  correctAnswers: currentImageIndex,
+                  totalQuestions: test?.questions?.length || 0,
                   timeElapsed: timeElapsed
                 }}
               />
@@ -336,7 +501,7 @@ export default function GameScreen() {
                     </div>
                     <div className="flex justify-between py-2 border-b border-border">
                       <span className="text-muted-foreground">Toplam Görsel:</span>
-                      <span className="font-medium">{test?.imageIds?.length || 0}</span>
+                      <span className="font-medium">{test?.questions?.length || 0}</span>
                     </div>
                     <div className="flex justify-between py-2 border-b border-border">
                       <span className="text-muted-foreground">Mevcut Aşama:</span>
@@ -373,6 +538,12 @@ export default function GameScreen() {
                       text: `${test?.title} testinde ${formatTime(timeElapsed)} sürede ${score} puan topladım!`,
                       url: window.location.href
                     });
+                  } else {
+                    navigator.clipboard.writeText(window.location.href);
+                    toast({
+                      title: "Bağlantı kopyalandı",
+                      description: "Test bağlantısı panoya kopyalandı.",
+                    });
                   }
                 }}
               >
@@ -398,10 +569,10 @@ export default function GameScreen() {
               <div className="bg-muted h-1 w-full rounded-full mb-4"></div>
               <div className="flex justify-between text-sm text-muted-foreground">
                 <p>
-                  <span className="font-semibold">{test?.imageIds?.length || 0}</span> görsel
+                  <span className="font-semibold">{test?.questions?.length || 0}</span> görsel
                 </p>
                 <p>
-                  <span className="font-semibold">{guessHistory.filter(g => g.isCorrect).length}</span> doğru tahmin
+                  <span className="font-semibold">{test?.questions?.length || 0}</span> doğru tahmin
                 </p>
                 <p>
                   <span className="font-semibold">{timeElapsed}</span> saniye
@@ -418,27 +589,24 @@ export default function GameScreen() {
               <CardContent>
                 {similarTests && Array.isArray(similarTests) && similarTests.length > 0 ? (
                   <div className="space-y-3">
-                    {(similarTests as Test[])
-                      .filter(t => t.id !== Number(testId))
-                      .slice(0, 5)
-                      .map((similarTest, index) => (
-                        <div 
-                          key={index} 
-                          className="p-3 rounded-lg cursor-pointer hover:bg-muted transition-colors"
-                          onClick={() => window.location.href = `/test/${similarTest.id}`}
-                        >
-                          <h4 className="font-medium">{similarTest.title}</h4>
-                          <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <Heart className="w-3 h-3 text-red-500" /> {similarTest.likeCount || 0}
-                            </span>
-                            <span>•</span>
-                            <span className="flex items-center gap-1">
-                              {similarTest.imageIds?.length || 0} görsel
-                            </span>
-                          </div>
+                    {similarTests.map((similarTest, index) => (
+                      <div 
+                        key={index} 
+                        className="p-3 rounded-lg cursor-pointer hover:bg-muted transition-colors"
+                        onClick={() => window.location.href = `/test/${similarTest.id}`}
+                      >
+                        <h4 className="font-medium">{similarTest.title}</h4>
+                        <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Heart className="w-3 h-3 text-red-500" /> {similarTest.likeCount || 0}
+                          </span>
+                          <span>•</span>
+                          <span className="flex items-center gap-1">
+                            {similarTest.questions?.length || 0} görsel
+                          </span>
                         </div>
-                      ))}
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <div className="text-center py-6 text-muted-foreground">
@@ -461,11 +629,11 @@ export default function GameScreen() {
                   <div className="grid grid-cols-2 gap-2">
                     <div className="p-3 rounded-lg bg-muted text-center">
                       <p className="text-xs text-muted-foreground mb-1">Kategori</p>
-                      <p className="font-medium">{test?.categoryId ? "Film" : "Genel"}</p>
+                      <p className="font-medium">{test?.category?.name || "Genel"}</p>
                     </div>
                     <div className="p-3 rounded-lg bg-muted text-center">
                       <p className="text-xs text-muted-foreground mb-1">Görseller</p>
-                      <p className="font-medium">{test?.imageIds?.length || 0}</p>
+                      <p className="font-medium">{test?.questions?.length || 0}</p>
                     </div>
                     <div className="p-3 rounded-lg bg-muted text-center">
                       <p className="text-xs text-muted-foreground mb-1">Beğeni</p>
@@ -479,13 +647,34 @@ export default function GameScreen() {
                   
                   <Button 
                     className="w-full" 
-                    onClick={() => {
-                      apiRequest({
-                        url: `/api/tests/${testId}/like`,
-                        method: 'POST'
-                      }).catch(err => {
-                        console.error("Error liking test:", err);
-                      });
+                    onClick={async () => {
+                      if (!user) {
+                        toast({
+                          title: "Giriş yapmalısınız",
+                          description: "Testi beğenmek için giriş yapmalısınız.",
+                          variant: "destructive",
+                        });
+                        return;
+                      }
+                      
+                      try {
+                        const testRef = doc(db, 'tests', testId);
+                        await updateDoc(testRef, {
+                          likeCount: increment(1)
+                        });
+                        
+                        toast({
+                          title: "Test beğenildi",
+                          description: "Bu testi beğendiniz!",
+                        });
+                      } catch (error) {
+                        console.error("Error liking test:", error);
+                        toast({
+                          title: "Hata",
+                          description: "Test beğenilirken bir hata oluştu.",
+                          variant: "destructive",
+                        });
+                      }
                     }}
                   >
                     <ThumbsUp className="w-4 h-4 mr-2" /> Beğen
@@ -502,7 +691,7 @@ export default function GameScreen() {
             <CardContent>
               {comments && Array.isArray(comments) && comments.length > 0 ? (
                 <div className="space-y-3 max-h-80 overflow-y-auto mb-6">
-                  {(comments as TestComment[]).map((comment, index) => (
+                  {comments.map((comment, index) => (
                     <div key={index} className="bg-muted p-4 rounded-lg">
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex items-center gap-2">
@@ -512,10 +701,10 @@ export default function GameScreen() {
                           <h4 className="font-medium">{comment.userId ? "Kullanıcı" : "Anonim"}</h4>
                         </div>
                         <span className="text-xs text-muted-foreground px-2 py-1 rounded">
-                          {new Date(comment.createdAt || Date.now()).toLocaleDateString()}
+                          {comment.createdAt ? new Date(comment.createdAt.toDate()).toLocaleDateString() : ""}
                         </span>
                       </div>
-                      <p className="text-sm pl-10">{comment.text}</p>
+                      <p className="text-sm pl-10">{comment.comment}</p>
                     </div>
                   ))}
                 </div>
@@ -527,16 +716,56 @@ export default function GameScreen() {
               )}
               
               <div className="pt-4 border-t border-border">
-                <form className="flex gap-2" onSubmit={(e) => {
+                <form className="flex gap-2" onSubmit={async (e) => {
                   e.preventDefault();
-                  // Yorum gönderme işlemi
-                  toast({
-                    title: "Yorum gönderildi",
-                    description: "Yorumunuz onaylama sürecinden sonra yayınlanacaktır.",
-                    variant: "default"
-                  });
+                  
+                  const commentInput = e.currentTarget.elements.namedItem('comment') as HTMLInputElement;
+                  const comment = commentInput?.value;
+                  
+                  if (!comment?.trim()) {
+                    toast({
+                      title: "Yorum boş olamaz",
+                      description: "Lütfen bir yorum yazın.",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  
+                  if (!user) {
+                    toast({
+                      title: "Giriş yapmalısınız",
+                      description: "Yorum yapmak için giriş yapmalısınız.",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  
+                  try {
+                    await addDoc(collection(db, 'testComments'), {
+                      testId: testId,
+                      userId: user.uid,
+                      comment: comment.trim(),
+                      createdAt: serverTimestamp()
+                    });
+                    
+                    toast({
+                      title: "Yorum gönderildi",
+                      description: "Yorumunuz başarıyla eklendi.",
+                      variant: "default"
+                    });
+                    
+                    commentInput.value = '';
+                  } catch (error) {
+                    console.error("Error adding comment:", error);
+                    toast({
+                      title: "Hata",
+                      description: "Yorum eklenirken bir hata oluştu.",
+                      variant: "destructive",
+                    });
+                  }
                 }}>
                   <Input 
+                    name="comment"
                     placeholder="Yorumunuzu yazın..." 
                     className="flex-1" 
                   />

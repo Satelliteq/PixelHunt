@@ -80,7 +80,7 @@ service cloud.firestore {
     // Game scores collection
     match /gameScores/{scoreId} {
       // Only authenticated users can create scores
-      allow create: if isSignedIn();
+      allow create: if true; // Allow anonymous scores
       
       // Only admins can update or delete scores
       allow update, delete: if isAdmin();

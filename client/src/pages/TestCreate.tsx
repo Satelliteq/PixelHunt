@@ -7,10 +7,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuth } from "@/lib/AuthContext";
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs, query, where, orderBy } from 'firebase/firestore';
 import { storage, db } from '@/lib/firebase';
 import { createId } from '@paralleldrive/cuid2';
-import { createTest } from "@/lib/firebaseHelpers";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +25,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Slider } from "@/components/ui/slider";
 import { toast } from "@/hooks/use-toast";
 import { AlertTriangle, Trash, Upload, Plus, Image, Loader2 } from "lucide-react";
 
@@ -36,7 +34,6 @@ const testFormSchema = z.object({
   categoryId: z.string().min(1, "Lütfen bir kategori seçin"),
   isPublic: z.boolean().default(true),
   isAnonymous: z.boolean().default(false),
-  difficulty: z.number().min(1).max(5).default(2),
   thumbnailUrl: z.string().optional(),
   images: z.array(
     z.object({
@@ -89,8 +86,23 @@ export default function TestCreate() {
   ]);
 
   // Fetch categories
-  const { data: categories = [], isLoading: categoriesLoading } = useQuery<any[]>({
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery({
     queryKey: ['/api/categories'],
+    queryFn: async () => {
+      try {
+        const categoriesRef = collection(db, 'categories');
+        const q = query(categoriesRef, where('active', '==', true), orderBy('name'));
+        const querySnapshot = await getDocs(q);
+        
+        return querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        return [];
+      }
+    }
   });
 
   // Thumbnail yükleme işlevi
@@ -151,7 +163,6 @@ export default function TestCreate() {
       categoryId: "",
       isPublic: true,
       isAnonymous: false,
-      difficulty: 2,
       thumbnailUrl: "",
       images: [],
     },
@@ -231,22 +242,25 @@ export default function TestCreate() {
         }
       }
       
-      // Create test using the helper function
+      // Create test in Firestore
       const testData = {
+        uuid: createId(),
         title: values.title,
         description: values.description || "",
         categoryId: values.categoryId,
         creatorId: user.uid,
         questions: processedQuestions,
-        thumbnailUrl: finalThumbnail || null,
+        thumbnailUrl: finalThumbnail || processedQuestions[0]?.imageUrl,
         isPublic: values.isPublic,
         isAnonymous: values.isAnonymous,
         approved: true, // Auto-approve for now
         featured: false,
-        difficulty: values.difficulty || 2,
+        playCount: 0,
+        likeCount: 0,
+        createdAt: serverTimestamp()
       };
       
-      const createdTest = await createTest(testData);
+      const testRef = await addDoc(collection(db, 'tests'), testData);
       
       toast({
         title: "Test başarıyla oluşturuldu",
@@ -255,7 +269,7 @@ export default function TestCreate() {
       });
       
       // Navigate to the test page
-      navigate(`/test/${createdTest.id}`);
+      navigate(`/test/${testRef.id}`);
     } catch (error) {
       console.error("Test oluşturma hatası:", error);
       toast({
@@ -452,29 +466,6 @@ export default function TestCreate() {
                 )}
               />
             </div>
-            
-            <FormField
-              control={form.control}
-              name="difficulty"
-              render={({ field }) => (
-                <FormItem className="mt-4">
-                  <FormLabel>Zorluk Seviyesi: {field.value}</FormLabel>
-                  <FormControl>
-                    <Slider
-                      min={1}
-                      max={5}
-                      step={1}
-                      defaultValue={[field.value]}
-                      onValueChange={(vals) => field.onChange(vals[0])}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Testinizin zorluk seviyesini belirleyin (1: Kolay, 5: Çok Zor)
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
               <FormField

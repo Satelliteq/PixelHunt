@@ -8,6 +8,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -80,6 +81,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, orderBy, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+
 // Admin Sayfasına Giriş Kontrolü
 function AdminAccess() {
   const { user, loading } = useAuth();
@@ -106,11 +110,11 @@ function AdminAccess() {
         const isAdmin = user.app_metadata?.role === "admin" || 
                       user.user_metadata?.isAdmin === true ||
                       user.user_metadata?.role === "admin" ||
-                      user.id === '5d946ebe-c6b0-4488-801a-f4b1e67138bb' ||
+                      user.uid === '108973046762004266106' ||
                       user.email === 'pixelhuntfun@gmail.com';
                       
         console.log("Admin check:", { 
-          userId: user.id,
+          userId: user.uid,
           email: user.email,
           app_metadata: user.app_metadata,
           user_metadata: user.user_metadata,
@@ -132,7 +136,7 @@ function AdminAccess() {
   // Kullanıcı yükleniyor
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+      <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
         <p className="text-muted-foreground">Yetkilendiriliyor...</p>
       </div>
@@ -144,7 +148,7 @@ function AdminAccess() {
     user.app_metadata?.role === "admin" || 
     user.user_metadata?.isAdmin === true || 
     user.user_metadata?.role === "admin" ||
-    user.id === '5d946ebe-c6b0-4488-801a-f4b1e67138bb' ||
+    user.uid === '108973046762004266106' ||
     user.email === 'pixelhuntfun@gmail.com'
   )) {
     // Admin ID veya email ile kesin eşleşme varsa admin panelini göster
@@ -152,7 +156,7 @@ function AdminAccess() {
   }
   
   // Yetkilendirme kontrolleri useEffect ile yapılıyor, boş bir div döndür
-  return <div className="flex flex-col items-center justify-center min-h-[60vh]"></div>;
+  return <div className="flex items-center justify-center min-h-screen"></div>;
 }
 
 // Kullanılabilir ikonların listesi 
@@ -225,10 +229,16 @@ function AdminPanel() {
     try {
       // Yeni kategori ekleme
       if (!selectedCategory) {
-        await apiRequest("/api/categories", {
-          method: "POST",
-          data: values,
-        });
+        const categoryData = {
+          name: values.name,
+          description: values.description,
+          iconName: values.iconName || null,
+          active: values.active,
+          createdAt: serverTimestamp()
+        };
+        
+        await addDoc(collection(db, 'categories'), categoryData);
+        
         toast({
           title: "Başarılı",
           description: "Kategori başarıyla eklendi.",
@@ -236,10 +246,18 @@ function AdminPanel() {
       }
       // Kategori güncelleme
       else {
-        await apiRequest(`/api/categories/${selectedCategory.id}`, {
-          method: "PUT",
-          data: values,
-        });
+        const categoryRef = doc(db, 'categories', selectedCategory.id);
+        
+        const updateData = {
+          name: values.name,
+          description: values.description,
+          iconName: values.iconName,
+          active: values.active,
+          updatedAt: serverTimestamp()
+        };
+        
+        await updateDoc(categoryRef, updateData);
+        
         toast({
           title: "Başarılı",
           description: "Kategori başarıyla güncellendi.",
@@ -269,8 +287,16 @@ function AdminPanel() {
   const fetchCategories = async () => {
     setIsLoading(true);
     try {
-      const data = await apiRequest("/api/categories");
-      setCategories(data);
+      const categoriesRef = collection(db, 'categories');
+      const q = query(categoriesRef, orderBy('name'));
+      const querySnapshot = await getDocs(q);
+      
+      const categoriesData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      
+      setCategories(categoriesData);
     } catch (error) {
       console.error("Kategoriler yüklenirken hata:", error);
       toast({
@@ -287,8 +313,16 @@ function AdminPanel() {
   const fetchTests = async () => {
     setIsLoading(true);
     try {
-      const data = await apiRequest("/api/tests");
-      setTests(data);
+      const testsRef = collection(db, 'tests');
+      const q = query(testsRef, orderBy('createdAt', 'desc'));
+      const querySnapshot = await getDocs(q);
+      
+      const testsData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      
+      setTests(testsData);
     } catch (error) {
       console.error("Testler yüklenirken hata:", error);
       toast({
@@ -305,13 +339,15 @@ function AdminPanel() {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      const data = await apiRequest("/api/admin/users", {
-        headers: {
-          "x-admin-token": "admin-secret-token", // Geliştirme amacıyla
-          // Production ortamında oturum tabanlı kimlik doğrulama kullanacağız
-        }
-      });
-      setUsers(data);
+      const usersRef = collection(db, 'users');
+      const querySnapshot = await getDocs(usersRef);
+      
+      const usersData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      
+      setUsers(usersData);
     } catch (error) {
       console.error("Kullanıcılar yüklenirken hata:", error);
       toast({
@@ -341,12 +377,35 @@ function AdminPanel() {
     setIsLoading(true);
     try {
       // Aktiviteleri yükle
-      const data = await apiRequest("/api/admin/activities");
-      setActivities(data || []);
+      const activitiesRef = collection(db, 'userActivities');
+      const q = query(activitiesRef, orderBy('createdAt', 'desc'), limit(20));
+      const querySnapshot = await getDocs(q);
+      
+      const activitiesData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate()
+      }));
+      
+      setActivities(activitiesData);
       
       // Popüler testleri yükle
-      const popularData = await apiRequest("/api/tests/popular?limit=3");
-      setPopularTests(popularData || []);
+      const testsRef = collection(db, 'tests');
+      const testsQuery = query(
+        testsRef,
+        where('isPublic', '==', true),
+        where('approved', '==', true),
+        orderBy('playCount', 'desc'),
+        limit(3)
+      );
+      
+      const testsSnapshot = await getDocs(testsQuery);
+      const testsData = testsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      
+      setPopularTests(testsData);
     } catch (error) {
       console.error("Etkinlikler yüklenirken hata:", error);
       toast({
@@ -360,10 +419,24 @@ function AdminPanel() {
   };
   
   // Kullanıcı etkinliklerini göster
-  const showUserActivities = async (userId: number) => {
+  const showUserActivities = async (userId: string) => {
     try {
-      const data = await apiRequest(`/api/admin/users/${userId}/activities`);
-      setActivities(data);
+      const activitiesRef = collection(db, 'userActivities');
+      const q = query(
+        activitiesRef,
+        where('userId', '==', userId),
+        orderBy('createdAt', 'desc'),
+        limit(20)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const activitiesData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate()
+      }));
+      
+      setActivities(activitiesData);
       setActiveTab("activities");
     } catch (error) {
       console.error("Kullanıcı etkinlikleri yüklenirken hata:", error);
@@ -376,13 +449,13 @@ function AdminPanel() {
   };
 
   // Test silme
-  const handleDeleteTest = async (testId: number) => {
+  const handleDeleteTest = async (testId: string) => {
     if (window.confirm("Bu testi silmek istediğinize emin misiniz?")) {
       setIsLoading(true);
       try {
-        await apiRequest(`/api/tests/${testId}`, {
-          method: "DELETE",
-        });
+        const testRef = doc(db, 'tests', testId);
+        await deleteDoc(testRef);
+        
         toast({
           title: "Başarılı",
           description: "Test başarıyla silindi.",
@@ -403,7 +476,7 @@ function AdminPanel() {
   };
 
   // Kullanıcı banlama veya ban kaldırma
-  const handleBanUser = async (userId: number, currentBanStatus: boolean) => {
+  const handleBanUser = async (userId: string, currentBanStatus: boolean) => {
     const confirmMessage = currentBanStatus 
       ? "Bu kullanıcının banını kaldırmak istediğinize emin misiniz?" 
       : "Bu kullanıcıyı banlamak istediğinize emin misiniz?";
@@ -411,12 +484,9 @@ function AdminPanel() {
     if (window.confirm(confirmMessage)) {
       setIsLoading(true);
       try {
-        await apiRequest(`/api/admin/users/${userId}/ban`, {
-          method: "POST",
-          data: { banned: !currentBanStatus },
-          headers: {
-            "x-admin-token": "admin-secret-token", // Geliştirme amacıyla
-          }
+        const userRef = doc(db, 'users', userId);
+        await updateDoc(userRef, {
+          banned: !currentBanStatus
         });
         
         toast({
@@ -442,7 +512,7 @@ function AdminPanel() {
   };
 
   // Admin rolü atama
-  const handleToggleAdminRole = async (userId: number, currentRole: string) => {
+  const handleToggleAdminRole = async (userId: string, currentRole: string) => {
     const newRole = currentRole === "admin" ? "user" : "admin";
     const confirmMessage =
       currentRole === "admin"
@@ -452,12 +522,9 @@ function AdminPanel() {
     if (window.confirm(confirmMessage)) {
       setIsLoading(true);
       try {
-        await apiRequest(`/api/admin/users/${userId}/role`, {
-          method: "POST",
-          data: { role: newRole },
-          headers: {
-            "x-admin-token": "admin-secret-token", // Geliştirme amacıyla
-          }
+        const userRef = doc(db, 'users', userId);
+        await updateDoc(userRef, {
+          role: newRole
         });
         
         toast({
@@ -479,8 +546,6 @@ function AdminPanel() {
       }
     }
   };
-
-
 
   // Sayfa açıldığında ilgili verileri yükle
   useEffect(() => {
@@ -696,13 +761,14 @@ function AdminPanel() {
                       <TableHead>ID</TableHead>
                       <TableHead>Kategori Adı</TableHead>
                       <TableHead>Açıklama</TableHead>
+                      <TableHead>Durum</TableHead>
                       <TableHead className="text-right">İşlemler</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {categories.map((category) => (
                       <TableRow key={category.id}>
-                        <TableCell>{category.id}</TableCell>
+                        <TableCell className="font-mono text-xs">{category.id.substring(0, 8)}...</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
@@ -716,6 +782,13 @@ function AdminPanel() {
                         </TableCell>
                         <TableCell className="max-w-sm truncate">
                           {category.description}
+                        </TableCell>
+                        <TableCell>
+                          {category.active ? (
+                            <Badge variant="success" className="bg-green-500/10 text-green-600 border-green-200">Aktif</Badge>
+                          ) : (
+                            <Badge variant="destructive" className="bg-red-500/10 text-red-600 border-red-200">Pasif</Badge>
+                          )}
                         </TableCell>
                         <TableCell className="text-right">
                           <Button
@@ -747,7 +820,7 @@ function AdminPanel() {
                     Testleri görüntüleyin ve silin.
                   </CardDescription>
                 </div>
-                <Link to="/test-create">
+                <Link to="/create-test">
                   <Button>
                     <Plus className="w-4 h-4 mr-2" />
                     Yeni Test Oluştur
@@ -772,40 +845,39 @@ function AdminPanel() {
                       <TableHead>Test Adı</TableHead>
                       <TableHead>Kategori</TableHead>
                       <TableHead>Oluşturan</TableHead>
-                      <TableHead>Zorluk</TableHead>
+                      <TableHead>Durum</TableHead>
                       <TableHead className="text-right">İşlemler</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {tests.map((test) => (
                       <TableRow key={test.id}>
-                        <TableCell>{test.id}</TableCell>
+                        <TableCell className="font-mono text-xs">{test.id.substring(0, 8)}...</TableCell>
                         <TableCell>{test.title}</TableCell>
                         <TableCell>
-                          {test.category?.name || "Kategori yok"}
+                          {test.categoryId || "Kategori yok"}
                         </TableCell>
                         <TableCell>
-                          {test.createdBy?.username || "Bilinmeyen"}
+                          {test.creatorId || "Bilinmeyen"}
                         </TableCell>
                         <TableCell>
-                          <Badge
-                            variant={
-                              test.difficulty <= 2
-                                ? "outline"
-                                : test.difficulty <= 3
-                                  ? "secondary"
-                                  : test.difficulty <= 4
-                                    ? "default"
-                                    : "destructive"
-                            }
-                          >
-                            {test.difficulty}/5
-                          </Badge>
+                          <div className="flex flex-col gap-1">
+                            {test.isPublic ? (
+                              <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-200">Yayında</Badge>
+                            ) : (
+                              <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 border-yellow-200">Gizli</Badge>
+                            )}
+                            {test.approved ? (
+                              <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-200">Onaylı</Badge>
+                            ) : (
+                              <Badge variant="outline" className="bg-red-500/10 text-red-600 border-red-200">Onaysız</Badge>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Link to={`/test-edit/${test.id}`}>
-                            <Button variant="ghost" size="icon" title="Düzenle">
-                              <Edit className="w-4 h-4" />
+                          <Link to={`/test/${test.id}`}>
+                            <Button variant="ghost" size="icon" title="Görüntüle">
+                              <Eye className="w-4 h-4" />
                             </Button>
                           </Link>
                           <Button
@@ -859,8 +931,8 @@ function AdminPanel() {
                   <TableBody>
                     {users.map((user) => (
                       <TableRow key={user.id}>
-                        <TableCell>{user.id}</TableCell>
-                        <TableCell>{user.username}</TableCell>
+                        <TableCell className="font-mono text-xs">{user.id.substring(0, 8)}...</TableCell>
+                        <TableCell>{user.username || user.displayName || "Kullanıcı"}</TableCell>
                         <TableCell>{user.email}</TableCell>
                         <TableCell>
                           <Badge
@@ -875,7 +947,7 @@ function AdminPanel() {
                           {user.banned ? (
                             <Badge variant="destructive">Banlı</Badge>
                           ) : (
-                            <Badge variant="success">Aktif</Badge>
+                            <Badge variant="success" className="bg-green-500/10 text-green-600 border-green-200">Aktif</Badge>
                           )}
                         </TableCell>
                         <TableCell className="text-right">
@@ -961,7 +1033,7 @@ function AdminPanel() {
                               </TableCell>
                               <TableCell>{activity.details || '-'}</TableCell>
                               <TableCell>
-                                {new Date(activity.createdAt).toLocaleString('tr-TR')}
+                                {activity.createdAt ? new Date(activity.createdAt).toLocaleString('tr-TR') : '-'}
                               </TableCell>
                             </TableRow>
                           ))
