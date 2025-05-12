@@ -7,8 +7,8 @@ const serviceAccount = {
   "type": "service_account",
   "project_id": "pixelhunt-7afa8",
   "private_key_id": "private_key_id_placeholder",
-  // Parse private key from environment variable, replacing escaped newlines with actual newlines
-  "private_key": process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+  // Parse private key from environment variable, ensuring proper newline handling
+  "private_key": process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')?.replace(/["']/g, ''),
   "client_email": process.env.FIREBASE_CLIENT_EMAIL,
   "client_id": "client_id_placeholder",
   "auth_uri": "https://accounts.google.com/o/oauth2/auth",
