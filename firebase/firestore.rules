@@ -17,11 +17,6 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
     
-    // Allow initial setup of sample data
-    match /{document=**} {
-      allow read, write: if true;
-    }
-    
     // Users collection
     match /users/{userId} {
       // Anyone can read public user data
@@ -40,7 +35,7 @@ service cloud.firestore {
     // Categories collection
     match /categories/{categoryId} {
       // Allow read access to all categories
-      allow read;
+      allow read: if true;
       
       // Only admins can create, update, or delete categories
       allow create, update, delete: if isAdmin();
@@ -48,8 +43,8 @@ service cloud.firestore {
     
     // Images collection
     match /images/{imageId} {
-      // Anyone can read active images
-      allow read: if resource.data.active == true || isAdmin();
+      // Anyone can read images
+      allow read: if true;
       
       // Only admins or the creator can update images
       allow update: if isAdmin() || 
@@ -64,10 +59,8 @@ service cloud.firestore {
     
     // Tests collection
     match /tests/{testId} {
-      // Anyone can read public and approved tests
-      allow read: if (resource.data.isPublic == true && resource.data.approved == true) || 
-        isAdmin() || 
-        (isSignedIn() && resource.data.creatorId == request.auth.uid);
+      // Anyone can read tests
+      allow read: if true;
       
       // Only admins or the creator can update tests
       allow update: if isAdmin() || 
@@ -84,7 +77,7 @@ service cloud.firestore {
     // Test comments collection
     match /testComments/{commentId} {
       // Anyone can read comments
-      allow read;
+      allow read: if true;
       
       // Only authenticated users can create comments
       allow create: if isSignedIn();
@@ -97,7 +90,7 @@ service cloud.firestore {
     // Game scores collection
     match /gameScores/{scoreId} {
       // Anyone can read scores
-      allow read;
+      allow read: if true;
       
       // Only authenticated users can create scores
       allow create: if isSignedIn();
@@ -108,9 +101,8 @@ service cloud.firestore {
     
     // User activities collection
     match /userActivities/{activityId} {
-      // Users can read their own activities, admins can read all
-      allow read: if isAdmin() || 
-        (isSignedIn() && resource.data.userId == request.auth.uid);
+      // Anyone can read activities
+      allow read: if true;
       
       // Only the system or admins can create activities
       allow create: if isAdmin() || isSignedIn();
