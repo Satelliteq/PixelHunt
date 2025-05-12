@@ -226,14 +226,17 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Check if user is admin
   const checkUserAdminStatus = async (user: User) => {
+    // First check if user is in hardcoded admin list
+    const isHardcodedAdmin = user.email === 'pixelhuntfun@gmail.com' || 
+                            user.uid === '108973046762004266106';
+    
+    // If offline or hardcoded admin, return immediately
+    if (!navigator.onLine || isHardcodedAdmin) {
+      console.log(navigator.onLine ? "User is hardcoded admin" : "User is offline, using hardcoded admin list");
+      return isHardcodedAdmin;
+    }
+    
     try {
-      // If offline, check hardcoded admin list
-      if (!navigator.onLine) {
-        console.log("User is offline, using hardcoded admin list");
-        return user.email === 'pixelhuntfun@gmail.com' || 
-               user.uid === '108973046762004266106';
-      }
-      
       // Get user document from Firestore
       const userRef = doc(db, 'users', user.uid);
       const userSnap = await getDoc(userRef);
@@ -247,21 +250,18 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           return true;
         }
         
-        // Check if user is in admin list
-        if (user.email === 'pixelhuntfun@gmail.com' || 
-            user.uid === '108973046762004266106') {
-          console.log("User is admin via hardcoded admin list");
-          
-          // Update user document with admin role
+        // If user is in hardcoded admin list but not marked as admin in Firestore,
+        // update their role
+        if (isHardcodedAdmin) {
           try {
             await updateDoc(userRef, {
               role: 'admin'
             });
+            console.log("Updated hardcoded admin's role in Firestore");
           } catch (error) {
             console.error('Error updating admin role:', error);
             // Continue even if update fails
           }
-          
           return true;
         }
       }
@@ -270,8 +270,7 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } catch (error) {
       console.error('Admin status check error:', error);
       // If any error occurs, fall back to hardcoded admin check
-      return user.email === 'pixelhuntfun@gmail.com' || 
-             user.uid === '108973046762004266106';
+      return isHardcodedAdmin;
     }
   };
 
