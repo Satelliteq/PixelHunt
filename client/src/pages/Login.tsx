@@ -93,11 +93,7 @@ export default function Login() {
       await signInWithGoogle();
     } catch (error) {
       console.error('Login error:', error);
-      toast({
-        title: 'Giriş hatası',
-        description: 'Google ile giriş yapılırken bir hata oluştu. Lütfen tekrar deneyin.',
-        variant: 'destructive',
-      });
+      // Toast mesajı FirebaseContext içinde gösteriliyor
     }
   };
   
@@ -170,7 +166,7 @@ export default function Login() {
           <CardContent className="space-y-4">
             <div className="p-4 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-md text-amber-800 dark:text-amber-200">
               <div className="flex items-center">
-                <AlertTriangle className="h-5 w-5 mr-2" />
+                <AlertTriangle className="h-4 w-4 mr-2" />
                 <p>Kimlik doğrulama servisi bağlantı hatası</p>
               </div>
               <p className="text-sm mt-2">

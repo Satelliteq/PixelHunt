@@ -28,9 +28,8 @@ export default function Profile() {
   useEffect(() => {
     if (user) {
       // Safely access user metadata with optional chaining and defaults
-      const metadata = user.metadata || {};
-      setDisplayName(metadata.displayName || user.email?.split('@')[0] || '');
-      setUsername(metadata.username || user.email?.split('@')[0] || '');
+      setDisplayName(user.displayName || user.email?.split('@')[0] || '');
+      setUsername(user.email?.split('@')[0] || '');
     }
   }, [user]);
   
