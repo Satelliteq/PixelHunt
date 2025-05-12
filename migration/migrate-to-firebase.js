@@ -1,12 +1,23 @@
-const admin = require('firebase-admin');
-const { createClient } = require('@supabase/supabase-js');
-const fs = require('fs');
-const path = require('path');
-const fetch = require('node-fetch');
-require('dotenv').config();
+import admin from 'firebase-admin';
+import { createClient } from '@supabase/supabase-js';
+import fs from 'node:fs';
+import path from 'node:path';
+import fetch from 'node-fetch';
+import { fileURLToPath } from 'node:url';
+import { config } from 'dotenv';
+
+// Initialize environment variables
+config();
+
+// Get current file directory for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Initialize Firebase Admin
-const serviceAccount = require('./firebase-service-account.json');
+const serviceAccount = JSON.parse(
+  fs.readFileSync(path.join(__dirname, './firebase-service-account.json'), 'utf8')
+);
+
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   storageBucket: 'pixelhunt-7afa8.appspot.com'
