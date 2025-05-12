@@ -1,26 +1,21 @@
 import { initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import { createId } from '@paralleldrive/cuid2';
 
-// Load environment variables
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 // Initialize Firebase Admin
-let serviceAccount;
-try {
-  serviceAccount = JSON.parse(
-    process.env.FIREBASE_SERVICE_ACCOUNT || 
-    fs.readFileSync(path.join(__dirname, './firebase-service-account.json'), 'utf8')
-  );
-} catch (error) {
-  console.error('Error loading service account:', error);
-  console.log('Please ensure firebase-service-account.json exists or FIREBASE_SERVICE_ACCOUNT env var is set');
-  process.exit(1);
-}
+const serviceAccount = {
+  "type": "service_account",
+  "project_id": "pixelhunt-7afa8",
+  "private_key_id": "private_key_id_placeholder",
+  "private_key": process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n') || "private_key_placeholder",
+  "client_email": process.env.FIREBASE_CLIENT_EMAIL || "firebase-adminsdk-xxxxx@pixelhunt-7afa8.iam.gserviceaccount.com",
+  "client_id": "client_id_placeholder",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-xxxxx%40pixelhunt-7afa8.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+};
 
 // Initialize Firebase
 const firebaseApp = initializeApp({
@@ -151,6 +146,30 @@ async function createSampleData() {
         active: true,
         createdBy: adminUserRef.id,
         createdAt: FieldValue.serverTimestamp()
+      },
+      {
+        title: 'Mona Lisa',
+        imageUrl: 'https://images.unsplash.com/photo-1423742774270-6884aac775fa?w=500',
+        categoryId: categoryRefs['Sanat'],
+        answers: ['Mona Lisa', 'Leonardo da Vinci', 'da Vinci'],
+        difficulty: 1,
+        playCount: 150,
+        likeCount: 67,
+        active: true,
+        createdBy: adminUserRef.id,
+        createdAt: FieldValue.serverTimestamp()
+      },
+      {
+        title: 'Minecraft',
+        imageUrl: 'https://images.unsplash.com/photo-1627856013091-fed6e4e30025?w=500',
+        categoryId: categoryRefs['Oyunlar'],
+        answers: ['Minecraft', 'Mine Craft'],
+        difficulty: 1,
+        playCount: 250,
+        likeCount: 120,
+        active: true,
+        createdBy: adminUserRef.id,
+        createdAt: FieldValue.serverTimestamp()
       }
     ];
     
@@ -203,6 +222,52 @@ async function createSampleData() {
         thumbnailUrl: 'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=500',
         playCount: 35,
         likeCount: 15,
+        isPublic: true,
+        isAnonymous: false,
+        approved: true,
+        featured: false,
+        difficulty: 1,
+        createdAt: FieldValue.serverTimestamp()
+      },
+      {
+        uuid: createId(),
+        title: 'Sanat Eserleri',
+        description: 'Ünlü sanat eserlerini tanıyabilecek misiniz?',
+        creatorId: adminUserRef.id,
+        categoryId: categoryRefs['Sanat'],
+        questions: [
+          {
+            imageUrl: 'https://images.unsplash.com/photo-1423742774270-6884aac775fa?w=500',
+            answers: ['Mona Lisa', 'Leonardo da Vinci', 'da Vinci'],
+            question: 'Bu ünlü tablo nedir?'
+          }
+        ],
+        thumbnailUrl: 'https://images.unsplash.com/photo-1423742774270-6884aac775fa?w=500',
+        playCount: 42,
+        likeCount: 18,
+        isPublic: true,
+        isAnonymous: false,
+        approved: true,
+        featured: true,
+        difficulty: 1,
+        createdAt: FieldValue.serverTimestamp()
+      },
+      {
+        uuid: createId(),
+        title: 'Video Oyunları',
+        description: 'Popüler video oyunlarını tanıyabilecek misiniz?',
+        creatorId: adminUserRef.id,
+        categoryId: categoryRefs['Oyunlar'],
+        questions: [
+          {
+            imageUrl: 'https://images.unsplash.com/photo-1627856013091-fed6e4e30025?w=500',
+            answers: ['Minecraft', 'Mine Craft'],
+            question: 'Bu hangi oyun?'
+          }
+        ],
+        thumbnailUrl: 'https://images.unsplash.com/photo-1627856013091-fed6e4e30025?w=500',
+        playCount: 65,
+        likeCount: 30,
         isPublic: true,
         isAnonymous: false,
         approved: true,
