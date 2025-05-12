@@ -536,7 +536,7 @@ export async function incrementTestLikeCount(id: string): Promise<void> {
   }
 }
 
-export async function getPopularTests(limit: number = 5): Promise<Test[]> {
+export async function getPopularTests(limitCount: number = 5): Promise<Test[]> {
   try {
     const testsRef = collection(db, 'tests');
     const q = query(
@@ -544,7 +544,7 @@ export async function getPopularTests(limit: number = 5): Promise<Test[]> {
       where('isPublic', '==', true),
       where('approved', '==', true),
       orderBy('playCount', 'desc'),
-      limit(limit)
+      limit(limitCount)
     );
     
     const querySnapshot = await getDocs(q);
@@ -571,13 +571,13 @@ export async function getPopularTests(limit: number = 5): Promise<Test[]> {
         updatedAt: data.updatedAt?.toDate()
       };
     });
-  } catch (error) {
+  } catch (error)
     console.error('Error fetching popular tests:', error);
     return [];
   }
 }
 
-export async function getNewestTests(limit: number = 5): Promise<Test[]> {
+export async function getNewestTests(limitCount: number = 5): Promise<Test[]> {
   try {
     const testsRef = collection(db, 'tests');
     const q = query(
@@ -585,7 +585,7 @@ export async function getNewestTests(limit: number = 5): Promise<Test[]> {
       where('isPublic', '==', true),
       where('approved', '==', true),
       orderBy('createdAt', 'desc'),
-      limit(limit)
+      limit(limitCount)
     );
     
     const querySnapshot = await getDocs(q);
@@ -618,7 +618,7 @@ export async function getNewestTests(limit: number = 5): Promise<Test[]> {
   }
 }
 
-export async function getFeaturedTests(limit: number = 5): Promise<Test[]> {
+export async function getFeaturedTests(limitCount: number = 5): Promise<Test[]> {
   try {
     const testsRef = collection(db, 'tests');
     const q = query(
@@ -627,7 +627,7 @@ export async function getFeaturedTests(limit: number = 5): Promise<Test[]> {
       where('approved', '==', true),
       where('featured', '==', true),
       orderBy('createdAt', 'desc'),
-      limit(limit)
+      limit(limitCount)
     );
     
     const querySnapshot = await getDocs(q);

@@ -63,11 +63,22 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
       
       return result;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error signing in with Google:', error);
+      
+      let errorMessage = "Google ile giriş yapılırken bir hata oluştu.";
+      
+      if (error.code === "auth/unauthorized-domain") {
+        errorMessage = "Bu domain üzerinden giriş yapılamıyor. Lütfen yetkili bir domain kullanın.";
+      } else if (error.code === "auth/popup-closed-by-user") {
+        errorMessage = "Giriş penceresi kapatıldı. Lütfen tekrar deneyin.";
+      } else if (error.code === "auth/cancelled-popup-request") {
+        errorMessage = "Birden fazla giriş penceresi açıldı. Lütfen tekrar deneyin.";
+      }
+      
       toast({
         title: "Google ile Giriş Hatası",
-        description: "Google ile giriş yapılırken bir hata oluştu. Lütfen tekrar deneyin.",
+        description: errorMessage,
         variant: "destructive"
       });
       throw error;
@@ -187,8 +198,6 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
   
   const resendConfirmationEmail = async (email: string) => {
-    // Firebase doesn't have a direct equivalent to Supabase's email confirmation resend
-    // This is a placeholder function that could be implemented with Firebase Cloud Functions
     toast({
       title: "Bilgi",
       description: "Firebase'de e-posta doğrulaması otomatik olarak gönderilir ve yeniden gönderme işlemi gerekli değildir.",
@@ -224,36 +233,45 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return false;
       }
       
-      // Get user document from Firestore
-      const userRef = doc(db, 'users', user.uid);
-      const userSnap = await getDoc(userRef);
-      
-      if (userSnap.exists()) {
-        const userData = userSnap.data();
+      try {
+        // Get user document from Firestore
+        const userRef = doc(db, 'users', user.uid);
+        const userSnap = await getDoc(userRef);
         
-        // Check if user has admin role
-        if (userData.role === 'admin') {
-          console.log("User is admin via Firestore role");
-          return true;
-        }
-        
-        // Check if user is in admin list
-        if (user.email === 'pixelhuntfun@gmail.com' || 
-            user.uid === '108973046762004266106') {
-          console.log("User is admin via hardcoded admin list");
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
           
-          // Update user document with admin role
-          if (navigator.onLine) {
-            try {
-              await updateDoc(userRef, {
-                role: 'admin'
-              });
-            } catch (error) {
-              console.error('Error updating admin role:', error);
-              // Continue even if update fails
-            }
+          // Check if user has admin role
+          if (userData.role === 'admin') {
+            console.log("User is admin via Firestore role");
+            return true;
           }
           
+          // Check if user is in admin list
+          if (user.email === 'pixelhuntfun@gmail.com' || 
+              user.uid === '108973046762004266106') {
+            console.log("User is admin via hardcoded admin list");
+            
+            // Update user document with admin role if online
+            if (navigator.onLine) {
+              try {
+                await updateDoc(userRef, {
+                  role: 'admin'
+                });
+              } catch (error) {
+                console.error('Error updating admin role:', error);
+                // Continue even if update fails
+              }
+            }
+            
+            return true;
+          }
+        }
+      } catch (error) {
+        console.error('Error checking Firestore admin status:', error);
+        // If Firestore check fails, fall back to hardcoded admin check
+        if (user.email === 'pixelhuntfun@gmail.com' || 
+            user.uid === '108973046762004266106') {
           return true;
         }
       }
