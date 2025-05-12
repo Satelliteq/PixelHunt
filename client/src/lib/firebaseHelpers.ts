@@ -834,23 +834,16 @@ export async function getFeaturedTests(limitCount: number = 5): Promise<Test[]> 
 // Search function
 export async function searchTests(query: string, categoryId?: string): Promise<Test[]> {
   try {
-    const testsRef = collection(db, 'tests');
-    let q;
-    
     // Base query conditions
-    const conditions = [
+    const testsRef = collection(db, 'tests');
+    let q = query(
+      testsRef,
       where('isPublic', '==', true),
-      orderBy('createdAt', 'desc'),
+      orderBy('title'),
       limit(20)
-    ];
-    
-    // Add category filter if provided
-    if (categoryId) {
-      conditions.push(where('categoryId', '==', categoryId));
-    }
+    );
     
     // Execute query
-    q = query(testsRef, ...conditions);
     const querySnapshot = await getDocs(q);
     
     // Filter results client-side for text search
@@ -886,6 +879,11 @@ export async function searchTests(query: string, categoryId?: string): Promise<T
         test.title.toLowerCase().includes(normalizedQuery) || 
         (test.description && test.description.toLowerCase().includes(normalizedQuery))
       );
+    }
+    
+    // Filter by category if provided
+    if (categoryId) {
+      results = results.filter(test => test.categoryId === categoryId);
     }
     
     return results;

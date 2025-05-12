@@ -2,7 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, connectAuthEmulator } from 'firebase/auth';
 import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getStorage, connectStorageEmulator } from 'firebase/storage';
-import { getDatabase } from 'firebase/database';
+import { getDatabase, connectDatabaseEmulator } from 'firebase/database';
 
 // Firebase configuration
 const firebaseConfig = {
@@ -27,6 +27,7 @@ if (import.meta.env.DEV && window.location.hostname === 'localhost') {
   connectAuthEmulator(auth, 'http://localhost:9099');
   connectFirestoreEmulator(db, 'localhost', 8080);
   connectStorageEmulator(storage, 'localhost', 9199);
+  connectDatabaseEmulator(rtdb, 'localhost', 9000);
 }
 
 export { app, auth, db, storage, rtdb };

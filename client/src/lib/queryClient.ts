@@ -13,7 +13,10 @@ import {
   updateDoc, 
   deleteDoc, 
   increment, 
-  serverTimestamp 
+  serverTimestamp,
+  DocumentData,
+  QueryDocumentSnapshot,
+  FirestoreDataConverter
 } from 'firebase/firestore';
 import { 
   getAllCategories, 

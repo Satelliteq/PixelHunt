@@ -36,7 +36,8 @@ const testFormSchema = z.object({
   categoryId: z.string().min(1, "Lütfen bir kategori seçin"),
   isPublic: z.boolean().default(true),
   isAnonymous: z.boolean().default(false),
-  thumbnail: z.string().optional(),
+  difficulty: z.number().min(1).max(5).default(2),
+  thumbnailUrl: z.string().optional(),
   images: z.array(
     z.object({
       imageUrl: z.string().url("Geçerli bir URL girmelisiniz"),
@@ -129,7 +130,7 @@ export default function TestCreate() {
       const downloadURL = await getDownloadURL(snapshot.ref);
       
       setThumbnail(downloadURL);
-      form.setValue("thumbnail", downloadURL);
+      form.setValue("thumbnailUrl", downloadURL);
       setUploading(false);
     } catch (error) {
       setUploading(false);
@@ -150,7 +151,8 @@ export default function TestCreate() {
       categoryId: "",
       isPublic: true,
       isAnonymous: false,
-      thumbnail: "",
+      difficulty: 2,
+      thumbnailUrl: "",
       images: [],
     },
   });
@@ -208,7 +210,7 @@ export default function TestCreate() {
       );
       
       // Process thumbnail if it's a data URL
-      let finalThumbnail = thumbnail;
+      let finalThumbnail = thumbnail || (imageInputs[0]?.imageUrl || '');
       if (finalThumbnail && finalThumbnail.startsWith('data:image/')) {
         try {
           // Convert data URL to blob
@@ -241,7 +243,7 @@ export default function TestCreate() {
         isAnonymous: values.isAnonymous,
         approved: true, // Auto-approve for now
         featured: false,
-        difficulty: 2, // Default difficulty
+        difficulty: values.difficulty || 2,
       };
       
       const createdTest = await createTest(testData);
@@ -451,6 +453,29 @@ export default function TestCreate() {
               />
             </div>
             
+            <FormField
+              control={form.control}
+              name="difficulty"
+              render={({ field }) => (
+                <FormItem className="mt-4">
+                  <FormLabel>Zorluk Seviyesi: {field.value}</FormLabel>
+                  <FormControl>
+                    <Slider
+                      min={1}
+                      max={5}
+                      step={1}
+                      defaultValue={[field.value]}
+                      onValueChange={(vals) => field.onChange(vals[0])}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Testinizin zorluk seviyesini belirleyin (1: Kolay, 5: Çok Zor)
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
               <FormField
                 control={form.control}
@@ -501,7 +526,7 @@ export default function TestCreate() {
 
             <FormField
               control={form.control}
-              name="thumbnail"
+              name="thumbnailUrl"
               render={({ field }) => (
                 <FormItem className="mt-4">
                   <FormLabel>Kapak Fotoğrafı</FormLabel>
