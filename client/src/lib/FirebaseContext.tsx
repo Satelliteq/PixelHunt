@@ -32,7 +32,8 @@ const AUTHORIZED_DOMAINS = [
   'localhost',
   'localhost:3000',
   'localhost:5173',
-  'pixelhunt-7afa8.firebaseapp.com'
+  'pixelhunt-7afa8.firebaseapp.com',
+  'zp1v56uxy8rdx5ypatb0ockcb9tr6a-oci3--3000--4d9fd228.local-credentialless.webcontainer-api.io'
 ];
 
 // Hardcoded admin list for offline fallback
