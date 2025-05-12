@@ -130,7 +130,7 @@ async function seedData() {
       const imagesData = [
         {
           title: 'Ferrari 458',
-          imageUrl: '/attached_assets/ba1f50f644077acc8bedb8b0634c1af8.jpg',
+          imageUrl: 'https://images.unsplash.com/photo-1592198084033-aade902d1aae?w=800',
           categoryId: categoryRefs['Arabalar'] || Object.values(categoryRefs)[0],
           answers: ['Ferrari', 'Ferrari 458', '458 Italia'],
           difficulty: 2,
@@ -141,7 +141,7 @@ async function seedData() {
         },
         {
           title: 'İstanbul Boğazı',
-          imageUrl: '/attached_assets/86b4065a7c34a1c78de57b71078b4f5b.jpg',
+          imageUrl: 'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=800',
           categoryId: categoryRefs['Coğrafya'] || Object.values(categoryRefs)[1],
           answers: ['İstanbul', 'Istanbul', 'Boğaz', 'Bogazici', 'Bosphorus'],
           difficulty: 1,
@@ -152,7 +152,7 @@ async function seedData() {
         },
         {
           title: 'Star Wars - Darth Vader',
-          imageUrl: '/attached_assets/6c161a984b072640f8d7cde4b759f0a8.jpg',
+          imageUrl: 'https://images.unsplash.com/photo-1608889825103-eb5ed706fc64?w=800',
           categoryId: categoryRefs['Film & TV'] || Object.values(categoryRefs)[2],
           answers: ['Star Wars', 'Darth Vader', 'Vader'],
           difficulty: 2,
@@ -163,7 +163,7 @@ async function seedData() {
         },
         {
           title: 'Mona Lisa',
-          imageUrl: 'https://images.unsplash.com/photo-1423742774270-6884aac775fa?w=500',
+          imageUrl: 'https://images.unsplash.com/photo-1423742774270-6884aac775fa?w=800',
           categoryId: categoryRefs['Sanat'] || Object.values(categoryRefs)[3],
           answers: ['Mona Lisa', 'Leonardo da Vinci', 'da Vinci'],
           difficulty: 1,
@@ -174,12 +174,45 @@ async function seedData() {
         },
         {
           title: 'Minecraft',
-          imageUrl: 'https://images.unsplash.com/photo-1607853202273-797f1c22a38e?w=500',
+          imageUrl: 'https://images.unsplash.com/photo-1607853202273-797f1c22a38e?w=800',
           categoryId: categoryRefs['Oyunlar'] || Object.values(categoryRefs)[4],
           answers: ['Minecraft', 'Mine Craft'],
           difficulty: 1,
           playCount: 250,
           likeCount: 120,
+          active: true,
+          createdAt: serverTimestamp()
+        },
+        {
+          title: 'Lamborghini Aventador',
+          imageUrl: 'https://images.unsplash.com/photo-1544829099-b9a0c07fad1a?w=800',
+          categoryId: categoryRefs['Arabalar'] || Object.values(categoryRefs)[0],
+          answers: ['Lamborghini', 'Lamborghini Aventador', 'Aventador'],
+          difficulty: 2,
+          playCount: 180,
+          likeCount: 95,
+          active: true,
+          createdAt: serverTimestamp()
+        },
+        {
+          title: 'Eyfel Kulesi',
+          imageUrl: 'https://images.unsplash.com/photo-1543349689-9a4d426bee8e?w=800',
+          categoryId: categoryRefs['Coğrafya'] || Object.values(categoryRefs)[1],
+          answers: ['Eyfel Kulesi', 'Eiffel Tower', 'Paris'],
+          difficulty: 1,
+          playCount: 220,
+          likeCount: 110,
+          active: true,
+          createdAt: serverTimestamp()
+        },
+        {
+          title: 'Harry Potter',
+          imageUrl: 'https://images.unsplash.com/photo-1551269901-5c5e14c25df7?w=800',
+          categoryId: categoryRefs['Film & TV'] || Object.values(categoryRefs)[2],
+          answers: ['Harry Potter', 'Hogwarts'],
+          difficulty: 1,
+          playCount: 240,
+          likeCount: 130,
           active: true,
           createdAt: serverTimestamp()
         }
@@ -212,12 +245,17 @@ async function seedData() {
           categoryId: categoryRefs['Arabalar'] || Object.values(categoryRefs)[0],
           questions: [
             {
-              imageUrl: '/attached_assets/ba1f50f644077acc8bedb8b0634c1af8.jpg',
+              imageUrl: 'https://images.unsplash.com/photo-1592198084033-aade902d1aae?w=800',
               answers: ['Ferrari', 'Ferrari 458', '458 Italia'],
               question: 'Bu görselde ne görüyorsunuz?'
+            },
+            {
+              imageUrl: 'https://images.unsplash.com/photo-1544829099-b9a0c07fad1a?w=800',
+              answers: ['Lamborghini', 'Lamborghini Aventador', 'Aventador'],
+              question: 'Bu araba hangi markaya ait?'
             }
           ],
-          thumbnailUrl: '/attached_assets/ba1f50f644077acc8bedb8b0634c1af8.jpg',
+          thumbnailUrl: 'https://images.unsplash.com/photo-1592198084033-aade902d1aae?w=800',
           playCount: 50,
           likeCount: 20,
           isPublic: true,
@@ -235,12 +273,17 @@ async function seedData() {
           categoryId: categoryRefs['Coğrafya'] || Object.values(categoryRefs)[1],
           questions: [
             {
-              imageUrl: '/attached_assets/86b4065a7c34a1c78de57b71078b4f5b.jpg',
+              imageUrl: 'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=800',
               answers: ['İstanbul', 'Istanbul', 'Boğaz', 'Bogazici', 'Bosphorus'],
               question: 'Bu görselde hangi şehir görünüyor?'
+            },
+            {
+              imageUrl: 'https://images.unsplash.com/photo-1543349689-9a4d426bee8e?w=800',
+              answers: ['Eyfel Kulesi', 'Eiffel Tower', 'Paris'],
+              question: 'Bu ünlü yapı nedir?'
             }
           ],
-          thumbnailUrl: '/attached_assets/86b4065a7c34a1c78de57b71078b4f5b.jpg',
+          thumbnailUrl: 'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=800',
           playCount: 35,
           likeCount: 15,
           isPublic: true,
@@ -258,12 +301,17 @@ async function seedData() {
           categoryId: categoryRefs['Film & TV'] || Object.values(categoryRefs)[2],
           questions: [
             {
-              imageUrl: '/attached_assets/6c161a984b072640f8d7cde4b759f0a8.jpg',
+              imageUrl: 'https://images.unsplash.com/photo-1608889825103-eb5ed706fc64?w=800',
               answers: ['Star Wars', 'Darth Vader', 'Vader'],
               question: 'Bu görselde hangi film karakteri görünüyor?'
+            },
+            {
+              imageUrl: 'https://images.unsplash.com/photo-1551269901-5c5e14c25df7?w=800',
+              answers: ['Harry Potter', 'Hogwarts'],
+              question: 'Bu hangi film serisine ait?'
             }
           ],
-          thumbnailUrl: '/attached_assets/6c161a984b072640f8d7cde4b759f0a8.jpg',
+          thumbnailUrl: 'https://images.unsplash.com/photo-1608889825103-eb5ed706fc64?w=800',
           playCount: 65,
           likeCount: 30,
           isPublic: true,
@@ -281,12 +329,12 @@ async function seedData() {
           categoryId: categoryRefs['Sanat'] || Object.values(categoryRefs)[3],
           questions: [
             {
-              imageUrl: 'https://images.unsplash.com/photo-1423742774270-6884aac775fa?w=500',
+              imageUrl: 'https://images.unsplash.com/photo-1423742774270-6884aac775fa?w=800',
               answers: ['Mona Lisa', 'Leonardo da Vinci', 'da Vinci'],
               question: 'Bu ünlü tablo nedir?'
             }
           ],
-          thumbnailUrl: 'https://images.unsplash.com/photo-1423742774270-6884aac775fa?w=500',
+          thumbnailUrl: 'https://images.unsplash.com/photo-1423742774270-6884aac775fa?w=800',
           playCount: 42,
           likeCount: 18,
           isPublic: true,
@@ -304,12 +352,12 @@ async function seedData() {
           categoryId: categoryRefs['Oyunlar'] || Object.values(categoryRefs)[4],
           questions: [
             {
-              imageUrl: 'https://images.unsplash.com/photo-1607853202273-797f1c22a38e?w=500',
+              imageUrl: 'https://images.unsplash.com/photo-1607853202273-797f1c22a38e?w=800',
               answers: ['Minecraft', 'Mine Craft'],
               question: 'Bu hangi oyun?'
             }
           ],
-          thumbnailUrl: 'https://images.unsplash.com/photo-1607853202273-797f1c22a38e?w=500',
+          thumbnailUrl: 'https://images.unsplash.com/photo-1607853202273-797f1c22a38e?w=800',
           playCount: 65,
           likeCount: 30,
           isPublic: true,

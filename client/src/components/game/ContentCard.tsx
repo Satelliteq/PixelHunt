@@ -12,7 +12,7 @@ type ContentCardProps = {
 
 export default function ContentCard({
   title,
-  imageUrl = "/default-test-thumb.jpg",
+  imageUrl = "https://images.unsplash.com/photo-1592198084033-aade902d1aae?w=500",
   playCount,
   likeCount,
   duration,
@@ -25,9 +25,15 @@ export default function ContentCard({
     >
       <div className="relative aspect-video">
         <img 
-          src={imageUrl} 
+          src={imageUrl.startsWith('/attached_assets/') 
+            ? `https://images.unsplash.com/photo-1592198084033-aade902d1aae?w=500` // Default fallback image
+            : imageUrl} 
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
           alt={title}
+          onError={(e) => {
+            // If image fails to load, replace with a default image
+            (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1592198084033-aade902d1aae?w=500";
+          }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-center justify-center opacity-90 group-hover:opacity-100 transition-opacity">
           <button 

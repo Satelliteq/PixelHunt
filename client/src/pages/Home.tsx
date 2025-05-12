@@ -330,7 +330,7 @@ export default function Home() {
                         <div className="aspect-video relative group">
                           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-80 group-hover:opacity-60 transition-opacity"></div>
                           <img 
-                            src={test.thumbnailUrl || `/attached_assets/ba1f50f644077acc8bedb8b0634c1af8.jpg`} 
+                            src={test.thumbnailUrl || 'https://images.unsplash.com/photo-1592198084033-aade902d1aae?w=500'} 
                             alt={test.title}
                             className="w-full h-full object-cover"
                           />
@@ -421,7 +421,7 @@ export default function Home() {
                     <ContentCard
                       key={test.id}
                       title={test.title}
-                      imageUrl={test.thumbnailUrl || '/default-test-thumb.jpg'}
+                      imageUrl={test.thumbnailUrl || 'https://images.unsplash.com/photo-1592198084033-aade902d1aae?w=500'}
                       playCount={test.playCount}
                       likeCount={test.likeCount}
                       duration={`${test.questions && Array.isArray(test.questions) ? test.questions.length : 0} ${t('question')}`}
@@ -492,18 +492,22 @@ export default function Home() {
                     Array(10).fill(0).map((_, index) => (
                       <div key={index} className="animate-pulse test-card rounded-xl h-[220px]"></div>
                     ))
-                  ) : (
-                    featuredTests?.map((test) => (
+                  ) : featuredTests && featuredTests.length > 0 ? (
+                    featuredTests.map((test) => (
                       <ContentCard
                         key={test.id}
                         title={test.title}
-                        imageUrl={test.thumbnailUrl || '/default-test-thumb.jpg'}
+                        imageUrl={test.thumbnailUrl || 'https://images.unsplash.com/photo-1592198084033-aade902d1aae?w=500'}
                         playCount={test.playCount || 0}
                         likeCount={test.likeCount || 0}
                         duration={`${test.questions && Array.isArray(test.questions) ? test.questions.length : 0} ${t('question')}`}
                         onClick={() => handleTestClick(test.id)}
                       />
                     ))
+                  ) : (
+                    <div className="col-span-5 text-center py-8 bg-muted/30 rounded-lg">
+                      <p className="text-muted-foreground">Henüz öne çıkan test bulunmuyor.</p>
+                    </div>
                   )}
                 </div>
               </TabsContent>
@@ -514,18 +518,22 @@ export default function Home() {
                     Array(10).fill(0).map((_, index) => (
                       <div key={index} className="animate-pulse test-card rounded-xl h-[220px]"></div>
                     ))
-                  ) : (
-                    popularTests?.map((test) => (
+                  ) : popularTests && popularTests.length > 0 ? (
+                    popularTests.map((test) => (
                       <ContentCard
                         key={test.id}
                         title={test.title}
-                        imageUrl={test.thumbnailUrl || '/default-test-thumb.jpg'}
+                        imageUrl={test.thumbnailUrl || 'https://images.unsplash.com/photo-1592198084033-aade902d1aae?w=500'}
                         playCount={test.playCount || 0}
                         likeCount={test.likeCount || 0}
                         duration={`${test.questions && Array.isArray(test.questions) ? test.questions.length : 0} ${t('question')}`}
                         onClick={() => handleTestClick(test.id)}
                       />
                     ))
+                  ) : (
+                    <div className="col-span-5 text-center py-8 bg-muted/30 rounded-lg">
+                      <p className="text-muted-foreground">Henüz popüler test bulunmuyor.</p>
+                    </div>
                   )}
                 </div>
               </TabsContent>
@@ -536,18 +544,22 @@ export default function Home() {
                     Array(10).fill(0).map((_, index) => (
                       <div key={index} className="animate-pulse test-card rounded-xl h-[220px]"></div>
                     ))
-                  ) : (
-                    newestTests?.map((test) => (
+                  ) : newestTests && newestTests.length > 0 ? (
+                    newestTests.map((test) => (
                       <ContentCard
                         key={test.id}
                         title={test.title}
-                        imageUrl={test.thumbnailUrl || '/default-test-thumb.jpg'}
+                        imageUrl={test.thumbnailUrl || 'https://images.unsplash.com/photo-1592198084033-aade902d1aae?w=500'}
                         playCount={test.playCount || 0}
                         likeCount={test.likeCount || 0}
                         duration={`${test.questions && Array.isArray(test.questions) ? test.questions.length : 0} ${t('question')}`}
                         onClick={() => handleTestClick(test.id)}
                       />
                     ))
+                  ) : (
+                    <div className="col-span-5 text-center py-8 bg-muted/30 rounded-lg">
+                      <p className="text-muted-foreground">Henüz yeni test bulunmuyor.</p>
+                    </div>
                   )}
                 </div>
               </TabsContent>

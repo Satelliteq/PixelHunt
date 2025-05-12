@@ -190,7 +190,7 @@ export async function initializeSampleData() {
     const imagesData = [
       {
         title: 'Ferrari 458',
-        imageUrl: '/attached_assets/ba1f50f644077acc8bedb8b0634c1af8.jpg',
+        imageUrl: 'https://images.unsplash.com/photo-1592198084033-aade902d1aae?w=800',
         categoryId: '1', // Will be updated after categories are created
         answers: ['Ferrari', 'Ferrari 458', '458 Italia'],
         difficulty: 2,
@@ -201,7 +201,7 @@ export async function initializeSampleData() {
       },
       {
         title: 'İstanbul Boğazı',
-        imageUrl: '/attached_assets/86b4065a7c34a1c78de57b71078b4f5b.jpg',
+        imageUrl: 'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=800',
         categoryId: '2', // Will be updated after categories are created
         answers: ['İstanbul', 'Istanbul', 'Boğaz', 'Bogazici', 'Bosphorus'],
         difficulty: 1,
@@ -212,7 +212,7 @@ export async function initializeSampleData() {
       },
       {
         title: 'Star Wars - Darth Vader',
-        imageUrl: '/attached_assets/6c161a984b072640f8d7cde4b759f0a8.jpg',
+        imageUrl: 'https://images.unsplash.com/photo-1608889825103-eb5ed706fc64?w=800',
         categoryId: '3', // Will be updated after categories are created
         answers: ['Star Wars', 'Darth Vader', 'Vader'],
         difficulty: 2,
@@ -251,12 +251,12 @@ export async function initializeSampleData() {
         categoryId: categoryIds['1'],
         questions: [
           {
-            imageUrl: '/attached_assets/ba1f50f644077acc8bedb8b0634c1af8.jpg',
+            imageUrl: 'https://images.unsplash.com/photo-1592198084033-aade902d1aae?w=800',
             answers: ['Ferrari', 'Ferrari 458', '458 Italia'],
             question: 'Bu görselde ne görüyorsunuz?'
           }
         ],
-        thumbnailUrl: '/attached_assets/ba1f50f644077acc8bedb8b0634c1af8.jpg',
+        thumbnailUrl: 'https://images.unsplash.com/photo-1592198084033-aade902d1aae?w=800',
         playCount: 50,
         likeCount: 20,
         isPublic: true,
@@ -274,12 +274,12 @@ export async function initializeSampleData() {
         categoryId: categoryIds['2'],
         questions: [
           {
-            imageUrl: '/attached_assets/86b4065a7c34a1c78de57b71078b4f5b.jpg',
+            imageUrl: 'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=800',
             answers: ['İstanbul', 'Istanbul', 'Boğaz', 'Bogazici', 'Bosphorus'],
             question: 'Bu görselde hangi şehir görünüyor?'
           }
         ],
-        thumbnailUrl: '/attached_assets/86b4065a7c34a1c78de57b71078b4f5b.jpg',
+        thumbnailUrl: 'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=800',
         playCount: 35,
         likeCount: 15,
         isPublic: true,
@@ -297,12 +297,12 @@ export async function initializeSampleData() {
         categoryId: categoryIds['3'],
         questions: [
           {
-            imageUrl: '/attached_assets/6c161a984b072640f8d7cde4b759f0a8.jpg',
+            imageUrl: 'https://images.unsplash.com/photo-1608889825103-eb5ed706fc64?w=800',
             answers: ['Star Wars', 'Darth Vader', 'Vader'],
             question: 'Bu görselde hangi film karakteri görünüyor?'
           }
         ],
-        thumbnailUrl: '/attached_assets/6c161a984b072640f8d7cde4b759f0a8.jpg',
+        thumbnailUrl: 'https://images.unsplash.com/photo-1608889825103-eb5ed706fc64?w=800',
         playCount: 65,
         likeCount: 30,
         isPublic: true,
@@ -551,7 +551,7 @@ export async function getAllTests(): Promise<Test[]> {
         creatorId: data.creatorId,
         categoryId: data.categoryId,
         questions: data.questions || [],
-        thumbnailUrl: data.thumbnailUrl,
+        thumbnailUrl: data.thumbnailUrl || getDefaultThumbnail(),
         playCount: data.playCount || 0,
         likeCount: data.likeCount || 0,
         isPublic: data.isPublic !== false,
@@ -584,7 +584,7 @@ export async function getTest(id: string): Promise<Test | null> {
         creatorId: data.creatorId,
         categoryId: data.categoryId,
         questions: data.questions || [],
-        thumbnailUrl: data.thumbnailUrl,
+        thumbnailUrl: data.thumbnailUrl || getDefaultThumbnail(),
         playCount: data.playCount || 0,
         likeCount: data.likeCount || 0,
         isPublic: data.isPublic !== false,
@@ -621,7 +621,7 @@ export async function getTestByUuid(uuid: string): Promise<Test | null> {
         creatorId: data.creatorId,
         categoryId: data.categoryId,
         questions: data.questions || [],
-        thumbnailUrl: data.thumbnailUrl,
+        thumbnailUrl: data.thumbnailUrl || getDefaultThumbnail(),
         playCount: data.playCount || 0,
         likeCount: data.likeCount || 0,
         isPublic: data.isPublic !== false,
@@ -735,7 +735,7 @@ export async function getPopularTests(limitCount: number = 5): Promise<Test[]> {
         creatorId: data.creatorId,
         categoryId: data.categoryId,
         questions: data.questions || [],
-        thumbnailUrl: data.thumbnailUrl,
+        thumbnailUrl: data.thumbnailUrl || getDefaultThumbnail(),
         playCount: data.playCount || 0,
         likeCount: data.likeCount || 0,
         isPublic: data.isPublic !== false,
@@ -776,7 +776,7 @@ export async function getNewestTests(limitCount: number = 5): Promise<Test[]> {
         creatorId: data.creatorId,
         categoryId: data.categoryId,
         questions: data.questions || [],
-        thumbnailUrl: data.thumbnailUrl,
+        thumbnailUrl: data.thumbnailUrl || getDefaultThumbnail(),
         playCount: data.playCount || 0,
         likeCount: data.likeCount || 0,
         isPublic: data.isPublic !== false,
@@ -818,7 +818,7 @@ export async function getFeaturedTests(limitCount: number = 5): Promise<Test[]> 
         creatorId: data.creatorId,
         categoryId: data.categoryId,
         questions: data.questions || [],
-        thumbnailUrl: data.thumbnailUrl,
+        thumbnailUrl: data.thumbnailUrl || getDefaultThumbnail(),
         playCount: data.playCount || 0,
         likeCount: data.likeCount || 0,
         isPublic: data.isPublic !== false,
@@ -865,7 +865,7 @@ export async function searchTests(query: string, categoryId?: string): Promise<T
         creatorId: data.creatorId,
         categoryId: data.categoryId,
         questions: data.questions || [],
-        thumbnailUrl: data.thumbnailUrl,
+        thumbnailUrl: data.thumbnailUrl || getDefaultThumbnail(),
         playCount: data.playCount || 0,
         likeCount: data.likeCount || 0,
         isPublic: data.isPublic !== false,
@@ -977,4 +977,17 @@ export async function saveGameScore(scoreData: Omit<GameScore, 'id' | 'createdAt
     console.error('Error saving game score:', error);
     throw new Error('Game score saving failed');
   }
+}
+
+// Helper function to get a default thumbnail if none is provided
+function getDefaultThumbnail(): string {
+  const defaultThumbnails = [
+    'https://images.unsplash.com/photo-1592198084033-aade902d1aae?w=500',
+    'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=500',
+    'https://images.unsplash.com/photo-1608889825103-eb5ed706fc64?w=500',
+    'https://images.unsplash.com/photo-1423742774270-6884aac775fa?w=500',
+    'https://images.unsplash.com/photo-1627856013091-fed6e4e30025?w=500'
+  ];
+  
+  return defaultThumbnails[Math.floor(Math.random() * defaultThumbnails.length)];
 }

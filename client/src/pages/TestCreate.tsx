@@ -631,7 +631,7 @@ export default function TestCreate() {
                           src={image.imageUrl}
                           alt={`Preview ${index}`}
                           onError={(e) => {
-                            (e.target as HTMLImageElement).src = 'https://placehold.co/80x80?text=Önizleme';
+                            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1592198084033-aade902d1aae?w=500';
                           }}
                           className="max-w-full max-h-full object-contain"
                         />
