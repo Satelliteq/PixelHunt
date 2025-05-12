@@ -4,6 +4,7 @@ import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import { useEffect, useState } from "react";
 import { LanguageProvider } from "./lib/LanguageContext";
+import { FirebaseProvider } from "./lib/FirebaseContext";
 import { AuthProvider } from "./lib/AuthContext";
 
 // Auth pages
@@ -72,18 +73,20 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
-        <AuthProvider>
-          <div className="min-h-screen flex flex-col bg-background text-foreground">
-            {!isGameScreen && <Header />}
-            <main className={`flex-grow ${!isGameScreen ? 'container mx-auto px-4 py-6' : 'w-full'}`}>
-              <Router />
-            </main>
-            {!isGameScreen && <Footer />}
-          </div>
-          <Toaster />
-        </AuthProvider>
-      </LanguageProvider>
+      <FirebaseProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <div className="min-h-screen flex flex-col bg-background text-foreground">
+              {!isGameScreen && <Header />}
+              <main className={`flex-grow ${!isGameScreen ? 'container mx-auto px-4 py-6' : 'w-full'}`}>
+                <Router />
+              </main>
+              {!isGameScreen && <Footer />}
+            </div>
+            <Toaster />
+          </AuthProvider>
+        </LanguageProvider>
+      </FirebaseProvider>
     </QueryClientProvider>
   );
 }

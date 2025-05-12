@@ -6,7 +6,10 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuth } from "@/lib/AuthContext";
-import { supabase } from "@/lib/supabase";
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { storage, db } from '@/lib/firebase';
+import { createId } from '@paralleldrive/cuid2';
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +32,7 @@ import { AlertTriangle, Trash, Upload, Plus, Image, Loader2 } from "lucide-react
 const testFormSchema = z.object({
   title: z.string().min(5, "Başlık en az 5 karakter olmalıdır").max(100, "Başlık en fazla 100 karakter olabilir"),
   description: z.string().min(10, "Açıklama en az 10 karakter olmalıdır").default(""),
-  categoryId: z.number().min(1, "Lütfen bir kategori seçin"),
+  categoryId: z.string().min(1, "Lütfen bir kategori seçin"),
   isPublic: z.boolean().default(true),
   isAnonymous: z.boolean().default(false),
   thumbnail: z.string().optional(),
@@ -88,8 +91,6 @@ export default function TestCreate() {
     queryKey: ['/api/categories'],
   });
 
-  // We're now allowing anonymous test creation, so no login check is needed.
-
   // Thumbnail yükleme işlevi
   const handleThumbnailUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -117,17 +118,21 @@ export default function TestCreate() {
     try {
       setUploading(true);
       
-      // Dosyayı Base64'e çevirme işlemi
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setThumbnail(base64String);
-        form.setValue("thumbnail", base64String);
-        setUploading(false);
-      };
-      reader.readAsDataURL(file);
+      // Create a reference to Firebase Storage
+      const storageRef = ref(storage, `test-thumbnails/${createId()}_${file.name}`);
+      
+      // Upload the file
+      const snapshot = await uploadBytes(storageRef, file);
+      
+      // Get the download URL
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      
+      setThumbnail(downloadURL);
+      form.setValue("thumbnail", downloadURL);
+      setUploading(false);
     } catch (error) {
       setUploading(false);
+      console.error("Error uploading thumbnail:", error);
       toast({
         title: "Hata",
         description: "Kapak fotoğrafı yüklenirken bir hata oluştu.",
@@ -141,7 +146,7 @@ export default function TestCreate() {
     defaultValues: {
       title: "",
       description: "",
-      categoryId: 0,
+      categoryId: "",
       isPublic: true,
       isAnonymous: false,
       thumbnail: "",
@@ -160,124 +165,35 @@ export default function TestCreate() {
       
       // Form değerini güncelle
       form.setValue("images", formattedImages);
-      console.log("Form images değeri güncellendi:", formattedImages);
     }
   }, [imageInputs, form]);
   
-  const handleSubmitDirectly = async (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Form doğrudan gönderim");
-    
-    // Form değerlerini manuel olarak hazırla
-    const title = form.getValues("title");
-    const description = form.getValues("description") || "";
-    const categoryId = form.getValues("categoryId");
-    const isPublic = form.getValues("isPublic");
-    const isAnonymous = form.getValues("isAnonymous");
-    
-    if (!title || title.length < 5) {
-      toast({
-        title: "Hata",
-        description: "Başlık en az 5 karakter olmalıdır",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (!categoryId || categoryId <= 0) {
-      toast({
-        title: "Hata",
-        description: "Lütfen bir kategori seçin",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Görsel ve cevapları hazırla
-    if (imageInputs.length === 0 || !imageInputs[0].imageUrl || imageInputs[0].answers.length === 0) {
-      toast({
-        title: "Hata",
-        description: "En az bir görsel ve cevap eklemelisiniz",
-        variant: "destructive",
-      });
-      return;
-    }
-    
+  const handleSubmit = async (values: TestFormValues) => {
     try {
       setUploading(true);
       
-      // Kapak fotoğrafı işleme
-      let finalThumbnail = thumbnail;
-      if (thumbnail && thumbnail.startsWith('data:image/')) {
-        try {
-          // Base64'ü blob'a çevir
-          const res = await fetch(thumbnail);
-          const blob = await res.blob();
-          
-          // Dosya adı oluştur
-          const fileExt = thumbnail.split(';')[0].split('/')[1];
-          const fileName = `thumbnail-${Date.now()}.${fileExt}`;
-          const filePath = `test-thumbnails/${fileName}`;
-          
-          // Supabase Storage'a yükleme
-          const { data: thumbnailData, error: thumbnailError } = await supabase.storage
-            .from('images')
-            .upload(filePath, blob, {
-              contentType: blob.type,
-              upsert: true
-            });
-          
-          if (thumbnailError) throw thumbnailError;
-          
-          // Public URL'yi al
-          const { data: { publicUrl: thumbnailUrl } } = supabase.storage
-            .from('images')
-            .getPublicUrl(filePath);
-          
-          finalThumbnail = thumbnailUrl;
-          console.log("Kapak fotoğrafı başarıyla yüklendi:", finalThumbnail);
-        } catch (error) {
-          console.error('Kapak fotoğrafı işleme hatası:', error);
-          toast({
-            title: "Hata",
-            description: "Kapak fotoğrafı yüklenirken bir hata oluştu.",
-            variant: "destructive",
-          });
-          return;
-        }
-      }
-      
-      // Görselleri işle
-      const processedImages = await Promise.all(
+      // Process images
+      const processedQuestions = await Promise.all(
         imageInputs.map(async (img, index) => {
           let finalImageUrl = img.imageUrl;
           
-          // Eğer görsel Base64 formatındaysa, Supabase'e yükle
-          if (img.imageUrl.startsWith('data:image/')) {
+          // If the image is a data URL, upload it to Firebase Storage
+          if (finalImageUrl.startsWith('data:image/')) {
             try {
-              const res = await fetch(img.imageUrl);
-              const blob = await res.blob();
+              // Convert data URL to blob
+              const response = await fetch(finalImageUrl);
+              const blob = await response.blob();
               
-              const fileExt = img.imageUrl.split(';')[0].split('/')[1];
-              const fileName = `test-image-${Date.now()}-${index}.${fileExt}`;
-              const filePath = `test-images/${fileName}`;
+              // Create a reference to Firebase Storage
+              const storageRef = ref(storage, `test-images/${createId()}_${index}.jpg`);
               
-              const { data: imageData, error: imageError } = await supabase.storage
-                .from('images')
-                .upload(filePath, blob, {
-                  contentType: blob.type,
-                  upsert: true
-                });
+              // Upload the blob
+              const snapshot = await uploadBytes(storageRef, blob);
               
-              if (imageError) throw imageError;
-              
-              const { data: { publicUrl: imageUrl } } = supabase.storage
-                .from('images')
-                .getPublicUrl(filePath);
-              
-              finalImageUrl = imageUrl;
+              // Get the download URL
+              finalImageUrl = await getDownloadURL(snapshot.ref);
             } catch (error) {
-              console.error(`Görsel #${index + 1} yükleme hatası:`, error);
+              console.error(`Error uploading image #${index + 1}:`, error);
               throw error;
             }
           }
@@ -285,60 +201,65 @@ export default function TestCreate() {
           return {
             imageUrl: finalImageUrl,
             answers: img.answers,
-            question: img.question || "Bu görselde ne görüyorsunuz?"
+            question: "Bu görselde ne görüyorsunuz?"
           };
         })
       );
       
-      // Supabase'e test verilerini kaydet
-      const { data: testData, error: testError } = await supabase
-        .from('tests')
-        .insert({
-          title,
-          description: description || "",
-          category_id: categoryId,
-          creator_id: isAnonymous ? null : user?.id,
-          is_public: isPublic,
-          is_anonymous: isAnonymous,
-          thumbnail: finalThumbnail,
-          difficulty: 2,
-          approved: true,
-          featured: false
-        })
-        .select()
-        .single();
+      // Process thumbnail if it's a data URL
+      let finalThumbnail = thumbnail;
+      if (finalThumbnail && finalThumbnail.startsWith('data:image/')) {
+        try {
+          // Convert data URL to blob
+          const response = await fetch(finalThumbnail);
+          const blob = await response.blob();
+          
+          // Create a reference to Firebase Storage
+          const storageRef = ref(storage, `test-thumbnails/${createId()}.jpg`);
+          
+          // Upload the blob
+          const snapshot = await uploadBytes(storageRef, blob);
+          
+          // Get the download URL
+          finalThumbnail = await getDownloadURL(snapshot.ref);
+        } catch (error) {
+          console.error('Error uploading thumbnail:', error);
+          throw error;
+        }
+      }
       
-      if (testError) throw testError;
+      // Create test document in Firestore
+      const testData = {
+        title: values.title,
+        description: values.description || "",
+        categoryId: values.categoryId,
+        creatorId: user.uid,
+        questions: processedQuestions,
+        thumbnailUrl: finalThumbnail || null,
+        isPublic: values.isPublic,
+        isAnonymous: values.isAnonymous,
+        approved: true, // Auto-approve for now
+        featured: false,
+        difficulty: 2, // Default difficulty
+        playCount: 0,
+        likeCount: 0,
+        createdAt: serverTimestamp(),
+        uuid: createId() // Generate a unique ID for sharing
+      };
       
-      // Soruları kaydet
-      const questionsToInsert = processedImages.map((img, index) => ({
-        test_id: testData.id,
-        image_url: img.imageUrl,
-        question: img.question,
-        order_index: index
-      }));
+      // Add to Firestore
+      const docRef = await addDoc(collection(db, 'tests'), testData);
       
-      const { error: questionsError } = await supabase
-        .from('questions')
-        .insert(questionsToInsert);
-      
-      if (questionsError) throw questionsError;
-      
-      // Cevapları kaydet
-      const answersToInsert = processedImages.flatMap((img, questionIndex) =>
-        img.answers.map(answer => ({
-          test_id: testData.id,
-          question_id: testData.id + questionIndex,
-          answer_text: answer,
-          is_correct: true
-        }))
-      );
-      
-      const { error: answersError } = await supabase
-        .from('answers')
-        .insert(answersToInsert);
-      
-      if (answersError) throw answersError;
+      // Record user activity
+      await addDoc(collection(db, 'userActivities'), {
+        userId: user.uid,
+        userName: user.displayName || user.email?.split('@')[0],
+        activityType: 'create_test',
+        details: `Yeni test oluşturuldu: ${values.title}`,
+        entityId: docRef.id,
+        entityType: 'test',
+        createdAt: serverTimestamp()
+      });
       
       toast({
         title: "Test başarıyla oluşturuldu",
@@ -346,9 +267,8 @@ export default function TestCreate() {
         variant: "default",
       });
       
-      // Test sayfasına yönlendir
-      navigate(`/tests/${testData.id}`);
-      
+      // Navigate to the test page
+      navigate(`/test/${docRef.id}`);
     } catch (error) {
       console.error("Test oluşturma hatası:", error);
       toast({
@@ -357,188 +277,6 @@ export default function TestCreate() {
         variant: "destructive",
       });
     } finally {
-      setUploading(false);
-    }
-  };
-  
-  const onSubmit = async (values: TestFormValues) => {
-    try {
-      setUploading(true);
-      console.log("Form gönderim başladı - formValues:", values);
-      console.log("Görsel adedi:", imageInputs.length, "Form görsel adedi:", values.images?.length);
-      
-      // Form verilerini kontrol et
-      if (imageInputs.length === 0) {
-        setUploading(false);
-        toast({
-          title: "Hata",
-          description: "En az bir görsel eklemelisiniz.",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      // Görsel kontrolleri
-      for (let i = 0; i < imageInputs.length; i++) {
-        if (!imageInputs[i].imageUrl) {
-          setUploading(false);
-          toast({
-            title: "Hata",
-            description: `Görsel #${i+1} için bir URL girmelisiniz.`,
-            variant: "destructive",
-          });
-          return;
-        }
-        
-        if (imageInputs[i].answers.length === 0) {
-          setUploading(false);
-          toast({
-            title: "Hata",
-            description: `Görsel #${i+1} için en az bir cevap eklemelisiniz.`,
-            variant: "destructive",
-          });
-          return;
-        }
-      }
-      
-      // Base64 formatındaki görselleri işleyin ve URL'leri kaydedin
-      console.log("Görseller işleniyor...");
-      const processedImages = await Promise.all(
-        imageInputs.map(async (img, index) => {
-          let finalImageUrl = img.imageUrl;
-          
-          // Eğer görsel URL'si base64 formatındaysa, Supabase'e yükleme işlemi yapılacak
-          if (finalImageUrl && finalImageUrl.startsWith('data:image/')) {
-            try {
-              console.log(`Görsel #${index+1} yükleniyor...`);
-              // Base64'ü blob'a çevir
-              const res = await fetch(finalImageUrl);
-              const blob = await res.blob();
-              
-              // Dosya adı oluştur
-              const fileExt = finalImageUrl.split(';')[0].split('/')[1];
-              const fileName = `${Date.now()}-${index}.${fileExt}`;
-              const filePath = `test-images/${fileName}`;
-              
-              // Supabase REST API üzerinden dosya yükleme
-              const uploadRes = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/images/${filePath}`, {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-                  'Content-Type': blob.type,
-                  'x-upsert': 'true'
-                },
-                body: blob
-              });
-              
-              if (uploadRes.ok) {
-                // Yükleme başarılı, public URL'yi kullan
-                finalImageUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/images/${filePath}`;
-                console.log(`Görsel #${index+1} başarıyla yüklendi:`, finalImageUrl);
-              } else {
-                console.error('Görsel yükleme hatası:', await uploadRes.text());
-                // Hata durumunda orijinal URL'yi kullan
-              }
-            } catch (error) {
-              console.error('Görsel işleme hatası:', error);
-              // Hata durumunda orijinal URL'yi kullan
-            }
-          }
-          
-          return {
-            imageUrl: finalImageUrl,
-            answers: img.answers,
-          };
-        })
-      );
-      
-      // Thumbnail işlemi
-      console.log("Thumbnail işleniyor...");
-      let finalThumbnail = thumbnail;
-      if (thumbnail && thumbnail.startsWith('data:image/')) {
-        try {
-          // Base64'ü blob'a çevir
-          const res = await fetch(thumbnail);
-          const blob = await res.blob();
-          
-          // Dosya adı oluştur
-          const fileExt = thumbnail.split(';')[0].split('/')[1];
-          const fileName = `thumbnail-${Date.now()}.${fileExt}`;
-          const filePath = `test-thumbnails/${fileName}`;
-          
-          // Supabase REST API üzerinden dosya yükleme
-          const uploadRes = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/images/${filePath}`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-              'Content-Type': blob.type,
-              'x-upsert': 'true'
-            },
-            body: blob
-          });
-          
-          if (uploadRes.ok) {
-            // Yükleme başarılı, public URL'yi kullan
-            finalThumbnail = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/images/${filePath}`;
-            console.log("Thumbnail başarıyla yüklendi:", finalThumbnail);
-          }
-        } catch (error) {
-          console.error('Thumbnail işleme hatası:', error);
-        }
-      }
-      
-      // API'ye gönderilecek dönüştürülmüş değerler
-      const transformedValues = {
-        title: values.title,
-        description: values.description || "",
-        category_id: values.categoryId,
-        creator_id: 1, // Sabit bir değer kullanıyoruz, çünkü UUID değil sayısal bir değer bekleniyor
-        is_public: values.isPublic,
-        is_anonymous: values.isAnonymous,
-        thumbnail: finalThumbnail, // image_url yerine thumbnail kullanıyoruz
-        imageUrl: finalThumbnail, // Aynı zamanda imageUrl olarak da ekliyoruz
-        questions: processedImages,
-      };
-      
-      console.log("API'ye gönderilecek veri:", transformedValues);
-
-      try {
-        const response = await apiRequest("/api/tests", {
-          method: "POST",
-          data: transformedValues,
-        });
-        
-        console.log("API yanıtı:", response);
-
-        toast({
-          title: "Test başarıyla oluşturuldu",
-          description: "Testiniz başarıyla oluşturuldu ve yayınlandı.",
-          variant: "default",
-        });
-
-        // Test sayfasına UUID ile yönlendir
-        if (response.uuid) {
-          navigate(`/tests/u/${response.uuid}`);
-        } else {
-          navigate(`/tests/${response.id}`);
-        }
-      } catch (apiError) {
-        console.error("API hatası:", apiError);
-        toast({
-          title: "API Hatası",
-          description: "Sunucu ile iletişim sırasında bir hata oluştu. Lütfen tekrar deneyin.",
-          variant: "destructive",
-        });
-      }
-      
-      setUploading(false);
-    } catch (error) {
-      console.error("Test oluşturma hatası:", error);
-      toast({
-        title: "Hata",
-        description: "Test oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.",
-        variant: "destructive",
-      });
       setUploading(false);
     }
   };
@@ -567,7 +305,7 @@ export default function TestCreate() {
     setImageInputs(newImages);
   };
   
-  const handleFileUpload = (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
     
@@ -590,13 +328,33 @@ export default function TestCreate() {
       return;
     }
     
-    const reader = new FileReader();
-    reader.onloadend = () => {
+    try {
+      setUploading(true);
+      
+      // Create a reference to Firebase Storage
+      const storageRef = ref(storage, `test-images/${createId()}_${file.name}`);
+      
+      // Upload the file
+      const snapshot = await uploadBytes(storageRef, file);
+      
+      // Get the download URL
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      
+      // Update image URL
       const newImages = [...imageInputs];
-      newImages[index].imageUrl = reader.result as string;
+      newImages[index].imageUrl = downloadURL;
       setImageInputs(newImages);
-    };
-    reader.readAsDataURL(file);
+      
+      setUploading(false);
+    } catch (error) {
+      setUploading(false);
+      console.error("Error uploading image:", error);
+      toast({
+        title: "Hata",
+        description: "Görsel yüklenirken bir hata oluştu.",
+        variant: "destructive",
+      });
+    }
   };
 
   const addAnswer = (index: number) => {
@@ -627,14 +385,12 @@ export default function TestCreate() {
     }
   };
 
-  // Difficulty section has been removed
-
   return (
     <div className="max-w-3xl mx-auto py-8 px-4">
       <h1 className="text-3xl font-bold mb-8">Yeni Test Oluştur</h1>
       
       <Form {...form}>
-        <form onSubmit={handleSubmitDirectly} className="space-y-8">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
           <div className="bg-card p-6 rounded-lg border shadow-sm">
             <h2 className="text-xl font-semibold mb-4">Test Bilgileri</h2>
             
@@ -685,8 +441,8 @@ export default function TestCreate() {
                     <FormLabel>Kategori</FormLabel>
                     <Select
                       disabled={categoriesLoading}
-                      onValueChange={(value) => field.onChange(Number(value))}
-                      value={field.value ? field.value.toString() : undefined}
+                      onValueChange={field.onChange}
+                      value={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -695,7 +451,7 @@ export default function TestCreate() {
                       </FormControl>
                       <SelectContent>
                         {categories.map((category: any) => (
-                          <SelectItem key={category.id} value={category.id.toString()}>
+                          <SelectItem key={category.id} value={category.id}>
                             {category.name}
                           </SelectItem>
                         ))}
@@ -808,10 +564,6 @@ export default function TestCreate() {
                 </FormItem>
               )}
             />
-
-
-            
-
           </div>
 
           <div className="bg-card p-6 rounded-lg border shadow-sm">
@@ -854,9 +606,10 @@ export default function TestCreate() {
                               accept="image/*"
                               className="hidden"
                               onChange={(e) => handleFileUpload(index, e)}
+                              disabled={uploading}
                             />
                             <Upload className="h-4 w-4 mr-2" />
-                            Bilgisayardan Görsel Yükle
+                            {uploading ? 'Yükleniyor...' : 'Bilgisayardan Görsel Yükle'}
                           </label>
                         </div>
                       </div>
@@ -949,8 +702,15 @@ export default function TestCreate() {
             <Button type="button" variant="outline" onClick={() => navigate("/")}>
               İptal
             </Button>
-            <Button type="submit">
-              Testi Oluştur
+            <Button type="submit" disabled={uploading}>
+              {uploading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Yükleniyor...
+                </>
+              ) : (
+                "Testi Oluştur"
+              )}
             </Button>
           </div>
         </form>
