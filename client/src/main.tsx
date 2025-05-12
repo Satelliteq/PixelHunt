@@ -8,21 +8,13 @@ import "@fontsource/bebas-neue";
 // Initialize sample data
 import { initializeSampleData } from "./lib/firebaseHelpers";
 
-// Try to initialize sample data with better error handling
+// Try to initialize sample data
 (async () => {
   try {
     await initializeSampleData();
     console.log("Sample data initialized successfully");
   } catch (error) {
-    // More detailed error logging
-    console.error("Error initializing sample data:", {
-      message: error.message,
-      code: error.code,
-      stack: error.stack
-    });
-    
-    // Continue loading the app even if sample data fails
-    console.log("Continuing app initialization despite sample data error");
+    console.error("Error initializing sample data:", error);
   }
 })();
 

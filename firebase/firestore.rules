@@ -20,7 +20,7 @@ service cloud.firestore {
     // Users collection
     match /users/{userId} {
       // Anyone can read public user data
-      allow read;
+      allow read: if true;
       
       // Only the user or an admin can update their own document
       allow update: if isOwner(userId) || isAdmin();
