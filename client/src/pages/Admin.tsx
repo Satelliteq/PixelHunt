@@ -13,33 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Loader2,
-  UserX,
-  Shield,
-  Edit,
-  Trash,
-  Plus,
-  Check,
-  X,
-  Star,
-  Globe,
-  Film,
-  Palette,
-  Gamepad,
-  Image,
-  Music,
-  Book,
-  BookOpen,
-  Car,
-  Map,
-  Camera,
-  Coffee,
-  Trophy,
-  Users,
-  Heart,
-  LucideIcon,
-} from "lucide-react";
+import { Loader2, UserX, Shield, Edit, Trash, Plus, Check, X, Star, Globe, Film, Palette, Gamepad, Image, Music, Book, BookOpen, Car, Map, Camera, Coffee, Trophy, Users, Heart, DivideIcon as LucideIcon } from "lucide-react";
 import {
   Table,
   TableBody,
