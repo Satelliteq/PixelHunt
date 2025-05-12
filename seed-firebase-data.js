@@ -26,9 +26,9 @@ async function seedData() {
     const categoriesRef = collection(db, 'categories');
     const categoriesSnapshot = await getDocs(categoriesRef);
     
-    if (!categoriesSnapshot.empty) {
-      console.log('Categories already exist. Checking if we need to add more sample data...');
-    } else {
+    let categoryRefs = {};
+    
+    if (categoriesSnapshot.empty) {
       // Add categories
       console.log('Adding categories...');
       const categoriesData = [
@@ -106,22 +106,19 @@ async function seedData() {
         }
       ];
       
-      const categoryRefs = {};
-      
       for (const category of categoriesData) {
         const docRef = await addDoc(collection(db, 'categories'), category);
         console.log(`Added category: ${category.name} with ID: ${docRef.id}`);
         categoryRefs[category.name] = docRef.id;
       }
+    } else {
+      // Get existing categories
+      categoriesSnapshot.forEach(doc => {
+        const data = doc.data();
+        categoryRefs[data.name] = doc.id;
+      });
+      console.log('Categories already exist, using existing categories');
     }
-    
-    // Get all categories for reference
-    const allCategoriesSnapshot = await getDocs(collection(db, 'categories'));
-    const categoryRefs = {};
-    allCategoriesSnapshot.forEach(doc => {
-      const data = doc.data();
-      categoryRefs[data.name] = doc.id;
-    });
     
     // Check if images already exist
     const imagesRef = collection(db, 'images');
@@ -172,82 +169,6 @@ async function seedData() {
         const docRef = await addDoc(collection(db, 'images'), image);
         console.log(`Added image: ${image.title} with ID: ${docRef.id}`);
         imageRefs[image.title] = docRef.id;
-      }
-    }
-    
-    // Add more sample images
-    console.log('Adding additional sample images...');
-    const additionalImagesData = [
-      {
-        title: 'Mona Lisa',
-        imageUrl: 'https://images.unsplash.com/photo-1544333323-ec9ed3218dd1?w=500',
-        categoryId: categoryRefs['Sanat'],
-        answers: ['Mona Lisa', 'Leonardo da Vinci', 'La Gioconda'],
-        difficulty: 1,
-        playCount: 150,
-        likeCount: 60,
-        active: true,
-        createdAt: serverTimestamp()
-      },
-      {
-        title: 'Minecraft',
-        imageUrl: 'https://images.unsplash.com/photo-1587573089734-599851b2c3b1?w=500',
-        categoryId: categoryRefs['Oyunlar'],
-        answers: ['Minecraft', 'Mine Craft'],
-        difficulty: 1,
-        playCount: 220,
-        likeCount: 110,
-        active: true,
-        createdAt: serverTimestamp()
-      },
-      {
-        title: 'Beatles',
-        imageUrl: 'https://images.unsplash.com/photo-1516981879613-9f5da904015f?w=500',
-        categoryId: categoryRefs['Müzik'],
-        answers: ['Beatles', 'The Beatles', 'Beatles Band'],
-        difficulty: 2,
-        playCount: 180,
-        likeCount: 85,
-        active: true,
-        createdAt: serverTimestamp()
-      },
-      {
-        title: 'Futbol',
-        imageUrl: 'https://images.unsplash.com/photo-1508098682722-e99c643e7f0b?w=500',
-        categoryId: categoryRefs['Spor'],
-        answers: ['Futbol', 'Football', 'Soccer'],
-        difficulty: 1,
-        playCount: 160,
-        likeCount: 70,
-        active: true,
-        createdAt: serverTimestamp()
-      },
-      {
-        title: 'iPhone',
-        imageUrl: 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=500',
-        categoryId: categoryRefs['Teknoloji'],
-        answers: ['iPhone', 'Apple', 'Smartphone'],
-        difficulty: 1,
-        playCount: 190,
-        likeCount: 80,
-        active: true,
-        createdAt: serverTimestamp()
-      }
-    ];
-    
-    for (const image of additionalImagesData) {
-      // Check if image already exists
-      const imageQuery = query(
-        collection(db, 'images'),
-        where('title', '==', image.title)
-      );
-      const imageQuerySnapshot = await getDocs(imageQuery);
-      
-      if (imageQuerySnapshot.empty) {
-        const docRef = await addDoc(collection(db, 'images'), image);
-        console.log(`Added additional image: ${image.title} with ID: ${docRef.id}`);
-      } else {
-        console.log(`Image ${image.title} already exists, skipping`);
       }
     }
     
@@ -333,142 +254,6 @@ async function seedData() {
       for (const test of testsData) {
         const docRef = await addDoc(collection(db, 'tests'), test);
         console.log(`Added test: ${test.title} with ID: ${docRef.id}`);
-      }
-    }
-    
-    // Add more sample tests
-    console.log('Adding additional sample tests...');
-    const additionalTestsData = [
-      {
-        uuid: createId(),
-        title: 'Sanat Eserleri Testi',
-        description: 'Ünlü sanat eserlerini tanıyabilecek misiniz?',
-        creatorId: null,
-        categoryId: categoryRefs['Sanat'],
-        questions: [
-          {
-            imageUrl: 'https://images.unsplash.com/photo-1544333323-ec9ed3218dd1?w=500',
-            answers: ['Mona Lisa', 'Leonardo da Vinci', 'La Gioconda'],
-            question: 'Bu ünlü tablo nedir?'
-          }
-        ],
-        thumbnailUrl: 'https://images.unsplash.com/photo-1544333323-ec9ed3218dd1?w=500',
-        playCount: 40,
-        likeCount: 18,
-        isPublic: true,
-        isAnonymous: false,
-        approved: true,
-        featured: false,
-        difficulty: 1,
-        createdAt: serverTimestamp()
-      },
-      {
-        uuid: createId(),
-        title: 'Video Oyunları Testi',
-        description: 'Popüler video oyunlarını tanıyabilecek misiniz?',
-        creatorId: null,
-        categoryId: categoryRefs['Oyunlar'],
-        questions: [
-          {
-            imageUrl: 'https://images.unsplash.com/photo-1587573089734-599851b2c3b1?w=500',
-            answers: ['Minecraft', 'Mine Craft'],
-            question: 'Bu hangi oyun?'
-          }
-        ],
-        thumbnailUrl: 'https://images.unsplash.com/photo-1587573089734-599851b2c3b1?w=500',
-        playCount: 55,
-        likeCount: 25,
-        isPublic: true,
-        isAnonymous: false,
-        approved: true,
-        featured: true,
-        difficulty: 1,
-        createdAt: serverTimestamp()
-      },
-      {
-        uuid: createId(),
-        title: 'Müzik Dünyası Testi',
-        description: 'Ünlü müzisyenleri ve grupları tanıyabilecek misiniz?',
-        creatorId: null,
-        categoryId: categoryRefs['Müzik'],
-        questions: [
-          {
-            imageUrl: 'https://images.unsplash.com/photo-1516981879613-9f5da904015f?w=500',
-            answers: ['Beatles', 'The Beatles', 'Beatles Band'],
-            question: 'Bu ünlü müzik grubu hangisidir?'
-          }
-        ],
-        thumbnailUrl: 'https://images.unsplash.com/photo-1516981879613-9f5da904015f?w=500',
-        playCount: 45,
-        likeCount: 22,
-        isPublic: true,
-        isAnonymous: false,
-        approved: true,
-        featured: false,
-        difficulty: 2,
-        createdAt: serverTimestamp()
-      },
-      {
-        uuid: createId(),
-        title: 'Spor Dünyası Testi',
-        description: 'Spor dünyasındaki bilginizi test edin',
-        creatorId: null,
-        categoryId: categoryRefs['Spor'],
-        questions: [
-          {
-            imageUrl: 'https://images.unsplash.com/photo-1508098682722-e99c643e7f0b?w=500',
-            answers: ['Futbol', 'Football', 'Soccer'],
-            question: 'Bu hangi spor?'
-          }
-        ],
-        thumbnailUrl: 'https://images.unsplash.com/photo-1508098682722-e99c643e7f0b?w=500',
-        playCount: 38,
-        likeCount: 16,
-        isPublic: true,
-        isAnonymous: false,
-        approved: true,
-        featured: false,
-        difficulty: 1,
-        createdAt: serverTimestamp()
-      },
-      {
-        uuid: createId(),
-        title: 'Teknoloji Markaları Testi',
-        description: 'Teknoloji dünyasındaki markaları tanıyabilecek misiniz?',
-        creatorId: null,
-        categoryId: categoryRefs['Teknoloji'],
-        questions: [
-          {
-            imageUrl: 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=500',
-            answers: ['iPhone', 'Apple', 'Smartphone'],
-            question: 'Bu hangi teknolojik ürün?'
-          }
-        ],
-        thumbnailUrl: 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=500',
-        playCount: 42,
-        likeCount: 20,
-        isPublic: true,
-        isAnonymous: false,
-        approved: true,
-        featured: true,
-        difficulty: 1,
-        createdAt: serverTimestamp()
-      }
-    ];
-    
-    for (const test of additionalTestsData) {
-      // Check if test already exists
-      const testQuery = query(
-        collection(db, 'tests'),
-        where('title', '==', test.title)
-      );
-      const testQuerySnapshot = await getDocs(testQuery);
-      
-      if (testQuerySnapshot.empty) {
-        const docRef = await addDoc(collection(db, 'tests'), test);
-        console.log(`Added additional test: ${test.title} with ID: ${docRef.id}`);
-      } else {
-        console.log(`Test ${test.title} already exists, skipping`);
       }
     }
     

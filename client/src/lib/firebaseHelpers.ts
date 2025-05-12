@@ -834,7 +834,7 @@ export async function getFeaturedTests(limitCount: number = 5): Promise<Test[]> 
 // Search function
 export async function searchTests(query: string, categoryId?: string): Promise<Test[]> {
   try {
-    // Base query conditions
+    // Base query
     const testsRef = collection(db, 'tests');
     let q = query(
       testsRef,
