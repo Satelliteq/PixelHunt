@@ -571,7 +571,7 @@ export async function getPopularTests(limitCount: number = 5): Promise<Test[]> {
         updatedAt: data.updatedAt?.toDate()
       };
     });
-  } catch (error)
+  } catch (error) {
     console.error('Error fetching popular tests:', error);
     return [];
   }
