@@ -183,11 +183,7 @@ export async function initializeSampleData() {
     ];
 
     for (const category of categoriesData) {
-      try {
-        await addDoc(collection(db, 'categories'), category);
-      } catch (error) {
-        console.error('Error adding category:', error);
-      }
+      await addDoc(collection(db, 'categories'), category);
     }
 
     // Add sample images
@@ -195,10 +191,8 @@ export async function initializeSampleData() {
       {
         title: 'Ferrari 458',
         imageUrl: '/attached_assets/ba1f50f644077acc8bedb8b0634c1af8.jpg',
-        storageRef: 'ba1f50f644077acc8bedb8b0634c1af8.jpg',
         categoryId: '1', // Will be updated after categories are created
         answers: ['Ferrari', 'Ferrari 458', '458 Italia'],
-        hints: ['İtalyan spor araba markası', 'Kırmızı rengiyle ünlü', 'F1 yarışlarında başarılı'],
         difficulty: 2,
         playCount: 120,
         likeCount: 45,
@@ -208,10 +202,8 @@ export async function initializeSampleData() {
       {
         title: 'İstanbul Boğazı',
         imageUrl: '/attached_assets/86b4065a7c34a1c78de57b71078b4f5b.jpg',
-        storageRef: '86b4065a7c34a1c78de57b71078b4f5b.jpg',
         categoryId: '2', // Will be updated after categories are created
         answers: ['İstanbul', 'Istanbul', 'Boğaz', 'Bogazici', 'Bosphorus'],
-        hints: ['Türkiye\'nin en kalabalık şehri', 'Avrupa ve Asya\'yı birleştiren şehir', 'Eski adı Konstantinopolis'],
         difficulty: 1,
         playCount: 200,
         likeCount: 78,
@@ -220,11 +212,9 @@ export async function initializeSampleData() {
       },
       {
         title: 'Star Wars - Darth Vader',
-        imageUrl: '/attached_assets/6c161a984b072640f8d7cde4b759f0a8.jpg', 
-        storageRef: '6c161a984b072640f8d7cde4b759f0a8.jpg',
+        imageUrl: '/attached_assets/6c161a984b072640f8d7cde4b759f0a8.jpg',
         categoryId: '3', // Will be updated after categories are created
         answers: ['Star Wars', 'Darth Vader', 'Vader'],
-        hints: ['Ünlü bilim kurgu serisi', 'Karanlık tarafın lordu', 'Siyah maske ve kask takar'],
         difficulty: 2,
         playCount: 180,
         likeCount: 95,
@@ -235,7 +225,7 @@ export async function initializeSampleData() {
 
     // Get actual category IDs
     const categoriesQuery = await getDocs(collection(db, 'categories'));
-    const categoryIds = {};
+    const categoryIds: Record<string, string> = {};
     let index = 1;
     categoriesQuery.forEach(doc => {
       categoryIds[index.toString()] = doc.id;
@@ -244,14 +234,10 @@ export async function initializeSampleData() {
 
     // Add images with correct category IDs
     for (const image of imagesData) {
-      try {
-        const categoryId = categoryIds[image.categoryId];
-        if (categoryId) {
-          image.categoryId = categoryId;
-          await addDoc(collection(db, 'images'), image);
-        }
-      } catch (error) {
-        console.error('Error adding image:', error);
+      const categoryId = categoryIds[image.categoryId];
+      if (categoryId) {
+        image.categoryId = categoryId;
+        await addDoc(collection(db, 'images'), image);
       }
     }
 
@@ -329,17 +315,13 @@ export async function initializeSampleData() {
     ];
 
     for (const test of testsData) {
-      try {
-        await addDoc(collection(db, 'tests'), test);
-      } catch (error) {
-        console.error('Error adding test:', error);
-      }
+      await addDoc(collection(db, 'tests'), test);
     }
 
     console.log('Sample data initialized successfully');
   } catch (error) {
     console.error('Error initializing sample data:', error);
-    // Don't throw the error, just log it to prevent app from crashing
+    throw error;
   }
 }
 

@@ -12,7 +12,8 @@
     "migrate:firebase": "node migration/migrate-to-firebase.js",
     "verify:firebase": "node migration/verify-migration.js",
     "deploy:firebase": "node migration/deploy-firebase.js",
-    "sample:firebase": "node migration/create-sample-data.js"
+    "sample:firebase": "node migration/create-sample-data.js",
+    "seed:firebase": "node seed-firebase-data.js"
   },
   "dependencies": {
     "@fontsource/bebas-neue": "^5.2.5",

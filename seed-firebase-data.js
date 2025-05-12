@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, doc, setDoc, Timestamp, getDocs, query, where, limit } from 'firebase/firestore';
+import { getFirestore, collection, doc, setDoc, addDoc, serverTimestamp } from 'firebase/firestore';
+import { createId } from '@paralleldrive/cuid2';
 
 // Firebase configuration
 const firebaseConfig = {
@@ -8,271 +9,212 @@ const firebaseConfig = {
   projectId: "pixelhunt-7afa8",
   storageBucket: "pixelhunt-7afa8.appspot.com",
   messagingSenderId: "595531085941",
-  appId: "1:595531085941:web:9bd7b5f890098211d2a03c"
+  appId: "1:595531085941:web:9bd7b5f890098211d2a03c",
+  databaseURL: "https://pixelhunt-7afa8-default-rtdb.firebaseio.com"
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Sample users
-const users = [
-  {
-    id: 'admin',
-    username: 'admin',
-    email: 'admin@example.com',
-    role: 'admin',
-    score: 1000,
-    avatarUrl: 'https://ui-avatars.com/api/?name=Admin&background=random',
-    banned: false,
-    lastLoginAt: Timestamp.now(),
-    createdAt: Timestamp.now()
-  },
-  {
-    id: 'test_user',
-    username: 'test_user',
-    email: 'user@example.com',
-    role: 'user',
-    score: 500,
-    avatarUrl: 'https://ui-avatars.com/api/?name=Test+User&background=random',
-    banned: false,
-    lastLoginAt: Timestamp.now(),
-    createdAt: Timestamp.now()
-  }
-];
-
-// Sample categories
-const categories = [
-  {
-    id: 'cars',
-    name: 'Arabalar',
-    description: 'Otomobil markaları ve modelleri',
-    iconName: 'car',
-    color: '#EF4444',
-    backgroundColor: '#FEF2F2',
-    active: true,
-    createdAt: Timestamp.now()
-  },
-  {
-    id: 'geography',
-    name: 'Coğrafya',
-    description: 'Dünya üzerindeki yerler ve landmark\'lar',
-    iconName: 'globe',
-    color: '#3B82F6',
-    backgroundColor: '#EFF6FF',
-    active: true,
-    createdAt: Timestamp.now()
-  },
-  {
-    id: 'movies',
-    name: 'Film & TV',
-    description: 'Filmler, TV şovları ve karakterler',
-    iconName: 'film',
-    color: '#8B5CF6',
-    backgroundColor: '#F5F3FF',
-    active: true,
-    createdAt: Timestamp.now()
-  },
-  {
-    id: 'art',
-    name: 'Sanat',
-    description: 'Ünlü sanat eserleri ve sanatçılar',
-    iconName: 'palette',
-    color: '#EC4899',
-    backgroundColor: '#FDF2F8',
-    active: true,
-    createdAt: Timestamp.now()
-  },
-  {
-    id: 'games',
-    name: 'Oyunlar',
-    description: 'Video oyunları ve karakterleri',
-    iconName: 'gamepad',
-    color: '#10B981',
-    backgroundColor: '#ECFDF5',
-    active: true,
-    createdAt: Timestamp.now()
-  }
-];
-
-// Sample images
-const images = [
-  {
-    id: 'ferrari',
-    title: 'Ferrari 458',
-    imageUrl: '/attached_assets/ba1f50f644077acc8bedb8b0634c1af8.jpg',
-    categoryId: 'cars',
-    answers: ['Ferrari', 'Ferrari 458', '458 Italia'],
-    difficulty: 2,
-    playCount: 120,
-    likeCount: 45,
-    active: true,
-    createdAt: Timestamp.now()
-  },
-  {
-    id: 'istanbul',
-    title: 'İstanbul Boğazı',
-    imageUrl: '/attached_assets/86b4065a7c34a1c78de57b71078b4f5b.jpg',
-    categoryId: 'geography',
-    answers: ['İstanbul', 'Istanbul', 'Boğaz', 'Bogazici', 'Bosphorus'],
-    difficulty: 1,
-    playCount: 200,
-    likeCount: 78,
-    active: true,
-    createdAt: Timestamp.now()
-  },
-  {
-    id: 'starwars',
-    title: 'Star Wars - Darth Vader',
-    imageUrl: '/attached_assets/6c161a984b072640f8d7cde4b759f0a8.jpg',
-    categoryId: 'movies',
-    answers: ['Star Wars', 'Darth Vader', 'Vader'],
-    difficulty: 2,
-    playCount: 180,
-    likeCount: 95,
-    active: true,
-    createdAt: Timestamp.now()
-  }
-];
-
-// Sample tests
-const tests = [
-  {
-    id: 'car-test',
-    uuid: 'car-test-uuid',
-    title: 'Arabalar Testi',
-    description: 'Otomobil markaları ve modelleri hakkında bilginizi test edin',
-    categoryId: 'cars',
-    creatorId: 'admin',
-    questions: [
-      {
-        imageUrl: '/attached_assets/ba1f50f644077acc8bedb8b0634c1af8.jpg',
-        answers: ['Ferrari', 'Ferrari 458', '458 Italia'],
-        question: 'Bu görselde ne görüyorsunuz?'
-      }
-    ],
-    thumbnailUrl: '/attached_assets/ba1f50f644077acc8bedb8b0634c1af8.jpg',
-    playCount: 50,
-    likeCount: 20,
-    isPublic: true,
-    isAnonymous: false,
-    approved: true,
-    featured: true,
-    difficulty: 2,
-    createdAt: Timestamp.now()
-  },
-  {
-    id: 'geography-test',
-    uuid: 'geography-test-uuid',
-    title: 'Dünya Coğrafyası',
-    description: 'Dünya üzerindeki önemli yerleri tanıyabilecek misiniz?',
-    categoryId: 'geography',
-    creatorId: 'admin',
-    questions: [
-      {
-        imageUrl: '/attached_assets/86b4065a7c34a1c78de57b71078b4f5b.jpg',
-        answers: ['İstanbul', 'Istanbul', 'Boğaz', 'Bogazici', 'Bosphorus'],
-        question: 'Bu görselde hangi şehir görünüyor?'
-      }
-    ],
-    thumbnailUrl: '/attached_assets/86b4065a7c34a1c78de57b71078b4f5b.jpg',
-    playCount: 35,
-    likeCount: 15,
-    isPublic: true,
-    isAnonymous: false,
-    approved: true,
-    featured: false,
-    difficulty: 1,
-    createdAt: Timestamp.now()
-  },
-  {
-    id: 'movie-test',
-    uuid: 'movie-test-uuid',
-    title: 'Film Karakterleri',
-    description: 'Popüler film karakterlerini tanıyabilecek misiniz?',
-    categoryId: 'movies',
-    creatorId: 'admin',
-    questions: [
-      {
-        imageUrl: '/attached_assets/6c161a984b072640f8d7cde4b759f0a8.jpg',
-        answers: ['Star Wars', 'Darth Vader', 'Vader'],
-        question: 'Bu görselde hangi film karakteri görünüyor?'
-      }
-    ],
-    thumbnailUrl: '/attached_assets/6c161a984b072640f8d7cde4b759f0a8.jpg',
-    playCount: 65,
-    likeCount: 30,
-    isPublic: true,
-    isAnonymous: false,
-    approved: true,
-    featured: true,
-    difficulty: 2,
-    createdAt: Timestamp.now()
-  }
-];
-
-// Check if data already exists before adding
-async function checkCollectionEmpty(collectionName) {
-  const querySnapshot = await getDocs(query(collection(db, collectionName), limit(1)));
-  return querySnapshot.empty;
-}
-
-// Add data to Firestore
+// Seed data function
 async function seedData() {
   try {
-    // Check if collections are empty before adding data
-    const categoriesEmpty = await checkCollectionEmpty('categories');
-    const usersEmpty = await checkCollectionEmpty('users');
-    const imagesEmpty = await checkCollectionEmpty('images');
-    const testsEmpty = await checkCollectionEmpty('tests');
+    console.log('Starting to seed Firestore database...');
     
-    // Add users if collection is empty
-    if (usersEmpty) {
-      console.log('Adding users...');
-      for (const user of users) {
-        await setDoc(doc(db, 'users', user.id), user);
-      }
-      console.log('✅ Users added successfully');
-    } else {
-      console.log('⏭️ Users collection already has data, skipping...');
+    // Check if categories already exist
+    const categoriesSnapshot = await collection(db, 'categories').get();
+    if (!categoriesSnapshot.empty) {
+      console.log('Data already exists in Firestore. Skipping seeding.');
+      return;
     }
-
-    // Add categories if collection is empty
-    if (categoriesEmpty) {
-      console.log('Adding categories...');
-      for (const category of categories) {
-        await setDoc(doc(db, 'categories', category.id), category);
+    
+    // Add categories
+    console.log('Adding categories...');
+    const categoriesData = [
+      {
+        name: 'Arabalar',
+        description: 'Otomobil markaları ve modelleri',
+        iconName: 'car',
+        color: '#EF4444', // red-500
+        backgroundColor: '#FEF2F2', // red-50
+        active: true,
+        createdAt: serverTimestamp()
+      },
+      {
+        name: 'Coğrafya',
+        description: 'Dünya üzerindeki yerler ve landmark\'lar',
+        iconName: 'globe',
+        color: '#10B981', // emerald-500
+        backgroundColor: '#ECFDF5', // emerald-50
+        active: true,
+        createdAt: serverTimestamp()
+      },
+      {
+        name: 'Film & TV',
+        description: 'Filmler, TV şovları ve karakterler',
+        iconName: 'film',
+        color: '#6366F1', // indigo-500
+        backgroundColor: '#EEF2FF', // indigo-50
+        active: true,
+        createdAt: serverTimestamp()
+      },
+      {
+        name: 'Sanat',
+        description: 'Ünlü sanat eserleri ve sanatçılar',
+        iconName: 'palette',
+        color: '#EC4899', // pink-500
+        backgroundColor: '#FDF2F8', // pink-50
+        active: true,
+        createdAt: serverTimestamp()
+      },
+      {
+        name: 'Oyunlar',
+        description: 'Video oyunları ve karakterleri',
+        iconName: 'gamepad',
+        color: '#8B5CF6', // violet-500
+        backgroundColor: '#F5F3FF', // violet-50
+        active: true,
+        createdAt: serverTimestamp()
       }
-      console.log('✅ Categories added successfully');
-    } else {
-      console.log('⏭️ Categories collection already has data, skipping...');
+    ];
+    
+    const categoryRefs = {};
+    
+    for (const category of categoriesData) {
+      const docRef = await addDoc(collection(db, 'categories'), category);
+      console.log(`Added category: ${category.name} with ID: ${docRef.id}`);
+      categoryRefs[category.name] = docRef.id;
     }
-
-    // Add images if collection is empty
-    if (imagesEmpty) {
-      console.log('Adding images...');
-      for (const image of images) {
-        await setDoc(doc(db, 'images', image.id), image);
+    
+    // Add images
+    console.log('Adding images...');
+    const imagesData = [
+      {
+        title: 'Ferrari 458',
+        imageUrl: '/attached_assets/ba1f50f644077acc8bedb8b0634c1af8.jpg',
+        categoryId: categoryRefs['Arabalar'],
+        answers: ['Ferrari', 'Ferrari 458', '458 Italia'],
+        difficulty: 2,
+        playCount: 120,
+        likeCount: 45,
+        active: true,
+        createdAt: serverTimestamp()
+      },
+      {
+        title: 'İstanbul Boğazı',
+        imageUrl: '/attached_assets/86b4065a7c34a1c78de57b71078b4f5b.jpg',
+        categoryId: categoryRefs['Coğrafya'],
+        answers: ['İstanbul', 'Istanbul', 'Boğaz', 'Bogazici', 'Bosphorus'],
+        difficulty: 1,
+        playCount: 200,
+        likeCount: 78,
+        active: true,
+        createdAt: serverTimestamp()
+      },
+      {
+        title: 'Star Wars - Darth Vader',
+        imageUrl: '/attached_assets/6c161a984b072640f8d7cde4b759f0a8.jpg',
+        categoryId: categoryRefs['Film & TV'],
+        answers: ['Star Wars', 'Darth Vader', 'Vader'],
+        difficulty: 2,
+        playCount: 180,
+        likeCount: 95,
+        active: true,
+        createdAt: serverTimestamp()
       }
-      console.log('✅ Images added successfully');
-    } else {
-      console.log('⏭️ Images collection already has data, skipping...');
+    ];
+    
+    const imageRefs = {};
+    
+    for (const image of imagesData) {
+      const docRef = await addDoc(collection(db, 'images'), image);
+      console.log(`Added image: ${image.title} with ID: ${docRef.id}`);
+      imageRefs[image.title] = docRef.id;
     }
-
-    // Add tests if collection is empty
-    if (testsEmpty) {
-      console.log('Adding tests...');
-      for (const test of tests) {
-        await setDoc(doc(db, 'tests', test.id), test);
+    
+    // Add tests
+    console.log('Adding tests...');
+    const testsData = [
+      {
+        uuid: createId(),
+        title: 'Arabalar Testi',
+        description: 'Otomobil markaları ve modelleri hakkında bilginizi test edin',
+        creatorId: null,
+        categoryId: categoryRefs['Arabalar'],
+        questions: [
+          {
+            imageUrl: '/attached_assets/ba1f50f644077acc8bedb8b0634c1af8.jpg',
+            answers: ['Ferrari', 'Ferrari 458', '458 Italia'],
+            question: 'Bu görselde ne görüyorsunuz?'
+          }
+        ],
+        thumbnailUrl: '/attached_assets/ba1f50f644077acc8bedb8b0634c1af8.jpg',
+        playCount: 50,
+        likeCount: 20,
+        isPublic: true,
+        isAnonymous: false,
+        approved: true,
+        featured: true,
+        difficulty: 2,
+        createdAt: serverTimestamp()
+      },
+      {
+        uuid: createId(),
+        title: 'Dünya Coğrafyası',
+        description: 'Dünya üzerindeki önemli yerleri tanıyabilecek misiniz?',
+        creatorId: null,
+        categoryId: categoryRefs['Coğrafya'],
+        questions: [
+          {
+            imageUrl: '/attached_assets/86b4065a7c34a1c78de57b71078b4f5b.jpg',
+            answers: ['İstanbul', 'Istanbul', 'Boğaz', 'Bogazici', 'Bosphorus'],
+            question: 'Bu görselde hangi şehir görünüyor?'
+          }
+        ],
+        thumbnailUrl: '/attached_assets/86b4065a7c34a1c78de57b71078b4f5b.jpg',
+        playCount: 35,
+        likeCount: 15,
+        isPublic: true,
+        isAnonymous: false,
+        approved: true,
+        featured: false,
+        difficulty: 1,
+        createdAt: serverTimestamp()
+      },
+      {
+        uuid: createId(),
+        title: 'Film Karakterleri',
+        description: 'Popüler film karakterlerini tanıyabilecek misiniz?',
+        creatorId: null,
+        categoryId: categoryRefs['Film & TV'],
+        questions: [
+          {
+            imageUrl: '/attached_assets/6c161a984b072640f8d7cde4b759f0a8.jpg',
+            answers: ['Star Wars', 'Darth Vader', 'Vader'],
+            question: 'Bu görselde hangi film karakteri görünüyor?'
+          }
+        ],
+        thumbnailUrl: '/attached_assets/6c161a984b072640f8d7cde4b759f0a8.jpg',
+        playCount: 65,
+        likeCount: 30,
+        isPublic: true,
+        isAnonymous: false,
+        approved: true,
+        featured: true,
+        difficulty: 2,
+        createdAt: serverTimestamp()
       }
-      console.log('✅ Tests added successfully');
-    } else {
-      console.log('⏭️ Tests collection already has data, skipping...');
+    ];
+    
+    for (const test of testsData) {
+      const docRef = await addDoc(collection(db, 'tests'), test);
+      console.log(`Added test: ${test.title} with ID: ${docRef.id}`);
     }
-
-    console.log('🎉 All sample data has been added to Firestore!');
+    
+    console.log('✅ All sample data added successfully to Firestore!');
   } catch (error) {
-    console.error('❌ Error adding sample data:', error);
+    console.error('Error seeding Firestore database:', error);
   }
 }
 
