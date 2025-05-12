@@ -7,8 +7,8 @@ const serviceAccount = {
   "type": "service_account",
   "project_id": "pixelhunt-7afa8",
   "private_key_id": "private_key_id_placeholder",
-  // Parse private key properly, replacing literal \n with actual newlines
-  "private_key": process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n') || "private_key_placeholder",
+  // Parse private key from environment variable
+  "private_key": process.env.FIREBASE_PRIVATE_KEY,
   "client_email": process.env.FIREBASE_CLIENT_EMAIL || "firebase-adminsdk-xxxxx@pixelhunt-7afa8.iam.gserviceaccount.com",
   "client_id": "client_id_placeholder",
   "auth_uri": "https://accounts.google.com/o/oauth2/auth",
