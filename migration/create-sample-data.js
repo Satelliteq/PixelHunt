@@ -1,10 +1,23 @@
-const admin = require('firebase-admin');
-const serviceAccount = require('./firebase-service-account.json');
-const { createId } = require('@paralleldrive/cuid2');
-require('dotenv').config();
+import admin from 'firebase-admin';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { config } from 'dotenv';
+import { createId } from '@paralleldrive/cuid2';
 
-// Initialize Firebase Admin
+// Initialize environment variables
+config();
+
+// Get current file directory for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Initialize Firebase Admin if not already initialized
 if (!admin.apps.length) {
+  const serviceAccount = JSON.parse(
+    fs.readFileSync(path.join(__dirname, './firebase-service-account.json'), 'utf8')
+  );
+
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
     storageBucket: process.env.FIREBASE_STORAGE_BUCKET || 'pixelhunt-7afa8.appspot.com'
