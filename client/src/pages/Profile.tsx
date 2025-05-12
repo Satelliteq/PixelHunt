@@ -27,8 +27,10 @@ export default function Profile() {
   // Initialize form values
   useEffect(() => {
     if (user) {
-      setDisplayName(user.user_metadata.full_name || '');
-      setUsername(user.user_metadata.username || '');
+      // Safely access user metadata with optional chaining and defaults
+      const metadata = user.metadata || {};
+      setDisplayName(metadata.displayName || user.email?.split('@')[0] || '');
+      setUsername(metadata.username || user.email?.split('@')[0] || '');
     }
   }, [user]);
   
@@ -43,7 +45,7 @@ export default function Profile() {
   const handleUpdateProfile = async () => {
     try {
       setIsUpdatingProfile(true);
-      // This code would normally update the Supabase user metadata
+      // This code would normally update the Firebase user metadata
       // In a production environment with proper server-side endpoints
       
       toast({
@@ -104,13 +106,13 @@ export default function Profile() {
 
   // Helper function to extract and format account info
   const getAccountInfo = () => {
-    const provider = user.app_metadata?.provider || 'email';
-    const createdAt = user.created_at ? new Date(user.created_at).toLocaleDateString('tr-TR') : '';
-    const lastSignIn = user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString('tr-TR') : '';
+    const provider = user.providerData?.[0]?.providerId || 'email';
+    const createdAt = user.metadata?.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString('tr-TR') : '';
+    const lastSignIn = user.metadata?.lastSignInTime ? new Date(user.metadata.lastSignInTime).toLocaleDateString('tr-TR') : '';
     
     return {
       provider,
-      providerIcon: provider === 'google' ? '🔵 Google' : '✉️ E-posta',
+      providerIcon: provider === 'google.com' ? '🔵 Google' : '✉️ E-posta',
       createdAt,
       lastSignIn
     };
@@ -123,17 +125,17 @@ export default function Profile() {
       {/* Profil Başlığı */}
       <div className="flex flex-col md:flex-row md:items-center md:space-x-6 gap-4 mb-8">
         <Avatar className="h-24 w-24">
-          <AvatarImage src={user.user_metadata.avatar_url} />
+          <AvatarImage src={user.photoURL || undefined} />
           <AvatarFallback className="text-2xl">{user.email?.[0].toUpperCase()}</AvatarFallback>
         </Avatar>
         <div className="space-y-1 flex-1">
-          <h1 className="text-3xl font-bold">{user.user_metadata.full_name || user.email}</h1>
-          <p className="text-muted-foreground text-lg">@{user.user_metadata.username || 'kullanıcı'}</p>
+          <h1 className="text-3xl font-bold">{user.displayName || user.email}</h1>
+          <p className="text-muted-foreground text-lg">@{username || 'kullanıcı'}</p>
           <div className="flex flex-wrap gap-2 mt-2">
             <Badge variant="secondary" className="text-xs">
               {accountInfo.providerIcon} ile giriş
             </Badge>
-            {user.email_confirmed_at && (
+            {user.emailVerified && (
               <Badge variant="outline" className="text-xs bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
                 ✓ E-posta doğrulanmış
               </Badge>
@@ -288,7 +290,7 @@ export default function Profile() {
                   />
                   <p className="text-xs text-muted-foreground flex items-center">
                     <Mail className="h-3 w-3 mr-1" /> 
-                    E-posta adresiniz değiştirilemez. {user.email_confirmed_at ? 
+                    E-posta adresiniz değiştirilemez. {user.emailVerified ? 
                       <span className="text-green-600 dark:text-green-400 ml-1">✓ Doğrulanmış</span> : 
                       <span className="text-amber-600 dark:text-amber-400 ml-1">Doğrulanmamış</span>
                     }

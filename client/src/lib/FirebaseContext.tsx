@@ -220,7 +220,7 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       // Check if we're online first
       if (!navigator.onLine) {
-        console.log("User is offline, can't check admin status");
+        console.log("User is offline, skipping admin status check");
         return false;
       }
       
@@ -243,9 +243,16 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           console.log("User is admin via hardcoded admin list");
           
           // Update user document with admin role
-          await updateDoc(userRef, {
-            role: 'admin'
-          });
+          if (navigator.onLine) {
+            try {
+              await updateDoc(userRef, {
+                role: 'admin'
+              });
+            } catch (error) {
+              console.error('Error updating admin role:', error);
+              // Continue even if update fails
+            }
+          }
           
           return true;
         }
@@ -264,9 +271,16 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setLoading(true);
       
       if (authUser) {
-        // Check admin status
-        await checkUserAdminStatus(authUser);
-        setUser(authUser);
+        try {
+          // Check admin status only if online
+          if (navigator.onLine) {
+            await checkUserAdminStatus(authUser);
+          }
+          setUser(authUser);
+        } catch (error) {
+          console.error('Error during auth state change:', error);
+          setUser(authUser); // Still set the user even if admin check fails
+        }
       } else {
         setUser(null);
       }
