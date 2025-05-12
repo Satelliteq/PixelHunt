@@ -27,6 +27,20 @@ type FirebaseContextType = {
 
 const FirebaseContext = createContext<FirebaseContextType | null>(null);
 
+// List of authorized domains for development
+const AUTHORIZED_DOMAINS = [
+  'localhost',
+  'localhost:3000',
+  'localhost:5173',
+  'pixelhunt-7afa8.firebaseapp.com'
+];
+
+// Hardcoded admin list for offline fallback
+const ADMIN_LIST = {
+  emails: ['pixelhuntfun@gmail.com'],
+  uids: ['108973046762004266106']
+};
+
 export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { toast } = useToast();
   const [user, setUser] = useState<User | null>(null);
@@ -35,31 +49,41 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const signInWithGoogle = async () => {
     try {
+      // Check if current domain is authorized
+      const currentDomain = window.location.hostname + (window.location.port ? ':' + window.location.port : '');
+      if (!AUTHORIZED_DOMAINS.includes(currentDomain)) {
+        throw new Error('auth/unauthorized-domain');
+      }
+
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       
-      // Check if this is a new user
-      const userRef = doc(db, 'users', result.user.uid);
-      const userSnap = await getDoc(userRef);
-      
-      if (!userSnap.exists()) {
-        // Create a new user document
-        await setDoc(userRef, {
-          uid: result.user.uid,
-          username: result.user.displayName || result.user.email?.split('@')[0] || 'User',
-          email: result.user.email,
-          avatarUrl: result.user.photoURL,
-          role: 'user',
-          score: 0,
-          banned: false,
-          createdAt: serverTimestamp(),
-          lastLoginAt: serverTimestamp()
-        });
-      } else {
-        // Update last login time
-        await updateDoc(userRef, {
-          lastLoginAt: serverTimestamp()
-        });
+      try {
+        // Check if this is a new user
+        const userRef = doc(db, 'users', result.user.uid);
+        const userSnap = await getDoc(userRef);
+        
+        if (!userSnap.exists()) {
+          // Create a new user document
+          await setDoc(userRef, {
+            uid: result.user.uid,
+            username: result.user.displayName || result.user.email?.split('@')[0] || 'User',
+            email: result.user.email,
+            avatarUrl: result.user.photoURL,
+            role: 'user',
+            score: 0,
+            banned: false,
+            createdAt: serverTimestamp(),
+            lastLoginAt: serverTimestamp()
+          });
+        } else {
+          // Update last login time
+          await updateDoc(userRef, {
+            lastLoginAt: serverTimestamp()
+          });
+        }
+      } catch (error) {
+        console.warn('Failed to create/update user document, but authentication succeeded:', error);
       }
       
       return result;
@@ -68,8 +92,9 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       
       let errorMessage = "Google ile giriş yapılırken bir hata oluştu.";
       
-      if (error.code === "auth/unauthorized-domain") {
+      if (error.code === "auth/unauthorized-domain" || error.message === "auth/unauthorized-domain") {
         errorMessage = "Bu domain üzerinden giriş yapılamıyor. Lütfen yetkili bir domain kullanın.";
+        console.error('Unauthorized domain. Current domain:', window.location.hostname);
       } else if (error.code === "auth/popup-closed-by-user") {
         errorMessage = "Giriş penceresi kapatıldı. Lütfen tekrar deneyin.";
       } else if (error.code === "auth/cancelled-popup-request") {
@@ -89,11 +114,15 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       const result = await signInWithEmailAndPassword(auth, email, password);
       
-      // Update last login time
-      const userRef = doc(db, 'users', result.user.uid);
-      await updateDoc(userRef, {
-        lastLoginAt: serverTimestamp()
-      });
+      try {
+        // Update last login time
+        const userRef = doc(db, 'users', result.user.uid);
+        await updateDoc(userRef, {
+          lastLoginAt: serverTimestamp()
+        });
+      } catch (error) {
+        console.warn('Failed to update last login time, but authentication succeeded:', error);
+      }
       
       return result;
     } catch (error: any) {
@@ -123,19 +152,23 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       const result = await createUserWithEmailAndPassword(auth, email, password);
       
-      // Create a new user document
-      const userRef = doc(db, 'users', result.user.uid);
-      await setDoc(userRef, {
-        uid: result.user.uid,
-        username: userData?.username || email.split('@')[0],
-        email: email,
-        role: 'user',
-        score: 0,
-        banned: false,
-        ...userData,
-        createdAt: serverTimestamp(),
-        lastLoginAt: serverTimestamp()
-      });
+      try {
+        // Create a new user document
+        const userRef = doc(db, 'users', result.user.uid);
+        await setDoc(userRef, {
+          uid: result.user.uid,
+          username: userData?.username || email.split('@')[0],
+          email: email,
+          role: 'user',
+          score: 0,
+          banned: false,
+          ...userData,
+          createdAt: serverTimestamp(),
+          lastLoginAt: serverTimestamp()
+        });
+      } catch (error) {
+        console.warn('Failed to create user document, but account creation succeeded:', error);
+      }
       
       toast({
         title: "Kayıt Başarılı",
@@ -226,59 +259,48 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Check if user is admin
   const checkUserAdminStatus = async (user: User) => {
-    try {
-      // If offline, check hardcoded admin list
-      if (!navigator.onLine) {
-        console.log("User is offline, using hardcoded admin list");
-        return user.email === 'pixelhuntfun@gmail.com' || 
-               user.uid === '108973046762004266106';
-      }
-      
+    // First check hardcoded admin list
+    const isAdminByList = ADMIN_LIST.emails.includes(user.email || '') || 
+                         ADMIN_LIST.uids.includes(user.uid);
+    
+    if (isAdminByList) {
+      console.log("User is admin via hardcoded admin list");
+      return true;
+    }
+
+    // If online, try to check Firestore
+    if (navigator.onLine) {
       try {
-        // Get user document from Firestore
         const userRef = doc(db, 'users', user.uid);
         const userSnap = await getDoc(userRef);
         
         if (userSnap.exists()) {
           const userData = userSnap.data();
           
-          // Check if user has admin role
           if (userData.role === 'admin') {
             console.log("User is admin via Firestore role");
             return true;
           }
           
-          // Check if user is in admin list
-          if (user.email === 'pixelhuntfun@gmail.com' || 
-              user.uid === '108973046762004266106') {
-            console.log("User is admin via hardcoded admin list");
-            
-            // Update user document with admin role
+          // If user is in admin list but role is not set, update it
+          if (isAdminByList) {
             try {
-              await updateDoc(userRef, {
-                role: 'admin'
-              });
+              await updateDoc(userRef, { role: 'admin' });
             } catch (error) {
-              console.error('Error updating admin role:', error);
-              // Continue even if update fails
+              console.warn('Failed to update admin role:', error);
             }
-            
-            return true;
           }
         }
       } catch (error) {
-        console.error('Error checking Firestore admin status:', error);
+        console.warn('Failed to check Firestore admin status:', error);
+        // Fall back to hardcoded list result
+        return isAdminByList;
       }
-      
-      // If any error occurs or no admin status found, fall back to hardcoded admin check
-      return user.email === 'pixelhuntfun@gmail.com' || 
-             user.uid === '108973046762004266106';
-    } catch (error) {
-      console.error('Admin status check error:', error);
-      // If any error occurs, fall back to hardcoded admin check
-      return user.email === 'pixelhuntfun@gmail.com' || 
-             user.uid === '108973046762004266106';
+    } else {
+      console.log("Offline mode: Using hardcoded admin list only");
     }
+    
+    return isAdminByList;
   };
 
   // Initialize auth state
