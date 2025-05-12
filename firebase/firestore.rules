@@ -17,11 +17,6 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
     
-    // Allow authenticated users to initialize sample data
-    match /{document=**} {
-      allow read, write: if isSignedIn();
-    }
-    
     // Users collection
     match /users/{userId} {
       // Anyone can read public user data
@@ -32,6 +27,9 @@ service cloud.firestore {
       
       // Only admins can create or delete users
       allow create, delete: if isAdmin();
+      
+      // Users can create their own document during sign-up
+      allow create: if isSignedIn() && request.auth.uid == userId;
     }
     
     // Categories collection

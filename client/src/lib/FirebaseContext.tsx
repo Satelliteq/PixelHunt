@@ -33,7 +33,9 @@ const AUTHORIZED_DOMAINS = [
   'localhost:3000',
   'localhost:5173',
   'pixelhunt-7afa8.firebaseapp.com',
-  'zp1v56uxy8rdx5ypatb0ockcb9tr6a-oci3--3000--4d9fd228.local-credentialless.webcontainer-api.io'
+  'zp1v56uxy8rdx5ypatb0ockcb9tr6a-oci3--3000--4d9fd228.local-credentialless.webcontainer-api.io',
+  'zp1v56uxy8rdx5ypatb0ockcb9tr6a-oci3--5000--4d9fd228.local-credentialless.webcontainer-api.io',
+  '.webcontainer-api.io'
 ];
 
 // Hardcoded admin list for offline fallback
@@ -52,7 +54,33 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       // Check if current domain is authorized
       const currentDomain = window.location.hostname + (window.location.port ? ':' + window.location.port : '');
-      if (!AUTHORIZED_DOMAINS.includes(currentDomain)) {
+      const domainParts = currentDomain.split('.');
+      
+      // Check if domain or any parent domain is in the authorized list
+      let isAuthorized = false;
+      for (let i = 0; i < domainParts.length; i++) {
+        const testDomain = domainParts.slice(i).join('.');
+        if (AUTHORIZED_DOMAINS.includes(testDomain)) {
+          isAuthorized = true;
+          break;
+        }
+      }
+      
+      // Also check if the full domain is authorized
+      if (AUTHORIZED_DOMAINS.includes(currentDomain)) {
+        isAuthorized = true;
+      }
+      
+      // Check if domain ends with any of the authorized domains that start with a dot
+      for (const domain of AUTHORIZED_DOMAINS) {
+        if (domain.startsWith('.') && currentDomain.endsWith(domain)) {
+          isAuthorized = true;
+          break;
+        }
+      }
+      
+      if (!isAuthorized) {
+        console.error('Unauthorized domain:', currentDomain);
         throw new Error('auth/unauthorized-domain');
       }
 
