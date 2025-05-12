@@ -15,6 +15,11 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
     
+    // Allow initial data setup for authenticated users
+    match /{document=**} {
+      allow read, write: if isSignedIn() && (resource == null || request.time < timestamp.date(2025, 12, 31));
+    }
+    
     // Users collection
     match /users/{userId} {
       // Anyone can read public user data
