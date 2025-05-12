@@ -2,6 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, connectAuthEmulator } from 'firebase/auth';
 import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getStorage, connectStorageEmulator } from 'firebase/storage';
+import { getDatabase } from 'firebase/database';
 
 // Firebase configuration
 const firebaseConfig = {
@@ -10,7 +11,8 @@ const firebaseConfig = {
   projectId: import.meta.env.FIREBASE_PROJECT_ID || "pixelhunt-7afa8",
   storageBucket: import.meta.env.FIREBASE_STORAGE_BUCKET || "pixelhunt-7afa8.appspot.com",
   messagingSenderId: import.meta.env.FIREBASE_MESSAGING_SENDER_ID || "595531085941",
-  appId: import.meta.env.FIREBASE_APP_ID || "1:595531085941:web:9bd7b5f890098211d2a03c"
+  appId: import.meta.env.FIREBASE_APP_ID || "1:595531085941:web:9bd7b5f890098211d2a03c",
+  databaseURL: "https://pixelhunt-7afa8-default-rtdb.firebaseio.com"
 };
 
 // Initialize Firebase
@@ -18,6 +20,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
+const rtdb = getDatabase(app); // Initialize Realtime Database
 
 // Connect to emulators in development
 if (import.meta.env.DEV && window.location.hostname === 'localhost') {
@@ -26,4 +29,4 @@ if (import.meta.env.DEV && window.location.hostname === 'localhost') {
   connectStorageEmulator(storage, 'localhost', 9199);
 }
 
-export { app, auth, db, storage };
+export { app, auth, db, storage, rtdb };
