@@ -329,7 +329,11 @@ export async function initializeSampleData() {
 export async function getAllCategories(): Promise<Category[]> {
   try {
     const categoriesRef = collection(db, 'categories');
-    const q = query(categoriesRef, where('active', '==', true), orderBy('name'));
+    const q = query(
+      categoriesRef, 
+      where('active', '==', true), 
+      orderBy('name')
+    );
     const querySnapshot = await getDocs(q);
     
     return querySnapshot.docs.map(doc => {
@@ -531,6 +535,7 @@ export async function getAllTests(): Promise<Test[]> {
     const q = query(
       testsRef,
       where('isPublic', '==', true),
+      where('approved', '==', true),
       orderBy('createdAt', 'desc')
     );
     
@@ -839,7 +844,8 @@ export async function searchTests(query: string, categoryId?: string): Promise<T
     let q = query(
       testsRef,
       where('isPublic', '==', true),
-      orderBy('title'),
+      where('approved', '==', true),
+      orderBy('createdAt', 'desc'),
       limit(20)
     );
     

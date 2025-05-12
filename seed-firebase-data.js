@@ -131,7 +131,7 @@ async function seedData() {
         {
           title: 'Ferrari 458',
           imageUrl: '/attached_assets/ba1f50f644077acc8bedb8b0634c1af8.jpg',
-          categoryId: categoryRefs['Arabalar'],
+          categoryId: categoryRefs['Arabalar'] || Object.values(categoryRefs)[0],
           answers: ['Ferrari', 'Ferrari 458', '458 Italia'],
           difficulty: 2,
           playCount: 120,
@@ -142,7 +142,7 @@ async function seedData() {
         {
           title: 'İstanbul Boğazı',
           imageUrl: '/attached_assets/86b4065a7c34a1c78de57b71078b4f5b.jpg',
-          categoryId: categoryRefs['Coğrafya'],
+          categoryId: categoryRefs['Coğrafya'] || Object.values(categoryRefs)[1],
           answers: ['İstanbul', 'Istanbul', 'Boğaz', 'Bogazici', 'Bosphorus'],
           difficulty: 1,
           playCount: 200,
@@ -153,11 +153,33 @@ async function seedData() {
         {
           title: 'Star Wars - Darth Vader',
           imageUrl: '/attached_assets/6c161a984b072640f8d7cde4b759f0a8.jpg',
-          categoryId: categoryRefs['Film & TV'],
+          categoryId: categoryRefs['Film & TV'] || Object.values(categoryRefs)[2],
           answers: ['Star Wars', 'Darth Vader', 'Vader'],
           difficulty: 2,
           playCount: 180,
           likeCount: 95,
+          active: true,
+          createdAt: serverTimestamp()
+        },
+        {
+          title: 'Mona Lisa',
+          imageUrl: 'https://images.unsplash.com/photo-1423742774270-6884aac775fa?w=500',
+          categoryId: categoryRefs['Sanat'] || Object.values(categoryRefs)[3],
+          answers: ['Mona Lisa', 'Leonardo da Vinci', 'da Vinci'],
+          difficulty: 1,
+          playCount: 150,
+          likeCount: 67,
+          active: true,
+          createdAt: serverTimestamp()
+        },
+        {
+          title: 'Minecraft',
+          imageUrl: 'https://images.unsplash.com/photo-1607853202273-797f1c22a38e?w=500',
+          categoryId: categoryRefs['Oyunlar'] || Object.values(categoryRefs)[4],
+          answers: ['Minecraft', 'Mine Craft'],
+          difficulty: 1,
+          playCount: 250,
+          likeCount: 120,
           active: true,
           createdAt: serverTimestamp()
         }
@@ -170,6 +192,8 @@ async function seedData() {
         console.log(`Added image: ${image.title} with ID: ${docRef.id}`);
         imageRefs[image.title] = docRef.id;
       }
+    } else {
+      console.log(`Found ${imagesSnapshot.size} existing images, skipping image creation`);
     }
     
     // Check if tests already exist
@@ -185,7 +209,7 @@ async function seedData() {
           title: 'Arabalar Testi',
           description: 'Otomobil markaları ve modelleri hakkında bilginizi test edin',
           creatorId: null,
-          categoryId: categoryRefs['Arabalar'],
+          categoryId: categoryRefs['Arabalar'] || Object.values(categoryRefs)[0],
           questions: [
             {
               imageUrl: '/attached_assets/ba1f50f644077acc8bedb8b0634c1af8.jpg',
@@ -208,7 +232,7 @@ async function seedData() {
           title: 'Dünya Coğrafyası',
           description: 'Dünya üzerindeki önemli yerleri tanıyabilecek misiniz?',
           creatorId: null,
-          categoryId: categoryRefs['Coğrafya'],
+          categoryId: categoryRefs['Coğrafya'] || Object.values(categoryRefs)[1],
           questions: [
             {
               imageUrl: '/attached_assets/86b4065a7c34a1c78de57b71078b4f5b.jpg',
@@ -231,7 +255,7 @@ async function seedData() {
           title: 'Film Karakterleri',
           description: 'Popüler film karakterlerini tanıyabilecek misiniz?',
           creatorId: null,
-          categoryId: categoryRefs['Film & TV'],
+          categoryId: categoryRefs['Film & TV'] || Object.values(categoryRefs)[2],
           questions: [
             {
               imageUrl: '/attached_assets/6c161a984b072640f8d7cde4b759f0a8.jpg',
@@ -248,6 +272,52 @@ async function seedData() {
           featured: true,
           difficulty: 2,
           createdAt: serverTimestamp()
+        },
+        {
+          uuid: createId(),
+          title: 'Sanat Eserleri',
+          description: 'Ünlü sanat eserlerini tanıyabilecek misiniz?',
+          creatorId: null,
+          categoryId: categoryRefs['Sanat'] || Object.values(categoryRefs)[3],
+          questions: [
+            {
+              imageUrl: 'https://images.unsplash.com/photo-1423742774270-6884aac775fa?w=500',
+              answers: ['Mona Lisa', 'Leonardo da Vinci', 'da Vinci'],
+              question: 'Bu ünlü tablo nedir?'
+            }
+          ],
+          thumbnailUrl: 'https://images.unsplash.com/photo-1423742774270-6884aac775fa?w=500',
+          playCount: 42,
+          likeCount: 18,
+          isPublic: true,
+          isAnonymous: false,
+          approved: true,
+          featured: true,
+          difficulty: 1,
+          createdAt: serverTimestamp()
+        },
+        {
+          uuid: createId(),
+          title: 'Video Oyunları',
+          description: 'Popüler video oyunlarını tanıyabilecek misiniz?',
+          creatorId: null,
+          categoryId: categoryRefs['Oyunlar'] || Object.values(categoryRefs)[4],
+          questions: [
+            {
+              imageUrl: 'https://images.unsplash.com/photo-1607853202273-797f1c22a38e?w=500',
+              answers: ['Minecraft', 'Mine Craft'],
+              question: 'Bu hangi oyun?'
+            }
+          ],
+          thumbnailUrl: 'https://images.unsplash.com/photo-1607853202273-797f1c22a38e?w=500',
+          playCount: 65,
+          likeCount: 30,
+          isPublic: true,
+          isAnonymous: false,
+          approved: true,
+          featured: false,
+          difficulty: 1,
+          createdAt: serverTimestamp()
         }
       ];
       
@@ -255,6 +325,8 @@ async function seedData() {
         const docRef = await addDoc(collection(db, 'tests'), test);
         console.log(`Added test: ${test.title} with ID: ${docRef.id}`);
       }
+    } else {
+      console.log(`Found ${testsSnapshot.size} existing tests, skipping test creation`);
     }
     
     console.log('✅ All sample data added successfully to Firestore!');
