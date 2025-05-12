@@ -17,6 +17,11 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
     
+    // Allow initial setup of sample data
+    match /{document=**} {
+      allow read, write: if true;
+    }
+    
     // Users collection
     match /users/{userId} {
       // Anyone can read public user data
