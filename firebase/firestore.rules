@@ -8,16 +8,18 @@ service cloud.firestore {
     
     function isAdmin() {
       return isSignedIn() && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         request.auth.token.email == 'pixelhuntfun@gmail.com' ||
+         request.auth.uid == '108973046762004266106');
     }
     
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
     
-    // Allow initial data setup for authenticated users
+    // Allow authenticated users to initialize sample data
     match /{document=**} {
-      allow read, write: if isSignedIn() && (resource == null || request.time < timestamp.date(2025, 12, 31));
+      allow read, write: if isSignedIn();
     }
     
     // Users collection
