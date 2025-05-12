@@ -230,7 +230,9 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // Check if we're online first
       if (!navigator.onLine) {
         console.log("User is offline, skipping admin status check");
-        return false;
+        // If offline, check hardcoded admin list
+        return user.email === 'pixelhuntfun@gmail.com' || 
+               user.uid === '108973046762004266106';
       }
       
       try {
@@ -253,15 +255,13 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             console.log("User is admin via hardcoded admin list");
             
             // Update user document with admin role if online
-            if (navigator.onLine) {
-              try {
-                await updateDoc(userRef, {
-                  role: 'admin'
-                });
-              } catch (error) {
-                console.error('Error updating admin role:', error);
-                // Continue even if update fails
-              }
+            try {
+              await updateDoc(userRef, {
+                role: 'admin'
+              });
+            } catch (error) {
+              console.error('Error updating admin role:', error);
+              // Continue even if update fails
             }
             
             return true;
@@ -270,10 +270,8 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       } catch (error) {
         console.error('Error checking Firestore admin status:', error);
         // If Firestore check fails, fall back to hardcoded admin check
-        if (user.email === 'pixelhuntfun@gmail.com' || 
-            user.uid === '108973046762004266106') {
-          return true;
-        }
+        return user.email === 'pixelhuntfun@gmail.com' || 
+               user.uid === '108973046762004266106';
       }
       
       return false;

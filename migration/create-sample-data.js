@@ -7,9 +7,9 @@ const serviceAccount = {
   "type": "service_account",
   "project_id": "pixelhunt-7afa8",
   "private_key_id": "private_key_id_placeholder",
-  // Parse private key from environment variable
-  "private_key": process.env.FIREBASE_PRIVATE_KEY,
-  "client_email": process.env.FIREBASE_CLIENT_EMAIL || "firebase-adminsdk-xxxxx@pixelhunt-7afa8.iam.gserviceaccount.com",
+  // Parse private key from environment variable, replacing escaped newlines with actual newlines
+  "private_key": process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+  "client_email": process.env.FIREBASE_CLIENT_EMAIL,
   "client_id": "client_id_placeholder",
   "auth_uri": "https://accounts.google.com/o/oauth2/auth",
   "token_uri": "https://oauth2.googleapis.com/token",
@@ -18,9 +18,19 @@ const serviceAccount = {
   "universe_domain": "googleapis.com"
 };
 
+// Validate required credentials
+if (!serviceAccount.private_key) {
+  throw new Error('FIREBASE_PRIVATE_KEY environment variable is not set or is invalid');
+}
+
+if (!serviceAccount.client_email) {
+  throw new Error('FIREBASE_CLIENT_EMAIL environment variable is not set or is invalid');
+}
+
 // Initialize Firebase
 const firebaseApp = initializeApp({
-  credential: cert(serviceAccount)
+  credential: cert(serviceAccount),
+  databaseURL: "https://pixelhunt-7afa8-default-rtdb.firebaseio.com"
 });
 
 const db = getFirestore();
@@ -287,6 +297,7 @@ async function createSampleData() {
     console.log('Sample data creation complete!');
   } catch (error) {
     console.error('Error creating sample data:', error);
+    throw error; // Re-throw to ensure the process exits with an error code
   }
 }
 
