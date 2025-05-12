@@ -121,66 +121,6 @@ export interface UserActivity {
   createdAt: Date;
 }
 
-// Firestore converters
-const userConverter: FirestoreDataConverter<User> = {
-  toFirestore(user: User): DocumentData {
-    return {
-      uid: user.uid,
-      username: user.username,
-      email: user.email,
-      role: user.role,
-      score: user.score,
-      avatarUrl: user.avatarUrl,
-      banned: user.banned,
-      lastLoginAt: user.lastLoginAt,
-      createdAt: user.createdAt
-    };
-  },
-  fromFirestore(snapshot: QueryDocumentSnapshot): User {
-    const data = snapshot.data();
-    return {
-      uid: data.uid,
-      username: data.username,
-      email: data.email,
-      role: data.role || 'user',
-      score: data.score || 0,
-      avatarUrl: data.avatarUrl,
-      banned: data.banned || false,
-      lastLoginAt: data.lastLoginAt?.toDate(),
-      createdAt: data.createdAt?.toDate() || new Date()
-    };
-  }
-};
-
-const categoryConverter: FirestoreDataConverter<Category> = {
-  toFirestore(category: Category): DocumentData {
-    return {
-      name: category.name,
-      description: category.description,
-      iconName: category.iconName,
-      color: category.color,
-      backgroundColor: category.backgroundColor,
-      active: category.active,
-      createdAt: category.createdAt,
-      updatedAt: category.updatedAt
-    };
-  },
-  fromFirestore(snapshot: QueryDocumentSnapshot): Category {
-    const data = snapshot.data();
-    return {
-      id: snapshot.id,
-      name: data.name,
-      description: data.description || '',
-      iconName: data.iconName,
-      color: data.color,
-      backgroundColor: data.backgroundColor,
-      active: data.active !== false,
-      createdAt: data.createdAt?.toDate() || new Date(),
-      updatedAt: data.updatedAt?.toDate()
-    };
-  }
-};
-
 // Helper functions for Firebase operations
 
 // Initialize sample data for testing
@@ -388,11 +328,24 @@ export async function initializeSampleData() {
 // Categories
 export async function getAllCategories(): Promise<Category[]> {
   try {
-    const categoriesRef = collection(db, 'categories').withConverter(categoryConverter);
+    const categoriesRef = collection(db, 'categories');
     const q = query(categoriesRef, where('active', '==', true), orderBy('name'));
     const querySnapshot = await getDocs(q);
     
-    return querySnapshot.docs.map(doc => doc.data());
+    return querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        name: data.name,
+        description: data.description || '',
+        iconName: data.iconName,
+        color: data.color,
+        backgroundColor: data.backgroundColor,
+        active: data.active !== false,
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate()
+      };
+    });
   } catch (error) {
     console.error('Error fetching categories:', error);
     return [];
@@ -401,11 +354,22 @@ export async function getAllCategories(): Promise<Category[]> {
 
 export async function getCategory(id: string): Promise<Category | null> {
   try {
-    const docRef = doc(db, 'categories', id).withConverter(categoryConverter);
+    const docRef = doc(db, 'categories', id);
     const docSnap = await getDoc(docRef);
     
     if (docSnap.exists()) {
-      return docSnap.data();
+      const data = docSnap.data();
+      return {
+        id: docSnap.id,
+        name: data.name,
+        description: data.description || '',
+        iconName: data.iconName,
+        color: data.color,
+        backgroundColor: data.backgroundColor,
+        active: data.active !== false,
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate()
+      };
     }
     
     return null;
@@ -672,7 +636,7 @@ export async function getTestByUuid(uuid: string): Promise<Test | null> {
   }
 }
 
-export async function createTest(testData: Omit<Test, 'id' | 'uuid' | 'createdAt' | 'playCount' | 'likeCount'>): Promise<Test> {
+export async function createTest(testData: any): Promise<Test> {
   try {
     // Generate a unique ID for sharing
     const uuid = createId();
@@ -683,7 +647,8 @@ export async function createTest(testData: Omit<Test, 'id' | 'uuid' | 'createdAt
       uuid,
       playCount: 0,
       likeCount: 0,
-      createdAt: serverTimestamp()
+      createdAt: serverTimestamp(),
+      isAnonymous: testData.isAnonymous || false
     };
     
     // Add to Firestore
@@ -708,6 +673,10 @@ export async function createTest(testData: Omit<Test, 'id' | 'uuid' | 'createdAt
       ...testData,
       playCount: 0,
       likeCount: 0,
+      isPublic: testData.isPublic !== false,
+      isAnonymous: testData.isAnonymous === true,
+      approved: testData.approved === true,
+      featured: testData.featured === true,
       createdAt: new Date()
     };
   } catch (error) {
@@ -862,6 +831,70 @@ export async function getFeaturedTests(limitCount: number = 5): Promise<Test[]> 
   }
 }
 
+// Search function
+export async function searchTests(query: string, categoryId?: string): Promise<Test[]> {
+  try {
+    const testsRef = collection(db, 'tests');
+    let q;
+    
+    // Base query conditions
+    const conditions = [
+      where('isPublic', '==', true),
+      orderBy('createdAt', 'desc'),
+      limit(20)
+    ];
+    
+    // Add category filter if provided
+    if (categoryId) {
+      conditions.push(where('categoryId', '==', categoryId));
+    }
+    
+    // Execute query
+    q = query(testsRef, ...conditions);
+    const querySnapshot = await getDocs(q);
+    
+    // Filter results client-side for text search
+    // Note: Firestore doesn't support full-text search natively
+    // For production, consider using Algolia or Firebase Extensions for search
+    let results = querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        uuid: data.uuid,
+        title: data.title,
+        description: data.description || '',
+        creatorId: data.creatorId,
+        categoryId: data.categoryId,
+        questions: data.questions || [],
+        thumbnailUrl: data.thumbnailUrl,
+        playCount: data.playCount || 0,
+        likeCount: data.likeCount || 0,
+        isPublic: data.isPublic !== false,
+        isAnonymous: data.isAnonymous === true,
+        approved: data.approved === true,
+        featured: data.featured === true,
+        difficulty: data.difficulty || 2,
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate()
+      };
+    });
+    
+    // Filter by search query if provided
+    if (query && query.trim() !== '') {
+      const normalizedQuery = query.toLowerCase().trim();
+      results = results.filter(test => 
+        test.title.toLowerCase().includes(normalizedQuery) || 
+        (test.description && test.description.toLowerCase().includes(normalizedQuery))
+      );
+    }
+    
+    return results;
+  } catch (error) {
+    console.error('Error searching tests:', error);
+    return [];
+  }
+}
+
 // File upload helper
 export async function uploadFile(file: File, path: string): Promise<string> {
   try {
@@ -939,69 +972,5 @@ export async function saveGameScore(scoreData: Omit<GameScore, 'id' | 'createdAt
   } catch (error) {
     console.error('Error saving game score:', error);
     throw new Error('Game score saving failed');
-  }
-}
-
-// Search function
-export async function searchTests(query: string, categoryId?: string): Promise<Test[]> {
-  try {
-    const testsRef = collection(db, 'tests');
-    let q;
-    
-    // Base query conditions
-    const conditions = [
-      where('isPublic', '==', true),
-      orderBy('createdAt', 'desc'),
-      limit(20)
-    ];
-    
-    // Add category filter if provided
-    if (categoryId) {
-      conditions.push(where('categoryId', '==', categoryId));
-    }
-    
-    // Execute query
-    q = query(testsRef, ...conditions);
-    const querySnapshot = await getDocs(q);
-    
-    // Filter results client-side for text search
-    // Note: Firestore doesn't support full-text search natively
-    // For production, consider using Algolia or Firebase Extensions for search
-    let results = querySnapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        uuid: data.uuid,
-        title: data.title,
-        description: data.description || '',
-        creatorId: data.creatorId,
-        categoryId: data.categoryId,
-        questions: data.questions || [],
-        thumbnailUrl: data.thumbnailUrl,
-        playCount: data.playCount || 0,
-        likeCount: data.likeCount || 0,
-        isPublic: data.isPublic !== false,
-        isAnonymous: data.isAnonymous === true,
-        approved: data.approved === true,
-        featured: data.featured === true,
-        difficulty: data.difficulty || 2,
-        createdAt: data.createdAt?.toDate() || new Date(),
-        updatedAt: data.updatedAt?.toDate()
-      };
-    });
-    
-    // Filter by search query if provided
-    if (query && query.trim() !== '') {
-      const normalizedQuery = query.toLowerCase().trim();
-      results = results.filter(test => 
-        test.title.toLowerCase().includes(normalizedQuery) || 
-        (test.description && test.description.toLowerCase().includes(normalizedQuery))
-      );
-    }
-    
-    return results;
-  } catch (error) {
-    console.error('Error searching tests:', error);
-    return [];
   }
 }
