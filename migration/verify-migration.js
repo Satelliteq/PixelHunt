@@ -1,29 +1,32 @@
-import admin from 'firebase-admin';
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { config } from 'dotenv';
+import { initializeApp, cert } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-// Initialize environment variables
-config();
-
-// Get current file directory for ES modules
+// Load environment variables
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Initialize Firebase Admin if not already initialized
-if (!admin.apps.length) {
-  const serviceAccount = JSON.parse(
+// Initialize Firebase Admin
+let serviceAccount;
+try {
+  serviceAccount = JSON.parse(
+    process.env.FIREBASE_SERVICE_ACCOUNT || 
     fs.readFileSync(path.join(__dirname, './firebase-service-account.json'), 'utf8')
   );
-
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    storageBucket: process.env.FIREBASE_STORAGE_BUCKET || 'pixelhunt-7afa8.appspot.com'
-  });
+} catch (error) {
+  console.error('Error loading service account:', error);
+  console.log('Please ensure firebase-service-account.json exists or FIREBASE_SERVICE_ACCOUNT env var is set');
+  process.exit(1);
 }
 
-const db = admin.firestore();
+// Initialize Firebase
+const firebaseApp = initializeApp({
+  credential: cert(serviceAccount)
+});
+
+const db = getFirestore();
 
 async function verifyMigration() {
   console.log('Verifying Firebase migration...');

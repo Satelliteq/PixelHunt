@@ -8,7 +8,7 @@ const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY || "AIzaSyBtHxrkA9kcUQZyJp9bA48Evyt5U-7AVoQ",
   authDomain: process.env.FIREBASE_AUTH_DOMAIN || "pixelhunt-7afa8.firebaseapp.com",
   projectId: process.env.FIREBASE_PROJECT_ID || "pixelhunt-7afa8",
-  storageBucket: process.env.FIREBASE_STORAGE_BUCKET || "pixelhunt-7afa8.firebasestorage.app",
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET || "pixelhunt-7afa8.appspot.com",
   messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || "595531085941",
   appId: process.env.FIREBASE_APP_ID || "1:595531085941:web:9bd7b5f890098211d2a03c"
 };

@@ -1,30 +1,33 @@
-import admin from 'firebase-admin';
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { config } from 'dotenv';
+import { initializeApp, cert } from 'firebase-admin/app';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { createId } from '@paralleldrive/cuid2';
 
-// Initialize environment variables
-config();
-
-// Get current file directory for ES modules
+// Load environment variables
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Initialize Firebase Admin if not already initialized
-if (!admin.apps.length) {
-  const serviceAccount = JSON.parse(
+// Initialize Firebase Admin
+let serviceAccount;
+try {
+  serviceAccount = JSON.parse(
+    process.env.FIREBASE_SERVICE_ACCOUNT || 
     fs.readFileSync(path.join(__dirname, './firebase-service-account.json'), 'utf8')
   );
-
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    storageBucket: process.env.FIREBASE_STORAGE_BUCKET || 'pixelhunt-7afa8.appspot.com'
-  });
+} catch (error) {
+  console.error('Error loading service account:', error);
+  console.log('Please ensure firebase-service-account.json exists or FIREBASE_SERVICE_ACCOUNT env var is set');
+  process.exit(1);
 }
 
-const db = admin.firestore();
+// Initialize Firebase
+const firebaseApp = initializeApp({
+  credential: cert(serviceAccount)
+});
+
+const db = getFirestore();
 
 async function createSampleData() {
   console.log('Creating sample data in Firebase...');
@@ -47,7 +50,7 @@ async function createSampleData() {
         color: '#FF5722',
         backgroundColor: '#FFF3F0',
         active: true,
-        createdAt: admin.firestore.FieldValue.serverTimestamp()
+        createdAt: FieldValue.serverTimestamp()
       },
       {
         name: 'Coğrafya',
@@ -56,7 +59,7 @@ async function createSampleData() {
         color: '#4CAF50',
         backgroundColor: '#E8F5E9',
         active: true,
-        createdAt: admin.firestore.FieldValue.serverTimestamp()
+        createdAt: FieldValue.serverTimestamp()
       },
       {
         name: 'Film & TV',
@@ -65,7 +68,7 @@ async function createSampleData() {
         color: '#2196F3',
         backgroundColor: '#E3F2FD',
         active: true,
-        createdAt: admin.firestore.FieldValue.serverTimestamp()
+        createdAt: FieldValue.serverTimestamp()
       },
       {
         name: 'Sanat',
@@ -74,7 +77,7 @@ async function createSampleData() {
         color: '#9C27B0',
         backgroundColor: '#F3E5F5',
         active: true,
-        createdAt: admin.firestore.FieldValue.serverTimestamp()
+        createdAt: FieldValue.serverTimestamp()
       },
       {
         name: 'Oyunlar',
@@ -83,7 +86,7 @@ async function createSampleData() {
         color: '#FFC107',
         backgroundColor: '#FFF8E1',
         active: true,
-        createdAt: admin.firestore.FieldValue.serverTimestamp()
+        createdAt: FieldValue.serverTimestamp()
       }
     ];
     
@@ -103,8 +106,8 @@ async function createSampleData() {
       role: 'admin',
       score: 1000,
       banned: false,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      lastLoginAt: admin.firestore.FieldValue.serverTimestamp()
+      createdAt: FieldValue.serverTimestamp(),
+      lastLoginAt: FieldValue.serverTimestamp()
     };
     
     const adminUserRef = await db.collection('users').add(adminUser);
@@ -123,7 +126,7 @@ async function createSampleData() {
         likeCount: 45,
         active: true,
         createdBy: adminUserRef.id,
-        createdAt: admin.firestore.FieldValue.serverTimestamp()
+        createdAt: FieldValue.serverTimestamp()
       },
       {
         title: 'İstanbul Boğazı',
@@ -135,7 +138,7 @@ async function createSampleData() {
         likeCount: 78,
         active: true,
         createdBy: adminUserRef.id,
-        createdAt: admin.firestore.FieldValue.serverTimestamp()
+        createdAt: FieldValue.serverTimestamp()
       },
       {
         title: 'Star Wars - Darth Vader',
@@ -147,7 +150,7 @@ async function createSampleData() {
         likeCount: 95,
         active: true,
         createdBy: adminUserRef.id,
-        createdAt: admin.firestore.FieldValue.serverTimestamp()
+        createdAt: FieldValue.serverTimestamp()
       }
     ];
     
@@ -182,7 +185,7 @@ async function createSampleData() {
         approved: true,
         featured: true,
         difficulty: 2,
-        createdAt: admin.firestore.FieldValue.serverTimestamp()
+        createdAt: FieldValue.serverTimestamp()
       },
       {
         uuid: createId(),
@@ -205,7 +208,7 @@ async function createSampleData() {
         approved: true,
         featured: false,
         difficulty: 1,
-        createdAt: admin.firestore.FieldValue.serverTimestamp()
+        createdAt: FieldValue.serverTimestamp()
       }
     ];
     

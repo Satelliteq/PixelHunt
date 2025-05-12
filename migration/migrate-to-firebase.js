@@ -1,34 +1,48 @@
-import admin from 'firebase-admin';
+import { initializeApp, cert } from 'firebase-admin/app';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { getStorage } from 'firebase-admin/storage';
 import { createClient } from '@supabase/supabase-js';
-import fs from 'node:fs';
-import path from 'node:path';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import fetch from 'node-fetch';
-import { fileURLToPath } from 'node:url';
-import { config } from 'dotenv';
+import { createId } from '@paralleldrive/cuid2';
 
-// Initialize environment variables
-config();
-
-// Get current file directory for ES modules
+// Load environment variables
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Initialize Firebase Admin
-const serviceAccount = JSON.parse(
-  fs.readFileSync(path.join(__dirname, './firebase-service-account.json'), 'utf8')
-);
+let serviceAccount;
+try {
+  serviceAccount = JSON.parse(
+    process.env.FIREBASE_SERVICE_ACCOUNT || 
+    fs.readFileSync(path.join(__dirname, './firebase-service-account.json'), 'utf8')
+  );
+} catch (error) {
+  console.error('Error loading service account:', error);
+  console.log('Please ensure firebase-service-account.json exists or FIREBASE_SERVICE_ACCOUNT env var is set');
+  process.exit(1);
+}
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  storageBucket: 'pixelhunt-7afa8.appspot.com'
+// Initialize Firebase
+const firebaseApp = initializeApp({
+  credential: cert(serviceAccount),
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET || 'pixelhunt-7afa8.appspot.com'
 });
 
-const db = admin.firestore();
-const bucket = admin.storage().bucket();
+const db = getFirestore();
+const bucket = getStorage().bucket();
 
 // Initialize Supabase client
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY not found in environment variables');
+  process.exit(1);
+}
+
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Migration stats
@@ -101,13 +115,10 @@ async function migrateUsers() {
     if (error) throw error;
     stats.users.total = users.length;
     
-    // Create a batch for Firebase
-    const batch = db.batch();
-    
     // Process each user
     for (const user of users) {
       try {
-        const userRef = db.collection('users').doc(user.id.toString());
+        const userRef = db.collection('users').doc(user.uuid || createId());
         
         // Migrate avatar if exists
         let avatarUrl = user.avatar;
@@ -121,7 +132,7 @@ async function migrateUsers() {
         
         // Map user data to Firebase structure
         const userData = {
-          uid: user.uuid || admin.firestore.FieldValue.serverTimestamp(),
+          uid: user.uuid || createId(),
           username: user.username,
           email: user.email || '',
           role: user.role || 'user',
@@ -129,10 +140,10 @@ async function migrateUsers() {
           avatarUrl: avatarUrl || null,
           banned: user.banned || false,
           lastLoginAt: user.last_login_at ? new Date(user.last_login_at) : null,
-          createdAt: user.created_at ? new Date(user.created_at) : admin.firestore.FieldValue.serverTimestamp()
+          createdAt: user.created_at ? new Date(user.created_at) : FieldValue.serverTimestamp()
         };
         
-        batch.set(userRef, userData);
+        await userRef.set(userData);
         stats.users.migrated++;
       } catch (err) {
         console.error(`Error processing user ${user.id}:`, err);
@@ -140,8 +151,6 @@ async function migrateUsers() {
       }
     }
     
-    // Commit the batch
-    await batch.commit();
     console.log(`Migrated ${stats.users.migrated} of ${stats.users.total} users`);
   } catch (error) {
     console.error('Error migrating users:', error);
@@ -161,9 +170,6 @@ async function migrateCategories() {
     if (error) throw error;
     stats.categories.total = categories.length;
     
-    // Create a batch for Firebase
-    const batch = db.batch();
-    
     // Process each category
     for (const category of categories) {
       try {
@@ -177,11 +183,11 @@ async function migrateCategories() {
           color: category.color || '#4F46E5',
           backgroundColor: category.backgroundcolor || null,
           active: category.active !== false,
-          createdAt: category.created_at ? new Date(category.created_at) : admin.firestore.FieldValue.serverTimestamp(),
+          createdAt: category.created_at ? new Date(category.created_at) : FieldValue.serverTimestamp(),
           updatedAt: category.updated_at ? new Date(category.updated_at) : null
         };
         
-        batch.set(categoryRef, categoryData);
+        await categoryRef.set(categoryData);
         stats.categories.migrated++;
       } catch (err) {
         console.error(`Error processing category ${category.id}:`, err);
@@ -189,8 +195,6 @@ async function migrateCategories() {
       }
     }
     
-    // Commit the batch
-    await batch.commit();
     console.log(`Migrated ${stats.categories.migrated} of ${stats.categories.total} categories`);
   } catch (error) {
     console.error('Error migrating categories:', error);
@@ -210,7 +214,7 @@ async function migrateImages() {
     if (error) throw error;
     stats.images.total = images.length;
     
-    // Process each image (not in batch due to file uploads)
+    // Process each image
     for (const image of images) {
       try {
         const imageRef = db.collection('images').doc(image.id.toString());
@@ -262,7 +266,7 @@ async function migrateImages() {
           likeCount: image.like_count || 0,
           active: image.active !== false,
           createdBy: image.created_by ? image.created_by.toString() : null,
-          createdAt: image.created_at ? new Date(image.created_at) : admin.firestore.FieldValue.serverTimestamp(),
+          createdAt: image.created_at ? new Date(image.created_at) : FieldValue.serverTimestamp(),
           updatedAt: image.updated_at ? new Date(image.updated_at) : null
         };
         
@@ -293,7 +297,7 @@ async function migrateTests() {
     if (error) throw error;
     stats.tests.total = tests.length;
     
-    // Process each test (not in batch due to potential file uploads)
+    // Process each test
     for (const test of tests) {
       try {
         const testRef = db.collection('tests').doc(test.id.toString());
@@ -375,7 +379,7 @@ async function migrateTests() {
           approved: test.approved === true,
           featured: test.featured === true,
           difficulty: test.difficulty || 2,
-          createdAt: test.created_at ? new Date(test.created_at) : admin.firestore.FieldValue.serverTimestamp(),
+          createdAt: test.created_at ? new Date(test.created_at) : FieldValue.serverTimestamp(),
           updatedAt: test.updated_at ? new Date(test.updated_at) : null
         };
         
@@ -406,11 +410,6 @@ async function migrateTestComments() {
     if (error) throw error;
     stats.testComments.total = comments.length;
     
-    // Create a batch for Firebase
-    const batch = db.batch();
-    let currentBatch = 0;
-    const BATCH_SIZE = 500; // Firestore batch limit
-    
     // Process each comment
     for (const comment of comments) {
       try {
@@ -422,29 +421,15 @@ async function migrateTestComments() {
           testId: comment.test_id.toString(),
           userId: comment.user_id ? comment.user_id.toString() : null,
           comment: comment.comment || comment.content || '',
-          createdAt: comment.created_at ? new Date(comment.created_at) : admin.firestore.FieldValue.serverTimestamp()
+          createdAt: comment.created_at ? new Date(comment.created_at) : FieldValue.serverTimestamp()
         };
         
-        batch.set(commentRef, commentData);
+        await commentRef.set(commentData);
         stats.testComments.migrated++;
-        
-        // Commit batch if we've reached the limit
-        currentBatch++;
-        if (currentBatch >= BATCH_SIZE) {
-          await batch.commit();
-          console.log(`Committed batch of ${currentBatch} comments`);
-          currentBatch = 0;
-        }
       } catch (err) {
         console.error(`Error processing comment ${comment.id}:`, err);
         stats.testComments.errors++;
       }
-    }
-    
-    // Commit any remaining documents
-    if (currentBatch > 0) {
-      await batch.commit();
-      console.log(`Committed final batch of ${currentBatch} comments`);
     }
     
     console.log(`Migrated ${stats.testComments.migrated} of ${stats.testComments.total} test comments`);
@@ -465,11 +450,6 @@ async function migrateGameScores() {
     
     if (error) throw error;
     stats.gameScores.total = scores.length;
-    
-    // Create a batch for Firebase
-    const batch = db.batch();
-    let currentBatch = 0;
-    const BATCH_SIZE = 500; // Firestore batch limit
     
     // Process each score
     for (const score of scores) {
@@ -497,29 +477,15 @@ async function migrateGameScores() {
           attemptsCount: score.attempts_count || 1,
           completed: score.completed === true,
           details: details,
-          createdAt: score.created_at ? new Date(score.created_at) : admin.firestore.FieldValue.serverTimestamp()
+          createdAt: score.created_at ? new Date(score.created_at) : FieldValue.serverTimestamp()
         };
         
-        batch.set(scoreRef, scoreData);
+        await scoreRef.set(scoreData);
         stats.gameScores.migrated++;
-        
-        // Commit batch if we've reached the limit
-        currentBatch++;
-        if (currentBatch >= BATCH_SIZE) {
-          await batch.commit();
-          console.log(`Committed batch of ${currentBatch} scores`);
-          currentBatch = 0;
-        }
       } catch (err) {
         console.error(`Error processing score ${score.id}:`, err);
         stats.gameScores.errors++;
       }
-    }
-    
-    // Commit any remaining documents
-    if (currentBatch > 0) {
-      await batch.commit();
-      console.log(`Committed final batch of ${currentBatch} scores`);
     }
     
     console.log(`Migrated ${stats.gameScores.migrated} of ${stats.gameScores.total} game scores`);
@@ -540,11 +506,6 @@ async function migrateUserActivities() {
     
     if (error) throw error;
     stats.userActivities.total = activities.length;
-    
-    // Create a batch for Firebase
-    const batch = db.batch();
-    let currentBatch = 0;
-    const BATCH_SIZE = 500; // Firestore batch limit
     
     // Process each activity
     for (const activity of activities) {
@@ -571,29 +532,15 @@ async function migrateUserActivities() {
           entityId: activity.entity_id ? activity.entity_id.toString() : null,
           entityType: activity.entity_type || null,
           metadata: metadata,
-          createdAt: activity.created_at ? new Date(activity.created_at) : admin.firestore.FieldValue.serverTimestamp()
+          createdAt: activity.created_at ? new Date(activity.created_at) : FieldValue.serverTimestamp()
         };
         
-        batch.set(activityRef, activityData);
+        await activityRef.set(activityData);
         stats.userActivities.migrated++;
-        
-        // Commit batch if we've reached the limit
-        currentBatch++;
-        if (currentBatch >= BATCH_SIZE) {
-          await batch.commit();
-          console.log(`Committed batch of ${currentBatch} activities`);
-          currentBatch = 0;
-        }
       } catch (err) {
         console.error(`Error processing activity ${activity.id}:`, err);
         stats.userActivities.errors++;
       }
-    }
-    
-    // Commit any remaining documents
-    if (currentBatch > 0) {
-      await batch.commit();
-      console.log(`Committed final batch of ${currentBatch} activities`);
     }
     
     console.log(`Migrated ${stats.userActivities.migrated} of ${stats.userActivities.total} user activities`);
