@@ -1,11 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
-import { supabaseStorage } from "./supabase-storage";
-import { pgStorage } from "./db-storage";
-import { storage as memStorage } from "./storage"; // Memory storage'ı ekleyelim
+import admin from 'firebase-admin';
 import { z } from "zod";
-import pkg from 'pg';
-const { Pool } = pkg;
 import { 
   insertUserSchema, 
   insertCategorySchema, 
@@ -16,833 +12,218 @@ import {
   gameModesEnum,
   userActivities
 } from "@shared/schema";
-import { db } from './supabase';
+
+// Get Firestore instance
+const db = admin.apps.length ? admin.firestore() : null;
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Route to safely expose environment variables to the client
   app.get("/api/env", (_req: Request, res: Response) => {
     // Only expose specific environment variables needed for client-side
     const clientEnv = {
-      SUPABASE_URL: process.env.SUPABASE_URL,
-      SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
+      FIREBASE_API_KEY: process.env.FIREBASE_API_KEY,
+      FIREBASE_AUTH_DOMAIN: process.env.FIREBASE_AUTH_DOMAIN,
+      FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID,
+      FIREBASE_STORAGE_BUCKET: process.env.FIREBASE_STORAGE_BUCKET,
+      FIREBASE_MESSAGING_SENDER_ID: process.env.FIREBASE_MESSAGING_SENDER_ID,
+      FIREBASE_APP_ID: process.env.FIREBASE_APP_ID
     };
     
     res.json(clientEnv);
   });
-  // API routes
-  
-  // User routes
-  app.post("/api/users/register", async (req: Request, res: Response) => {
-    try {
-      const userInput = insertUserSchema.parse(req.body);
-      const existingUser = await supabaseStorage.getUserByUsername(userInput.username);
-      
-      if (existingUser) {
-        return res.status(409).json({ message: "Username already exists" });
-      }
-      
-      const newUser = await supabaseStorage.createUser(userInput);
-      const { password, ...userWithoutPassword } = newUser;
-      
-      res.status(201).json(userWithoutPassword);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid user data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-  
-  app.post("/api/users/login", async (req: Request, res: Response) => {
-    try {
-      const { username, password } = req.body;
-      
-      if (!username || !password) {
-        return res.status(400).json({ message: "Username and password are required" });
-      }
-      
-      const user = await supabaseStorage.getUserByUsername(username);
-      
-      if (!user || user.password !== password) {
-        return res.status(401).json({ message: "Invalid credentials" });
-      }
-      
-      const { password: _, ...userWithoutPassword } = user;
-      
-      res.json(userWithoutPassword);
-    } catch (error) {
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-  
-  // Category routes
-  app.get("/api/categories", async (_req: Request, res: Response) => {
-    try {
-      // Supabase yerine memory storage kullanarak kategorileri getir
-      console.log("Fetching categories using supabaseStorage");
-      const categories = await supabaseStorage.getAllCategories();
-      res.json(categories);
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-  
-  app.get("/api/categories/:id", async (req: Request, res: Response) => {
-    try {
-      const id = parseInt(req.params.id);
-      
-      if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid category ID" });
-      }
-      
-      const category = await supabaseStorage.getCategory(id);
-      
-      if (!category) {
-        return res.status(404).json({ message: "Category not found" });
-      }
-      
-      res.json(category);
-    } catch (error) {
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-  
-  // Image routes
-  app.get("/api/images", async (_req: Request, res: Response) => {
-    try {
-      const images = await supabaseStorage.getAllImages();
-      res.json(images);
-    } catch (error) {
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-  
-  app.get("/api/images/category/:categoryId", async (req: Request, res: Response) => {
-    try {
-      const categoryId = parseInt(req.params.categoryId);
-      
-      if (isNaN(categoryId)) {
-        return res.status(400).json({ message: "Invalid category ID" });
-      }
-      
-      const images = await supabaseStorage.getImagesByCategory(categoryId);
-      res.json(images);
-    } catch (error) {
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-  
-  app.get("/api/images/:id", async (req: Request, res: Response) => {
-    try {
-      const id = parseInt(req.params.id);
-      
-      if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid image ID" });
-      }
-      
-      const image = await supabaseStorage.getImage(id);
-      
-      if (!image) {
-        return res.status(404).json({ message: "Image not found" });
-      }
-      
-      res.json(image);
-    } catch (error) {
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-  
-  app.get("/api/images/popular", async (_req: Request, res: Response) => {
-    try {
-      const limit = 5;
-      const topPlayedImages = await supabaseStorage.getTopPlayedImages(limit);
-      res.json(topPlayedImages);
-    } catch (error) {
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-  
-  app.get("/api/images/favorites", async (_req: Request, res: Response) => {
-    try {
-      const limit = 5;
-      const topLikedImages = await supabaseStorage.getTopLikedImages(limit);
-      res.json(topLikedImages);
-    } catch (error) {
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-  
-  app.post("/api/images/:id/like", async (req: Request, res: Response) => {
-    try {
-      const id = parseInt(req.params.id);
-      
-      if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid image ID" });
-      }
-      
-      const image = await supabaseStorage.getImage(id);
-      
-      if (!image) {
-        return res.status(404).json({ message: "Image not found" });
-      }
-      
-      await supabaseStorage.incrementLikeCount(id);
-      const updatedImage = await supabaseStorage.getImage(id);
-      
-      res.json(updatedImage);
-    } catch (error) {
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-  
-  // Game routes
-  app.post("/api/game/check-answer", async (req: Request, res: Response) => {
-    try {
-      const { imageId, answer } = req.body;
-      
-      if (!imageId || !answer) {
-        return res.status(400).json({ message: "Image ID and answer are required" });
-      }
-      
-      const id = parseInt(imageId);
-      
-      if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid image ID" });
-      }
-      
-      const image = await supabaseStorage.getImage(id);
-      
-      if (!image) {
-        return res.status(404).json({ message: "Image not found" });
-      }
-      
-      const answers = image.answers as string[];
-      const isCorrect = answers.some(
-        a => a.toLowerCase() === answer.toLowerCase()
-      );
-      
-      res.json({ isCorrect });
-    } catch (error) {
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-  
-  app.post("/api/game/scores", async (req: Request, res: Response) => {
-    try {
-      const gameScoreInput = insertGameScoreSchema.parse(req.body);
-      
-      const newScore = await supabaseStorage.saveGameScore(gameScoreInput);
-      res.status(201).json(newScore);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid score data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-  
-  app.get("/api/game/scores/top", async (req: Request, res: Response) => {
-    try {
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
-      const topScores = await supabaseStorage.getTopScores(limit);
-      res.json(topScores);
-    } catch (error) {
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-  
-  app.get("/api/game/scores/user/:userId", async (req: Request, res: Response) => {
-    try {
-      const userId = parseInt(req.params.userId);
-      
-      if (isNaN(userId)) {
-        return res.status(400).json({ message: "Invalid user ID" });
-      }
-      
-      const userScores = await supabaseStorage.getUserScores(userId);
-      res.json(userScores);
-    } catch (error) {
-      res.status(500).json({ message: "Server error" });
-    }
-  });
 
-  // Random image for gameplay
-  app.get("/api/game/random-image", async (req: Request, res: Response) => {
-    try {
-      const categoryId = req.query.categoryId ? parseInt(req.query.categoryId as string) : undefined;
-      
-      let images = await supabaseStorage.getAllImages();
-      
-      if (categoryId && !isNaN(categoryId)) {
-        images = await supabaseStorage.getImagesByCategory(categoryId);
-      }
-      
-      if (images.length === 0) {
-        return res.status(404).json({ message: "No images found" });
-      }
-      
-      const randomIndex = Math.floor(Math.random() * images.length);
-      const randomImage = images[randomIndex];
-      
-      res.json(randomImage);
-    } catch (error) {
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-  
-  // Test routes
-  app.get("/api/tests", async (req: Request, res: Response) => {
-    try {
-      // Eğer query parametresi varsa, arama yap
-      const searchQuery = req.query.q as string;
-      const categoryId = req.query.categoryId ? parseInt(req.query.categoryId as string) : undefined;
-      
-      if (searchQuery || categoryId) {
-        console.log(`Received search request: query="${searchQuery}", categoryId=${categoryId}`);
-        const searchResults = await supabaseStorage.searchTests(searchQuery || "", categoryId);
-        return res.json(searchResults);
-      }
-      
-      // Arama sorgusu yoksa tüm testleri getir
-      const tests = await supabaseStorage.getAllTests();
-      res.json(tests);
-    } catch (error) {
-      console.error("Test listesi veya arama hatası:", error);
-      res.status(500).json({ message: "Server error", error: String(error) });
-    }
-  });
-  
-  app.get("/api/tests/popular", async (req: Request, res: Response) => {
-    try {
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
-      console.log("Fetching popular tests using supabaseStorage");
-      const popularTests = await supabaseStorage.getPopularTests(limit);
-      res.json(popularTests);
-    } catch (error) {
-      console.error("Error fetching popular tests:", error);
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-  
-  app.get("/api/tests/newest", async (req: Request, res: Response) => {
-    try {
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
-      console.log("Fetching newest tests using supabaseStorage");
-      const newestTests = await supabaseStorage.getNewestTests(limit);
-      res.json(newestTests);
-    } catch (error) {
-      console.error("Error fetching newest tests:", error);
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-  
-  app.get("/api/tests/featured", async (req: Request, res: Response) => {
-    try {
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
-      console.log("Fetching featured tests using supabaseStorage");
-      const featuredTests = await supabaseStorage.getFeaturedTests(limit);
-      res.json(featuredTests);
-    } catch (error) {
-      console.error("Error fetching featured tests:", error);
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-  
-  app.get("/api/tests/category/:categoryId", async (req: Request, res: Response) => {
-    try {
-      const categoryId = parseInt(req.params.categoryId);
-      
-      if (isNaN(categoryId)) {
-        return res.status(400).json({ message: "Invalid category ID" });
-      }
-      
-      const tests = await supabaseStorage.getTestsByCategory(categoryId);
-      res.json(tests);
-    } catch (error) {
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-  
-  app.get("/api/tests/:id", async (req: Request, res: Response) => {
-    try {
-      // ID'nin sayı olup olmadığını kontrol et
-      const idParam = req.params.id;
-      let test = null;
-      
-      if (!isNaN(parseInt(idParam))) {
-        const id = parseInt(idParam);
-        test = await supabaseStorage.getTest(id);
-      }
-      
-      // Eğer ID sayı değilse veya test bulunamadıysa, UUID olarak dene
-      if (!test && idParam.length > 8) {
-        console.log("ID sayı olarak bulunamadı, UUID olarak deneniyor:", idParam);
-        test = await supabaseStorage.getTestByUuid(idParam);
-      }
-      
-      if (!test) {
-        console.log("Test bulunamadı - ID:", idParam);
-        return res.status(404).json({ message: "Test not found" });
-      }
-      
-      res.json(test);
-    } catch (error) {
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-  
-  app.post("/api/tests", async (req: Request, res: Response) => {
-    try {
-      console.log("Test oluşturma isteği alındı:", req.body);
-      
-      // Gerekli alanları kontrol et
-      if (!req.body.title || !req.body.categoryId) {
-        return res.status(400).json({ error: 'Başlık ve kategori zorunludur' });
-      }
-      
-      // Görselleri işle
-      const questions = req.body.images?.map((img: any) => ({
-        imageUrl: img.imageUrl,
-        answers: img.answers,
-        question: img.question || "Bu görselde ne görüyorsunuz?"
-      })) || [];
-      
-      // Görsel ID'lerini oluştur
-      const imageIds = questions.map((_, index) => index + 1);
-      
-      // is_anonymous kontrolü
-      const isAnonymous = req.body.isAnonymous !== undefined ? req.body.isAnonymous : false;
-      
-      // Veriyi dönüştür
-      const transformedData = {
-        title: req.body.title,
-        description: req.body.description || "",
-        category_id: req.body.categoryId,
-        creator_id: 1, // Varsayılan olarak 1 kullanıyoruz
-        image_ids: imageIds,
-        questions: questions,
-        is_public: req.body.isPublic !== undefined ? req.body.isPublic : true,
-        is_anonymous: isAnonymous,
-        approved: true,
-        featured: false,
-        thumbnail: req.body.thumbnail || null
-      };
-      
-      console.log("Dönüştürülmüş veri:", transformedData);
-      
-      // Testi oluştur
-      let createdTest: any = null;
-      
-      try {
-        // Önce Supabase'e kaydetmeyi dene
-        createdTest = await supabaseStorage.createTest(transformedData);
-        console.log("Test Supabase'e kaydedildi:", createdTest);
-      } catch (supabaseError) {
-        console.error("Supabase kaydetme hatası:", supabaseError);
-        
-        try {
-          // Sonra PostgreSQL'e kaydetmeyi dene
-          createdTest = await pgStorage.createTest(transformedData);
-          console.log("Test PostgreSQL'e kaydedildi:", createdTest);
-        } catch (pgError) {
-          console.error("PostgreSQL kaydetme hatası:", pgError);
-          throw new Error("Test oluşturulamadı");
-        }
-      }
-      
-      // Başarılı yanıt döndür
-      res.status(201).json({
-        success: true,
-        test: createdTest
-      });
-      
-    } catch (error) {
-      console.error("Test oluşturma hatası:", error);
-      res.status(500).json({
-        error: "Test oluşturulurken bir hata oluştu",
-        details: error instanceof Error ? error.message : "Bilinmeyen hata"
-      });
-    }
-  });
-  
-  app.post("/api/tests/:id/like", async (req: Request, res: Response) => {
-    try {
-      const id = parseInt(req.params.id);
-      
-      if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid test ID" });
-      }
-      
-      const test = await supabaseStorage.getTest(id);
-      
-      if (!test) {
-        return res.status(404).json({ message: "Test not found" });
-      }
-      
-      await supabaseStorage.incrementTestLikeCount(id);
-      const updatedTest = await supabaseStorage.getTest(id);
-      
-      res.json(updatedTest);
-    } catch (error) {
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-  
-  // Test comment routes
-  app.get("/api/tests/:testId/comments", async (req: Request, res: Response) => {
-    try {
-      const testId = parseInt(req.params.testId);
-      
-      if (isNaN(testId)) {
-        return res.status(400).json({ message: "Invalid test ID" });
-      }
-      
-      const comments = await supabaseStorage.getTestComments(testId);
-      res.json(comments);
-    } catch (error) {
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-  
-  app.post("/api/tests/:testId/comments", async (req: Request, res: Response) => {
-    try {
-      const testId = parseInt(req.params.testId);
-      
-      if (isNaN(testId)) {
-        return res.status(400).json({ message: "Invalid test ID" });
-      }
-      
-      const test = await supabaseStorage.getTest(testId);
-      
-      if (!test) {
-        return res.status(404).json({ message: "Test not found" });
-      }
-      
-      const commentInput = insertTestCommentSchema.parse({
-        ...req.body,
-        testId
-      });
-      
-      const comment = await supabaseStorage.createTestComment(commentInput);
-      res.status(201).json(comment);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid comment data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Server error" });
-    }
-  });
+  // API routes - these are now handled directly by the client using Firebase SDK
+  // We'll keep minimal server-side API routes for operations that require admin privileges
 
   // Admin routes
   // Middleware function to check if user is admin
   const isAdmin = async (req: Request, res: Response, next: Function) => {
-    // Admin kullanıcıları kontrol et - oturum bilgilerinden
-    // Veya req.user ile kullanıcı bilgilerine erişilebilir
+    if (!db) {
+      return res.status(500).json({ message: "Firebase not initialized" });
+    }
     
     try {
-      // Geliştirme aşamasında admin erişimini kolaylaştırmak için her isteği kabul edelim
-      // NOT: Üretime geçmeden önce bu kaldırılmalıdır
-      console.log("Allowing admin access for development purposes");
-      return next();
+      // Get the authorization token
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       
-      // İstek kimlik doğrulaması için bir oturum kullanılabilir
-      // const userId = req.session?.userId;
+      const token = authHeader.split('Bearer ')[1];
       
-      // // Geliştirme ve test amacıyla 'x-admin-token' başlığını da kabul edelim
-      // const adminTokenHeader = req.headers['x-admin-token'];
+      // Verify the token
+      const decodedToken = await admin.auth().verifyIdToken(token);
       
-      // if (adminTokenHeader === 'admin-secret-token') {
-      //   return next();
-      // }
+      // Check if user is admin
+      const userDoc = await db.collection('users').doc(decodedToken.uid).get();
+      if (!userDoc.exists) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
       
-      // // Kullanıcı oturumunu kontrol edin
-      // if (req.headers['x-user-id']) {
-      //   const userId = Number(req.headers['x-user-id']);
-      //   if (!isNaN(userId)) {
-      //     const user = await supabaseStorage.getUser(userId);
-      //     
-      //     if (user && user.role === 'admin') {
-      //       return next();
-      //     }
-      //   }
-      // }
+      const userData = userDoc.data();
+      if (userData?.role !== 'admin') {
+        return res.status(403).json({ message: "Forbidden" });
+      }
       
-      // return res.status(403).json({ message: "Access denied: Admin privileges required" });
+      // Add user to request
+      (req as any).user = {
+        uid: decodedToken.uid,
+        email: decodedToken.email,
+        role: userData.role
+      };
+      
+      next();
     } catch (error) {
       console.error('Admin authentication error:', error);
-      return res.status(500).json({ message: "Server error during authentication" });
+      return res.status(401).json({ message: "Unauthorized" });
     }
   };
   
-  // Get all users (admin only)
+  // Admin - Get all users
   app.get("/api/admin/users", isAdmin, async (_req: Request, res: Response) => {
+    if (!db) {
+      return res.status(500).json({ message: "Firebase not initialized" });
+    }
+    
     try {
-      const users = await supabaseStorage.getAllUsers();
-      // Remove passwords from the response
-      const safeUsers = users.map(user => {
-        const { password, ...userWithoutPassword } = user;
-        return userWithoutPassword;
-      });
+      const usersSnapshot = await db.collection('users').get();
+      const users = usersSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
       
-      res.json(safeUsers);
+      res.json(users);
     } catch (error) {
+      console.error('Error fetching users:', error);
       res.status(500).json({ message: "Server error" });
     }
   });
   
-  // Update user role (admin only)
+  // Admin - Update user role
   app.post("/api/admin/users/:id/role", isAdmin, async (req: Request, res: Response) => {
+    if (!db) {
+      return res.status(500).json({ message: "Firebase not initialized" });
+    }
+    
     try {
-      const userId = parseInt(req.params.id);
+      const userId = req.params.id;
       const { role } = req.body;
-      
-      if (isNaN(userId)) {
-        return res.status(400).json({ message: "Invalid user ID" });
-      }
       
       if (!role || (role !== 'admin' && role !== 'user')) {
         return res.status(400).json({ message: "Valid role (admin or user) is required" });
       }
       
-      const user = await supabaseStorage.getUser(userId);
+      const userRef = db.collection('users').doc(userId);
+      const userDoc = await userRef.get();
       
-      if (!user) {
+      if (!userDoc.exists) {
         return res.status(404).json({ message: "User not found" });
       }
       
-      const updatedUser = await supabaseStorage.updateUserRole(userId, role);
+      await userRef.update({ role });
       
-      if (!updatedUser) {
-        return res.status(404).json({ message: "User not found" });
-      }
+      const updatedUserDoc = await userRef.get();
+      const userData = updatedUserDoc.data();
       
-      const { password, ...userWithoutPassword } = updatedUser;
-      
-      res.json(userWithoutPassword);
+      res.json({
+        id: updatedUserDoc.id,
+        ...userData
+      });
     } catch (error) {
+      console.error('Error updating user role:', error);
       res.status(500).json({ message: "Server error" });
     }
   });
   
-  // Ban/unban user (admin only)
+  // Admin - Ban/unban user
   app.post("/api/admin/users/:id/ban", isAdmin, async (req: Request, res: Response) => {
+    if (!db) {
+      return res.status(500).json({ message: "Firebase not initialized" });
+    }
+    
     try {
-      const userId = parseInt(req.params.id);
+      const userId = req.params.id;
       const { banned } = req.body;
-      
-      if (isNaN(userId)) {
-        return res.status(400).json({ message: "Invalid user ID" });
-      }
       
       if (typeof banned !== 'boolean') {
         return res.status(400).json({ message: "Banned status (true/false) is required" });
       }
       
-      const user = await supabaseStorage.getUser(userId);
+      const userRef = db.collection('users').doc(userId);
+      const userDoc = await userRef.get();
       
-      if (!user) {
+      if (!userDoc.exists) {
         return res.status(404).json({ message: "User not found" });
       }
       
-      const updatedUser = await supabaseStorage.updateUserBanStatus(userId, banned);
+      await userRef.update({ banned });
       
-      if (!updatedUser) {
-        return res.status(404).json({ message: "User not found" });
-      }
+      const updatedUserDoc = await userRef.get();
+      const userData = updatedUserDoc.data();
       
-      const { password, ...userWithoutPassword } = updatedUser;
-      
-      res.json(userWithoutPassword);
+      res.json({
+        id: updatedUserDoc.id,
+        ...userData
+      });
     } catch (error) {
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-  
-  // CRUD operations for categories (admin only)
-  app.post("/api/categories", isAdmin, async (req: Request, res: Response) => {
-    try {
-      console.log("Allowing admin access for development purposes");
-      // Log request data for debugging
-      console.log("Request body for category:", req.body);
-      
-      // Doğrudan req.body'den ihtiyacımız olan alanları alıyoruz
-      const categoryInput = {
-        name: req.body.name,
-        description: req.body.description || "",
-        iconname: req.body.iconName || null,
-        color: req.body.color || null,
-        backgroundcolor: req.body.backgroundColor || null,
-        imageurl: req.body.imageUrl || null,
-        active: req.body.active !== false // Default to true if not provided
-      };
-      
-      // Try different storage methods until one works
-      let newCategory;
-      try {
-        console.log("Attempting to create category with supabaseStorage");
-        newCategory = await supabaseStorage.createCategory(categoryInput);
-      } catch (supabaseError) {
-        console.error("Supabase error:", supabaseError);
-        console.log("Falling back to pgStorage");
-        
-        try {
-          newCategory = await pgStorage.createCategory(categoryInput);
-        } catch (pgError) {
-          console.error("PostgreSQL error:", pgError);
-          console.log("Falling back to memory storage");
-          
-          // Final fallback to in-memory storage
-          try {
-            newCategory = await memStorage.createCategory(categoryInput);
-          } catch (memoryError) {
-            console.error("Memory storage error:", memoryError);
-            throw new Error("Failed to create category using all available storage methods");
-          }
-        }
-      }
-      
-      console.log("Category created successfully:", newCategory);
-      res.status(201).json(newCategory);
-    } catch (error) {
-      console.error("Error creating category:", error);
-      res.status(500).json({ message: "Server error", details: String(error) });
-    }
-  });
-  
-  app.put("/api/categories/:id", isAdmin, async (req: Request, res: Response) => {
-    try {
-      const id = parseInt(req.params.id);
-      
-      if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid category ID" });
-      }
-      
-      // Doğrudan req.body'den ihtiyacımız olan alanları alıyoruz - update işlemi için
-      const categoryInput = {
-        name: req.body.name,
-        description: req.body.description || "",
-        iconname: req.body.iconName || null,
-        color: req.body.color || null,
-        backgroundcolor: req.body.backgroundColor || null,
-        imageurl: req.body.imageUrl || null,
-        active: req.body.active !== false // Default to true if not provided
-      };
-      
-      console.log("Updating category with data:", categoryInput);
-      
-      // Try with supabase first, then fallback
-      let updatedCategory;
-      try {
-        updatedCategory = await supabaseStorage.updateCategory(id, categoryInput);
-      } catch (supabaseError) {
-        console.error("Supabase error:", supabaseError);
-        console.log("Falling back to pgStorage");
-        updatedCategory = await pgStorage.updateCategory(id, categoryInput);
-      }
-      
-      if (!updatedCategory) {
-        return res.status(404).json({ message: "Category not found" });
-      }
-      
-      res.json(updatedCategory);
-    } catch (error) {
-      console.error("Error updating category:", error);
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid category data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Server error", details: String(error) });
-    }
-  });
-  
-  // CRUD operations for tests (admin only)
-  app.put("/api/tests/:id", isAdmin, async (req: Request, res: Response) => {
-    try {
-      const id = parseInt(req.params.id);
-      
-      if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid test ID" });
-      }
-      
-      const testInput = insertTestSchema.parse(req.body);
-      const updatedTest = await supabaseStorage.updateTest(id, testInput);
-      
-      if (!updatedTest) {
-        return res.status(404).json({ message: "Test not found" });
-      }
-      
-      res.json(updatedTest);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid test data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-  
-  app.delete("/api/tests/:id", isAdmin, async (req: Request, res: Response) => {
-    try {
-      const id = parseInt(req.params.id);
-      
-      if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid test ID" });
-      }
-      
-      const deleted = await supabaseStorage.deleteTest(id);
-      
-      if (!deleted) {
-        return res.status(404).json({ message: "Test not found" });
-      }
-      
-      res.status(204).end();
-    } catch (error) {
+      console.error('Error updating user ban status:', error);
       res.status(500).json({ message: "Server error" });
     }
   });
   
   // Admin - Get all activities
   app.get("/api/admin/activities", isAdmin, async (req: Request, res: Response) => {
+    if (!db) {
+      return res.status(500).json({ message: "Firebase not initialized" });
+    }
+    
     try {
       const limit = parseInt(req.query.limit as string || "50", 10);
       
-      // Access user activities through the storage interface
-      try {
-        // Use supabaseStorage if it has the method, otherwise fall back to memory storage
-        const activities = await supabaseStorage.getLatestActivities(limit);
-        console.log('Activity query result:', { count: activities.length });
-        return res.json(activities);
-      } catch (dbError: any) {
-        console.error('Database query error:', dbError);
-        return res.status(500).json({ message: "Database error while fetching activities", error: dbError.message });
-      }
+      const activitiesSnapshot = await db.collection('userActivities')
+        .orderBy('createdAt', 'desc')
+        .limit(limit)
+        .get();
+      
+      const activities = activitiesSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate()
+      }));
+      
+      res.json(activities);
     } catch (error) {
-      console.error("Error fetching activities:", error);
-      res.status(500).json({ message: "Server error while fetching activities" });
+      console.error('Error fetching activities:', error);
+      res.status(500).json({ message: "Server error" });
     }
   });
   
   // Admin - Get activities for a specific user
   app.get("/api/admin/users/:id/activities", isAdmin, async (req: Request, res: Response) => {
+    if (!db) {
+      return res.status(500).json({ message: "Firebase not initialized" });
+    }
+    
     try {
-      const userId = parseInt(req.params.id, 10);
+      const userId = req.params.id;
       const limit = parseInt(req.query.limit as string || "50", 10);
       
-      if (isNaN(userId)) {
-        return res.status(400).json({ message: "Invalid user ID" });
-      }
+      const activitiesSnapshot = await db.collection('userActivities')
+        .where('userId', '==', userId)
+        .orderBy('createdAt', 'desc')
+        .limit(limit)
+        .get();
       
-      // Access user activities through the storage interface
-      try {
-        const activities = await supabaseStorage.getUserActivities(userId, limit);
-        console.log('User activity query result:', { userId, count: activities.length });
-        return res.json(activities);
-      } catch (dbError: any) {
-        console.error('Database query error:', dbError);
-        return res.status(500).json({ message: "Database error while fetching user activities", error: dbError.message });
-      }
+      const activities = activitiesSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate()
+      }));
+      
+      res.json(activities);
     } catch (error) {
-      console.error("Error fetching user activities:", error);
-      res.status(500).json({ message: "Server error while fetching user activities" });
+      console.error('Error fetching user activities:', error);
+      res.status(500).json({ message: "Server error" });
     }
   });
 
