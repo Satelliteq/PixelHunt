@@ -36,8 +36,8 @@ service cloud.firestore {
     
     // Categories collection
     match /categories/{categoryId} {
-      // Anyone can read active categories
-      allow read: if resource.data.active == true || isAdmin();
+      // Allow read access to all categories
+      allow read;
       
       // Only admins can create, update, or delete categories
       allow create, update, delete: if isAdmin();
