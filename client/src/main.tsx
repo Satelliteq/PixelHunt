@@ -15,6 +15,7 @@ import { initializeSampleData } from "./lib/firebaseHelpers";
     console.log("Sample data initialized successfully");
   } catch (error) {
     console.error("Error initializing sample data:", error);
+    // Don't throw the error, just log it to prevent app from crashing
   }
 })();
 
