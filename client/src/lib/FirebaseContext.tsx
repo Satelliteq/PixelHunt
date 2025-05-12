@@ -227,57 +227,51 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Check if user is admin
   const checkUserAdminStatus = async (user: User) => {
     try {
-      // Check if we're online first
+      // If offline, check hardcoded admin list
       if (!navigator.onLine) {
-        console.log("User is offline, skipping admin status check");
-        // If offline, check hardcoded admin list
+        console.log("User is offline, using hardcoded admin list");
         return user.email === 'pixelhuntfun@gmail.com' || 
                user.uid === '108973046762004266106';
       }
       
-      try {
-        // Get user document from Firestore
-        const userRef = doc(db, 'users', user.uid);
-        const userSnap = await getDoc(userRef);
+      // Get user document from Firestore
+      const userRef = doc(db, 'users', user.uid);
+      const userSnap = await getDoc(userRef);
+      
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
         
-        if (userSnap.exists()) {
-          const userData = userSnap.data();
-          
-          // Check if user has admin role
-          if (userData.role === 'admin') {
-            console.log("User is admin via Firestore role");
-            return true;
-          }
-          
-          // Check if user is in admin list
-          if (user.email === 'pixelhuntfun@gmail.com' || 
-              user.uid === '108973046762004266106') {
-            console.log("User is admin via hardcoded admin list");
-            
-            // Update user document with admin role if online
-            try {
-              await updateDoc(userRef, {
-                role: 'admin'
-              });
-            } catch (error) {
-              console.error('Error updating admin role:', error);
-              // Continue even if update fails
-            }
-            
-            return true;
-          }
+        // Check if user has admin role
+        if (userData.role === 'admin') {
+          console.log("User is admin via Firestore role");
+          return true;
         }
-      } catch (error) {
-        console.error('Error checking Firestore admin status:', error);
-        // If Firestore check fails, fall back to hardcoded admin check
-        return user.email === 'pixelhuntfun@gmail.com' || 
-               user.uid === '108973046762004266106';
+        
+        // Check if user is in admin list
+        if (user.email === 'pixelhuntfun@gmail.com' || 
+            user.uid === '108973046762004266106') {
+          console.log("User is admin via hardcoded admin list");
+          
+          // Update user document with admin role
+          try {
+            await updateDoc(userRef, {
+              role: 'admin'
+            });
+          } catch (error) {
+            console.error('Error updating admin role:', error);
+            // Continue even if update fails
+          }
+          
+          return true;
+        }
       }
       
       return false;
     } catch (error) {
       console.error('Admin status check error:', error);
-      return false;
+      // If any error occurs, fall back to hardcoded admin check
+      return user.email === 'pixelhuntfun@gmail.com' || 
+             user.uid === '108973046762004266106';
     }
   };
 
@@ -288,10 +282,7 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       
       if (authUser) {
         try {
-          // Check admin status only if online
-          if (navigator.onLine) {
-            await checkUserAdminStatus(authUser);
-          }
+          await checkUserAdminStatus(authUser);
           setUser(authUser);
         } catch (error) {
           console.error('Error during auth state change:', error);
