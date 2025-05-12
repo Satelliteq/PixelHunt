@@ -218,6 +218,12 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Check if user is admin
   const checkUserAdminStatus = async (user: User) => {
     try {
+      // Check if we're online first
+      if (!navigator.onLine) {
+        console.log("User is offline, can't check admin status");
+        return false;
+      }
+      
       // Get user document from Firestore
       const userRef = doc(db, 'users', user.uid);
       const userSnap = await getDoc(userRef);

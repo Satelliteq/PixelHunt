@@ -321,16 +321,16 @@ export default function Header() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.user_metadata.avatar_url} alt={user.user_metadata.full_name || user.email} />
-                    <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
+                    <AvatarImage src={user?.photoURL || undefined} alt={user?.displayName || user?.email || ''} />
+                    <AvatarFallback>{user?.email?.[0].toUpperCase()}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user.user_metadata.full_name || 'Kullanıcı'}</p>
-                    <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                    <p className="text-sm font-medium leading-none">{user?.displayName || 'Kullanıcı'}</p>
+                    <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -339,7 +339,7 @@ export default function Header() {
                     <User className="w-4 h-4 mr-2" />
                     Profilim
                   </DropdownMenuItem>
-                  {user.app_metadata?.role === 'admin' || user.user_metadata?.isAdmin ? (
+                  {user?.uid && (user.uid === '108973046762004266106' || user.email === 'pixelhuntfun@gmail.com') ? (
                     <DropdownMenuItem onClick={() => handleNavigation("/admin")}>
                       <Settings className="w-4 h-4 mr-2" />
                       Admin Paneli
@@ -479,7 +479,7 @@ export default function Header() {
               >
                 <User className="w-5 h-5 mr-2" /> Profilim
               </Button>
-              {user.app_metadata?.role === 'admin' || user.user_metadata?.isAdmin ? (
+              {user.uid === '108973046762004266106' || user.email === 'pixelhuntfun@gmail.com' ? (
                 <Button 
                   variant="outline" 
                   className="w-full justify-start"
