@@ -41,7 +41,7 @@ export default function GameScreen() {
   const imageRevealRef = useRef<any>(null);
   
   // Fetch test data
-  const { data: test, isLoading: isTestLoading } = useQuery({
+  const { data: test, isLoading: isTestLoading, refetch: refetchTest } = useQuery({
     queryKey: [`test-${testId}`],
     queryFn: async () => {
       if (!testId) return null;
@@ -177,7 +177,7 @@ export default function GameScreen() {
     },
     enabled: gameStatus === 'finished'
   });
-  
+
   // Check if user has already liked this test
   useEffect(() => {
     if (user && testId) {
@@ -481,7 +481,7 @@ export default function GameScreen() {
         <div className="text-center max-w-md">
           <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
           <h2 className="text-2xl font-bold mb-2">Test bulunamadı</h2>
-          <p className="text-muted-foreground mb-6">İstediğiniz test mevcut değil veya yüklenirken bir sorun oluştu.</p>
+          <p className="mb-4">İstediğiniz test mevcut değil veya yüklenirken bir sorun oluştu.</p>
           <Button onClick={() => window.history.back()}>Geri Dön</Button>
         </div>
       </div>
