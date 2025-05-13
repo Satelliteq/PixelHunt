@@ -4,10 +4,10 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/lib/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { UserCircle2, ThumbsUp, Share2, Play, Clock, Calendar, User, MessageSquare } from "lucide-react";
+import { UserCircle2, ThumbsUp, Share2, Play, Clock, Calendar, User, MessageSquare, Loader2 } from "lucide-react";
 import { formatDistance } from "date-fns";
 import { tr } from "date-fns/locale";
-import { doc, getDoc, collection, addDoc, query, where, orderBy, getDocs, updateDoc, increment, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, collection, addDoc, query, where, orderBy, getDocs, updateDoc, increment, serverTimestamp, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 import { 
