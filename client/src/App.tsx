@@ -27,7 +27,7 @@ import HowToPlay from "@/pages/HowToPlay";
 import NotFound from "@/pages/not-found";
 import Admin from "@/pages/Admin";
 
-import Header from "@/components/layout/Header";
+import Sidebar from "@/components/layout/Sidebar";
 import Footer from "@/components/layout/Footer";
 
 function Router() {
@@ -76,12 +76,11 @@ function App() {
       <FirebaseProvider>
         <LanguageProvider>
           <AuthProvider>
-            <div className="min-h-screen flex flex-col bg-background text-foreground">
-              {!isGameScreen && <Header />}
-              <main className={`flex-grow ${!isGameScreen ? 'container mx-auto px-4 py-6' : 'w-full'}`}>
+            <div className="min-h-screen flex bg-background text-foreground">
+              {!isGameScreen && <Sidebar />}
+              <main className={`flex-grow ${!isGameScreen ? 'p-4 md:p-6' : 'w-full'}`}>
                 <Router />
               </main>
-              {!isGameScreen && <Footer />}
             </div>
             <Toaster />
           </AuthProvider>
