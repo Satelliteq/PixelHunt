@@ -27,7 +27,7 @@ import HowToPlay from "@/pages/HowToPlay";
 import NotFound from "@/pages/not-found";
 import Admin from "@/pages/Admin";
 
-import Sidebar from "@/components/layout/Sidebar";
+import Sidebar from "./components/layout/Sidebar";
 import Footer from "@/components/layout/Footer";
 
 function Router() {

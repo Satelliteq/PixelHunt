@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Heart, Trophy, BookOpen, Filter, Clock, Users, Sparkles, Award, ChevronLeft, ChevronRight, Plus, Search, X, Loader2, Layers, Film, Music, Palette, Gamepad2, Dumbbell, FlaskConical, Landmark } from "lucide-react";
+import { Heart, Trophy, BookOpen, Filter, Clock, Users, Sparkles, Award, ChevronLeft, ChevronRight, Plus, Search, X, Loader2, Layers, Film, Music, Palette, Gamepad2, Dumbbell, FlaskConical, Landmark, Zap } from "lucide-react";
 import { Test, Category } from "@shared/schema";
 import { useLanguage } from "@/lib/LanguageContext";
 import { getAllCategories, getPopularTests, getNewestTests, getFeaturedTests, searchTests } from "@/lib/firebaseHelpers";
