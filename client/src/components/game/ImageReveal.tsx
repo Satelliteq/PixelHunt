@@ -12,7 +12,10 @@ type ImageRevealProps = {
   staticReveal?: boolean; // Statik mod veya rastgele açılım (true = statik, false = rastgele)
 };
 
-export default function ImageReveal({
+const ImageReveal = React.forwardRef<
+  { showCorrectGuessEffect: () => void },
+  ImageRevealProps
+>(({
   imageUrl,
   revealPercent,
   gridSize = 5, // 5x5 grid yapısına güncellendi
@@ -20,7 +23,7 @@ export default function ImageReveal({
   onCellReveal,
   revealSpecificCell,
   staticReveal = false
-}: ImageRevealProps) {
+}, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -250,4 +253,6 @@ export default function ImageReveal({
       </div>
     </div>
   );
-}
+});
+
+export default ImageReveal;

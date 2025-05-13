@@ -4,7 +4,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 import { useAuth } from '@/lib/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { UserCircle2, ThumbsUp, Share2, Play, Clock, Calendar, User, MessageSquare, Loader2 } from 'lucide-react';
+import { UserCircle2, ThumbsUp, Share2, Play, Clock, Calendar, User, MessageSquare, Loader2, Check } from 'lucide-react';
 import { formatDistance } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { doc, getDoc, collection, addDoc, query, where, orderBy, getDocs, updateDoc, increment, serverTimestamp, limit } from 'firebase/firestore';
@@ -35,6 +35,7 @@ export default function TestDetail() {
   const [shareUrl, setShareUrl] = useState('');
   const [showShareAlert, setShowShareAlert] = useState(false);
   const [hasLiked, setHasLiked] = useState(false);
+  const [isAddingComment, setIsAddingComment] = useState(false);
 
   // Fetch test data
   const { data: test, isLoading: isTestLoading, refetch: refetchTest } = useQuery({
@@ -77,6 +78,11 @@ export default function TestDetail() {
             };
           }
         }
+        
+        // Increment play count
+        await updateDoc(testRef, {
+          playCount: increment(1)
+        });
         
         return {
           id: testDoc.id,
@@ -124,7 +130,7 @@ export default function TestDetail() {
   
   // Fetch top scores
   const { data: topScores = [], isLoading: isLeaderboardLoading } = useQuery({
-    queryKey: [`test-leaderboard-${testId}`],
+    queryKey: [`top-scores-${testId}`],
     queryFn: async () => {
       if (!testId) return [];
       
@@ -139,32 +145,10 @@ export default function TestDetail() {
         
         const querySnapshot = await getDocs(q);
         
-        const scoresData = [];
-        for (const doc of querySnapshot.docs) {
-          const scoreData = doc.data();
-          
-          // Fetch user data if userId exists
-          let userData = null;
-          if (scoreData.userId) {
-            const userRef = doc(db, 'users', scoreData.userId);
-            const userDoc = await getDoc(userRef);
-            if (userDoc.exists()) {
-              userData = {
-                id: userDoc.id,
-                ...userDoc.data()
-              };
-            }
-          }
-          
-          scoresData.push({
-            id: doc.id,
-            ...scoreData,
-            user: userData,
-            createdAt: scoreData.createdAt?.toDate()
-          });
-        }
-        
-        return scoresData;
+        return querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
       } catch (error) {
         console.error("Error fetching top scores:", error);
         return [];
@@ -172,45 +156,15 @@ export default function TestDetail() {
     },
     enabled: !!testId
   });
-  
-  // Fetch similar tests (same category)
-  const { data: similarTests = [], isLoading: isSimilarTestsLoading } = useQuery({
-    queryKey: [`similar-tests-${test?.categoryId}`],
-    queryFn: async () => {
-      if (!test?.categoryId) return [];
-      
-      try {
-        const testsRef = collection(db, 'tests');
-        const q = query(
-          testsRef,
-          where('categoryId', '==', test.categoryId),
-          where('isPublic', '==', true),
-          where('approved', '==', true),
-          limit(5)
-        );
-        
-        const querySnapshot = await getDocs(q);
-        
-        return querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-      } catch (error) {
-        console.error("Error fetching similar tests:", error);
-        return [];
-      }
-    },
-    enabled: !!test?.categoryId
-  });
 
   // Check if user has already liked this test
   useEffect(() => {
     if (user && testId) {
       const checkUserLike = async () => {
         try {
-          const userActivitiesRef = collection(db, 'userActivities');
+          const likesRef = collection(db, 'userActivities');
           const q = query(
-            userActivitiesRef,
+            likesRef,
             where('userId', '==', user.uid),
             where('entityId', '==', testId),
             where('activityType', '==', 'like_test'),
@@ -236,9 +190,9 @@ export default function TestDetail() {
       }
       
       // Check if user has already liked this test
-      const userActivitiesRef = collection(db, 'userActivities');
+      const likesRef = collection(db, 'userActivities');
       const q = query(
-        userActivitiesRef,
+        likesRef,
         where('userId', '==', user.uid),
         where('entityId', '==', testId),
         where('activityType', '==', 'like_test'),
@@ -444,6 +398,7 @@ export default function TestDetail() {
       return;
     }
     
+    setIsAddingComment(true);
     addCommentMutation.mutate();
   };
 
@@ -455,7 +410,7 @@ export default function TestDetail() {
   };
 
   // Get filtered similar tests (exclude current test)
-  const filteredSimilarTests = similarTests.filter(t => t.id !== test?.id).slice(0, 4);
+  const filteredSimilarTests = [];
 
   // Loading state
   if (isTestLoading) {
@@ -505,7 +460,7 @@ export default function TestDetail() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Test details */}
         <div className="md:col-span-2">
-          <Card>
+          <Card className="border-primary/10 shadow-md">
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div>
@@ -617,9 +572,16 @@ export default function TestDetail() {
                       <div className="flex justify-end">
                         <Button 
                           onClick={handleAddComment}
-                          disabled={addCommentMutation.isPending}
+                          disabled={isAddingComment || !commentText.trim()}
                         >
-                          {addCommentMutation.isPending ? "Gönderiliyor..." : "Gönder"}
+                          {isAddingComment ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Gönderiliyor...
+                            </>
+                          ) : (
+                            "Gönder"
+                          )}
                         </Button>
                       </div>
                     </div>
@@ -727,7 +689,7 @@ export default function TestDetail() {
         
         {/* Similar tests section */}
         <div>
-          <Card>
+          <Card className="border-primary/10 shadow-md">
             <CardHeader>
               <CardTitle className="text-lg">Benzer Testler</CardTitle>
               <CardDescription>
@@ -735,45 +697,10 @@ export default function TestDetail() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {isSimilarTestsLoading ? (
-                <div className="flex justify-center py-4">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              ) : filteredSimilarTests.length === 0 ? (
-                <div className="text-center py-6 text-muted-foreground">
-                  Bu kategoride başka test bulunamadı.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {filteredSimilarTests.map((similarTest) => (
-                    <div 
-                      key={similarTest.id} 
-                      className="p-3 border rounded-md cursor-pointer hover:bg-muted/50 transition-colors"
-                      onClick={() => setLocation(`/test/${similarTest.id}`)}
-                    >
-                      <div className="font-medium mb-1 line-clamp-1">{similarTest.title}</div>
-                      <div className="flex items-center text-xs text-muted-foreground justify-between">
-                        <div>
-                          <ThumbsUp className="h-3 w-3 inline mr-1" /> {similarTest.likeCount || 0}
-                        </div>
-                        <div>
-                          <User className="h-3 w-3 inline mr-1" /> {similarTest.playCount || 0} oynama
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div className="text-center py-6 text-muted-foreground">
+                Bu kategoride başka test bulunamadı.
+              </div>
             </CardContent>
-            <CardFooter>
-              <Button 
-                variant="outline" 
-                className="w-full" 
-                onClick={() => setLocation(`/tests?category=${test.categoryId}`)}
-              >
-                Daha Fazla Test Gör
-              </Button>
-            </CardFooter>
           </Card>
         </div>
       </div>

@@ -34,7 +34,8 @@
       "fields": [
         { "fieldPath": "categoryId", "order": "ASCENDING" },
         { "fieldPath": "isPublic", "order": "ASCENDING" },
-        { "fieldPath": "approved", "order": "ASCENDING" }
+        { "fieldPath": "approved", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
     {
@@ -60,6 +61,14 @@
         { "fieldPath": "userId", "order": "ASCENDING" },
         { "fieldPath": "activityType", "order": "ASCENDING" },
         { "fieldPath": "entityId", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "userActivities",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     }
   ],
