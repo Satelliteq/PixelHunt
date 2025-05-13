@@ -10,6 +10,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { collection, addDoc, serverTimestamp, getDocs, query, where, orderBy } from 'firebase/firestore';
 import { storage, db } from '@/lib/firebase';
 import { createId } from '@paralleldrive/cuid2';
+import { getAllCategories, createTest } from '@/lib/firebaseHelpers';
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -81,6 +82,7 @@ export default function TestCreate() {
     imageUrl: string;
     answers: string[];
     tempAnswer: string;
+    file?: File;
   }[]>([
     { imageUrl: "", answers: [], tempAnswer: "" }
   ]);
@@ -88,21 +90,7 @@ export default function TestCreate() {
   // Fetch categories
   const { data: categories = [], isLoading: categoriesLoading } = useQuery({
     queryKey: ['/api/categories'],
-    queryFn: async () => {
-      try {
-        const categoriesRef = collection(db, 'categories');
-        const q = query(categoriesRef, where('active', '==', true), orderBy('name'));
-        const querySnapshot = await getDocs(q);
-        
-        return querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-        return [];
-      }
-    }
+    queryFn: () => getAllCategories()
   });
 
   // Thumbnail yükleme işlevi
@@ -191,18 +179,14 @@ export default function TestCreate() {
         imageInputs.map(async (img, index) => {
           let finalImageUrl = img.imageUrl;
           
-          // If the image is a data URL, upload it to Firebase Storage
-          if (finalImageUrl.startsWith('data:image/')) {
+          // If there's a file to upload
+          if (img.file) {
             try {
-              // Convert data URL to blob
-              const response = await fetch(finalImageUrl);
-              const blob = await response.blob();
-              
               // Create a reference to Firebase Storage
-              const storageRef = ref(storage, `test-images/${createId()}_${index}.jpg`);
+              const storageRef = ref(storage, `test-images/${createId()}_${img.file.name}`);
               
-              // Upload the blob
-              const snapshot = await uploadBytes(storageRef, blob);
+              // Upload the file
+              const snapshot = await uploadBytes(storageRef, img.file);
               
               // Get the download URL
               finalImageUrl = await getDownloadURL(snapshot.ref);
@@ -222,29 +206,9 @@ export default function TestCreate() {
       
       // Process thumbnail if it's a data URL
       let finalThumbnail = thumbnail || (imageInputs[0]?.imageUrl || '');
-      if (finalThumbnail && finalThumbnail.startsWith('data:image/')) {
-        try {
-          // Convert data URL to blob
-          const response = await fetch(finalThumbnail);
-          const blob = await response.blob();
-          
-          // Create a reference to Firebase Storage
-          const storageRef = ref(storage, `test-thumbnails/${createId()}.jpg`);
-          
-          // Upload the blob
-          const snapshot = await uploadBytes(storageRef, blob);
-          
-          // Get the download URL
-          finalThumbnail = await getDownloadURL(snapshot.ref);
-        } catch (error) {
-          console.error('Error uploading thumbnail:', error);
-          throw error;
-        }
-      }
       
       // Create test in Firestore
       const testData = {
-        uuid: createId(),
         title: values.title,
         description: values.description || "",
         categoryId: values.categoryId,
@@ -254,13 +218,10 @@ export default function TestCreate() {
         isPublic: values.isPublic,
         isAnonymous: values.isAnonymous,
         approved: true, // Auto-approve for now
-        featured: false,
-        playCount: 0,
-        likeCount: 0,
-        createdAt: serverTimestamp()
+        featured: false
       };
       
-      const testRef = await addDoc(collection(db, 'tests'), testData);
+      const createdTest = await createTest(testData);
       
       toast({
         title: "Test başarıyla oluşturuldu",
@@ -269,7 +230,7 @@ export default function TestCreate() {
       });
       
       // Navigate to the test page
-      navigate(`/test/${testRef.id}`);
+      navigate(`/test/${createdTest.id}`);
     } catch (error) {
       console.error("Test oluşturma hatası:", error);
       toast({

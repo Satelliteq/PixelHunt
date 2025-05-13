@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/lib/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { UserCircle2, ThumbsUp, Share2, Play, Clock, Calendar, User, MessageSquare, Loader2 } from "lucide-react";
+import { UserCircle2, ThumbsUp, Share2, Play, Clock, Calendar, User, MessageSquare, Loader2, Check } from "lucide-react";
 import { formatDistance } from "date-fns";
 import { tr } from "date-fns/locale";
 import { doc, getDoc, collection, addDoc, query, where, orderBy, getDocs, updateDoc, increment, serverTimestamp, limit } from 'firebase/firestore';
@@ -40,6 +40,8 @@ export default function TestDetail() {
   const [commentText, setCommentText] = useState("");
   const [shareUrl, setShareUrl] = useState("");
   const [showShareAlert, setShowShareAlert] = useState(false);
+  const [hasLiked, setHasLiked] = useState(false);
+  const [isAddingComment, setIsAddingComment] = useState(false);
 
   // Fetch test data
   const { data: test, isLoading: isTestLoading, refetch: refetchTest } = useQuery({
@@ -108,7 +110,8 @@ export default function TestDetail() {
         const q = query(
           commentsRef,
           where('testId', '==', testId),
-          orderBy('createdAt', 'desc')
+          orderBy('createdAt', 'desc'),
+          limit(10)
         );
         
         const querySnapshot = await getDocs(q);
@@ -227,12 +230,41 @@ export default function TestDetail() {
     },
     enabled: !!test?.categoryId
   });
+  
+  // Check if user has already liked this test
+  useEffect(() => {
+    if (user && testId) {
+      const checkUserLike = async () => {
+        try {
+          const likesRef = collection(db, 'userActivities');
+          const q = query(
+            likesRef,
+            where('userId', '==', user.uid),
+            where('entityId', '==', testId),
+            where('activityType', '==', 'like_test'),
+            limit(1)
+          );
+          
+          const querySnapshot = await getDocs(q);
+          setHasLiked(!querySnapshot.empty);
+        } catch (error) {
+          console.error("Error checking if user liked test:", error);
+        }
+      };
+      
+      checkUserLike();
+    }
+  }, [user, testId]);
 
   // Like test mutation
   const likeTestMutation = useMutation({
     mutationFn: async () => {
       if (!testId || !user) {
         throw new Error("Test ID or user not found");
+      }
+      
+      if (hasLiked) {
+        throw new Error("Already liked");
       }
       
       const testRef = doc(db, 'tests', testId);
@@ -254,6 +286,8 @@ export default function TestDetail() {
       return true;
     },
     onSuccess: () => {
+      setHasLiked(true);
+      
       toast({
         title: "Test beğenildi",
         description: "Bu testi beğendiniz!",
@@ -263,13 +297,21 @@ export default function TestDetail() {
       // Refetch test data to update like count
       refetchTest();
     },
-    onError: (error) => {
-      console.error("Error liking test:", error);
-      toast({
-        title: "Hata",
-        description: "Test beğenilirken bir hata oluştu.",
-        variant: "destructive",
-      });
+    onError: (error: any) => {
+      if (error.message === "Already liked") {
+        toast({
+          title: "Zaten beğendiniz",
+          description: "Bu testi daha önce beğendiniz.",
+          variant: "default",
+        });
+      } else {
+        console.error("Error liking test:", error);
+        toast({
+          title: "Hata",
+          description: "Test beğenilirken bir hata oluştu.",
+          variant: "destructive",
+        });
+      }
     }
   });
 
@@ -279,6 +321,8 @@ export default function TestDetail() {
       if (!testId || !user || !commentText.trim()) {
         throw new Error("Missing required data");
       }
+      
+      setIsAddingComment(true);
       
       const commentData = {
         testId: testId,
@@ -310,6 +354,7 @@ export default function TestDetail() {
       });
       
       setCommentText("");
+      setIsAddingComment(false);
       
       // Refetch comments to update the list
       refetchComments();
@@ -321,6 +366,7 @@ export default function TestDetail() {
         description: "Yorum eklenirken bir hata oluştu.",
         variant: "destructive",
       });
+      setIsAddingComment(false);
     }
   });
 
@@ -477,9 +523,17 @@ export default function TestDetail() {
                     size="sm" 
                     onClick={handleLikeTest}
                     className="flex gap-1 items-center"
-                    disabled={likeTestMutation.isPending}
+                    disabled={likeTestMutation.isPending || hasLiked}
                   >
-                    <ThumbsUp className="h-4 w-4" /> {test.likeCount || 0}
+                    {hasLiked ? (
+                      <>
+                        <Check className="h-4 w-4" /> {test.likeCount || 0}
+                      </>
+                    ) : (
+                      <>
+                        <ThumbsUp className="h-4 w-4" /> {test.likeCount || 0}
+                      </>
+                    )}
                   </Button>
                   <Button 
                     variant="outline" 
@@ -568,9 +622,16 @@ export default function TestDetail() {
                       <div className="flex justify-end">
                         <Button 
                           onClick={handleAddComment}
-                          disabled={addCommentMutation.isPending}
+                          disabled={addCommentMutation.isPending || isAddingComment}
                         >
-                          {addCommentMutation.isPending ? "Gönderiliyor..." : "Gönder"}
+                          {addCommentMutation.isPending || isAddingComment ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Gönderiliyor...
+                            </>
+                          ) : (
+                            "Gönder"
+                          )}
                         </Button>
                       </div>
                     </div>

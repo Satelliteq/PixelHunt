@@ -5,8 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
-  AlertTriangle, Heart, Share2, Trophy, Award, Clock, ThumbsUp,
-  MessageSquare, Star, ListOrdered, ArrowLeft, LayoutGrid
+  AlertTriangle, Heart, Share2, Play, Clock, Calendar, User, MessageSquare, Loader2,
+  ThumbsUp, Check, X
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { formatTime, checkAnswer, calculateScore, playSoundEffect } from '@/lib/gameHelpers';
@@ -34,9 +34,11 @@ export default function GameScreen() {
     isCorrect: boolean;
     isClose?: boolean;
   }>>([]);
+  const [hasLiked, setHasLiked] = useState(false);
   
   // Reference to the correct answers for current image
   const correctAnswersRef = useRef<string[]>([]);
+  const imageRevealRef = useRef<any>(null);
   
   // Fetch test data
   const { data: test, isLoading: isTestLoading } = useQuery({
@@ -118,7 +120,7 @@ export default function GameScreen() {
   });
   
   // Fetch test comments
-  const { data: comments } = useQuery({
+  const { data: comments, refetch: refetchComments } = useQuery({
     queryKey: [`test-comments-${testId}`],
     queryFn: async () => {
       if (!testId) return [];
@@ -136,7 +138,8 @@ export default function GameScreen() {
         
         return querySnapshot.docs.map(doc => ({
           id: doc.id,
-          ...doc.data()
+          ...doc.data(),
+          createdAt: doc.data().createdAt?.toDate()
         }));
       } catch (error) {
         console.error("Error fetching test comments:", error);
@@ -174,6 +177,31 @@ export default function GameScreen() {
     },
     enabled: gameStatus === 'finished'
   });
+  
+  // Check if user has already liked this test
+  useEffect(() => {
+    if (user && testId) {
+      const checkUserLike = async () => {
+        try {
+          const likesRef = collection(db, 'userActivities');
+          const q = query(
+            likesRef,
+            where('userId', '==', user.uid),
+            where('entityId', '==', testId),
+            where('activityType', '==', 'like_test'),
+            limit(1)
+          );
+          
+          const querySnapshot = await getDocs(q);
+          setHasLiked(!querySnapshot.empty);
+        } catch (error) {
+          console.error("Error checking if user liked test:", error);
+        }
+      };
+      
+      checkUserLike();
+    }
+  }, [user, testId]);
 
   // Update correct answers when current question changes
   useEffect(() => {
@@ -217,6 +245,11 @@ export default function GameScreen() {
     if (isCorrect) {
       // Play sound for correct answer
       playSoundEffect('correct', 0.5);
+      
+      // Show correct guess effect
+      if (imageRevealRef.current) {
+        imageRevealRef.current.showCorrectGuessEffect();
+      }
       
       // Calculate score based on reveal percentage
       const earnedScore = calculateScore(revealPercent);
@@ -320,6 +353,113 @@ export default function GameScreen() {
       setGameStatus('finished');
     }
   };
+  
+  // Handle like test
+  const handleLikeTest = async () => {
+    if (!user) {
+      toast({
+        title: "Giriş yapmalısınız",
+        description: "Testi beğenmek için giriş yapmalısınız.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (hasLiked) {
+      toast({
+        title: "Zaten beğendiniz",
+        description: "Bu testi daha önce beğendiniz.",
+        variant: "default",
+      });
+      return;
+    }
+    
+    try {
+      const testRef = doc(db, 'tests', testId);
+      await updateDoc(testRef, {
+        likeCount: increment(1)
+      });
+      
+      // Record like activity
+      await addDoc(collection(db, 'userActivities'), {
+        userId: user.uid,
+        userName: user.displayName || user.email?.split('@')[0],
+        activityType: 'like_test',
+        details: `Teste beğeni verildi: ${test?.title}`,
+        entityId: testId,
+        entityType: 'test',
+        createdAt: serverTimestamp()
+      });
+      
+      setHasLiked(true);
+      
+      toast({
+        title: "Test beğenildi",
+        description: "Bu testi beğendiniz!",
+        variant: "default",
+      });
+    } catch (error) {
+      console.error("Error liking test:", error);
+      toast({
+        title: "Hata",
+        description: "Test beğenilirken bir hata oluştu.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Add comment
+  const [commentText, setCommentText] = useState('');
+  const [isAddingComment, setIsAddingComment] = useState(false);
+  
+  const handleAddComment = async () => {
+    if (!user) {
+      toast({
+        title: "Giriş yapmalısınız",
+        description: "Yorum yapmak için giriş yapmalısınız.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!commentText.trim()) {
+      toast({
+        title: "Yorum boş olamaz",
+        description: "Lütfen bir yorum yazın.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsAddingComment(true);
+    
+    try {
+      await addDoc(collection(db, 'testComments'), {
+        testId: testId,
+        userId: user.uid,
+        comment: commentText.trim(),
+        createdAt: serverTimestamp()
+      });
+      
+      toast({
+        title: "Yorum eklendi",
+        description: "Yorumunuz başarıyla eklendi.",
+        variant: "default",
+      });
+      
+      setCommentText('');
+      refetchComments();
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      toast({
+        title: "Hata",
+        description: "Yorum eklenirken bir hata oluştu.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAddingComment(false);
+    }
+  };
 
   // Loading state
   if (isTestLoading) {
@@ -371,8 +511,8 @@ export default function GameScreen() {
                 onClick={() => window.history.back()} 
                 className="h-9"
               >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Geri Dön
+                <X className="w-4 h-4 mr-2" />
+                Testi Bitir
               </Button>
               
               <div className="flex items-center gap-1 px-3 py-2 rounded-full bg-secondary">
@@ -381,7 +521,6 @@ export default function GameScreen() {
               </div>
               
               <div className="flex items-center gap-1 px-3 py-2 rounded-full bg-secondary">
-                <LayoutGrid className="w-4 h-4 mr-1" />
                 <span className="text-sm font-medium">{currentImageIndex + 1}/{test?.questions?.length || 0}</span>
               </div>
             </div>
@@ -405,9 +544,10 @@ export default function GameScreen() {
                 </CardHeader>
                 
                 <CardContent className="pt-4">
-                  {/* Image Reveal */}
+                  {/* Image Reveal - Daha küçük ve çerçeveyi kaplayan görsel */}
                   <div className="rounded-lg overflow-hidden border border-border">
                     <ImageReveal 
+                      ref={imageRevealRef}
                       imageUrl={currentQuestion.imageUrl}
                       revealPercent={revealPercent}
                       gridSize={5}
@@ -489,7 +629,7 @@ export default function GameScreen() {
               <Card className="shadow-md">
                 <CardHeader className="pb-2">
                   <CardTitle className="flex items-center text-lg">
-                    <Trophy className="w-4 h-4 mr-2 text-yellow-500" />
+                    <Play className="w-4 h-4 mr-2 text-primary" />
                     Test Bilgileri
                   </CardTitle>
                 </CardHeader>
@@ -647,37 +787,18 @@ export default function GameScreen() {
                   
                   <Button 
                     className="w-full" 
-                    onClick={async () => {
-                      if (!user) {
-                        toast({
-                          title: "Giriş yapmalısınız",
-                          description: "Testi beğenmek için giriş yapmalısınız.",
-                          variant: "destructive",
-                        });
-                        return;
-                      }
-                      
-                      try {
-                        const testRef = doc(db, 'tests', testId);
-                        await updateDoc(testRef, {
-                          likeCount: increment(1)
-                        });
-                        
-                        toast({
-                          title: "Test beğenildi",
-                          description: "Bu testi beğendiniz!",
-                        });
-                      } catch (error) {
-                        console.error("Error liking test:", error);
-                        toast({
-                          title: "Hata",
-                          description: "Test beğenilirken bir hata oluştu.",
-                          variant: "destructive",
-                        });
-                      }
-                    }}
+                    onClick={handleLikeTest}
+                    disabled={hasLiked}
                   >
-                    <ThumbsUp className="w-4 h-4 mr-2" /> Beğen
+                    {hasLiked ? (
+                      <>
+                        <Check className="w-4 h-4 mr-2" /> Beğenildi
+                      </>
+                    ) : (
+                      <>
+                        <ThumbsUp className="w-4 h-4 mr-2" /> Beğen
+                      </>
+                    )}
                   </Button>
                 </div>
               </CardContent>
@@ -701,7 +822,7 @@ export default function GameScreen() {
                           <h4 className="font-medium">{comment.userId ? "Kullanıcı" : "Anonim"}</h4>
                         </div>
                         <span className="text-xs text-muted-foreground px-2 py-1 rounded">
-                          {comment.createdAt ? new Date(comment.createdAt.toDate()).toLocaleDateString() : ""}
+                          {comment.createdAt ? new Date(comment.createdAt).toLocaleDateString() : ""}
                         </span>
                       </div>
                       <p className="text-sm pl-10">{comment.comment}</p>
@@ -716,61 +837,25 @@ export default function GameScreen() {
               )}
               
               <div className="pt-4 border-t border-border">
-                <form className="flex gap-2" onSubmit={async (e) => {
+                <form className="flex gap-2" onSubmit={(e) => {
                   e.preventDefault();
-                  
-                  const commentInput = e.currentTarget.elements.namedItem('comment') as HTMLInputElement;
-                  const comment = commentInput?.value;
-                  
-                  if (!comment?.trim()) {
-                    toast({
-                      title: "Yorum boş olamaz",
-                      description: "Lütfen bir yorum yazın.",
-                      variant: "destructive",
-                    });
-                    return;
-                  }
-                  
-                  if (!user) {
-                    toast({
-                      title: "Giriş yapmalısınız",
-                      description: "Yorum yapmak için giriş yapmalısınız.",
-                      variant: "destructive",
-                    });
-                    return;
-                  }
-                  
-                  try {
-                    await addDoc(collection(db, 'testComments'), {
-                      testId: testId,
-                      userId: user.uid,
-                      comment: comment.trim(),
-                      createdAt: serverTimestamp()
-                    });
-                    
-                    toast({
-                      title: "Yorum gönderildi",
-                      description: "Yorumunuz başarıyla eklendi.",
-                      variant: "default"
-                    });
-                    
-                    commentInput.value = '';
-                  } catch (error) {
-                    console.error("Error adding comment:", error);
-                    toast({
-                      title: "Hata",
-                      description: "Yorum eklenirken bir hata oluştu.",
-                      variant: "destructive",
-                    });
-                  }
+                  handleAddComment();
                 }}>
                   <Input 
-                    name="comment"
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
                     placeholder="Yorumunuzu yazın..." 
                     className="flex-1" 
                   />
-                  <Button type="submit">
-                    Yorum Yap
+                  <Button type="submit" disabled={isAddingComment}>
+                    {isAddingComment ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Gönderiliyor...
+                      </>
+                    ) : (
+                      "Yorum Yap"
+                    )}
                   </Button>
                 </form>
               </div>

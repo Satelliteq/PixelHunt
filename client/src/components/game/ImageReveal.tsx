@@ -15,7 +15,7 @@ type ImageRevealProps = {
 export default function ImageReveal({
   imageUrl,
   revealPercent,
-  gridSize = 4, // 4x4 grid yapısına güncellendi
+  gridSize = 5, // 5x5 grid yapısına güncellendi
   className,
   onCellReveal,
   revealSpecificCell,
@@ -26,6 +26,7 @@ export default function ImageReveal({
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [revealedCells, setRevealedCells] = useState<number[]>([]);
   const [lastUpdatedPercent, setLastUpdatedPercent] = useState(0);
+  const [correctGuess, setCorrectGuess] = useState(false);
   
   // Load image and get dimensions
   useEffect(() => {
@@ -40,6 +41,7 @@ export default function ImageReveal({
       // Yeni görsel yüklendiğinde reveal yüzdesini sıfırla
       setRevealedCells([]);
       setLastUpdatedPercent(0);
+      setCorrectGuess(false);
     };
   }, [imageUrl]);
   
@@ -151,13 +153,26 @@ export default function ImageReveal({
         ctx.lineTo(i * cellWidth, canvas.height);
         ctx.stroke();
       }
+      
+      // Doğru tahmin efekti
+      if (correctGuess) {
+        ctx.fillStyle = "rgba(34, 197, 94, 0.3)"; // Yeşil renk
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Pulsing effect
+        const now = Date.now();
+        const opacity = 0.3 + 0.2 * Math.sin(now / 200);
+        
+        ctx.fillStyle = `rgba(34, 197, 94, ${opacity})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
     };
-  }, [imageLoaded, imageUrl, dimensions, gridSize, revealedCells]);
+  }, [imageLoaded, imageUrl, dimensions, gridSize, revealedCells, correctGuess]);
   
   // Re-draw when revealed cells change
   useEffect(() => {
     drawImage();
-  }, [drawImage, revealedCells]);
+  }, [drawImage, revealedCells, correctGuess]);
   
   // Canvas tıklama olayı - kullanıcı hücre açabilir
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -193,6 +208,21 @@ export default function ImageReveal({
       if (onCellReveal) onCellReveal();
     }
   };
+  
+  // Doğru tahmin animasyonu
+  const showCorrectGuessEffect = () => {
+    setCorrectGuess(true);
+    setTimeout(() => setCorrectGuess(false), 1500);
+  };
+
+  // Expose the showCorrectGuessEffect method
+  React.useImperativeHandle(
+    ref,
+    () => ({
+      showCorrectGuessEffect
+    }),
+    []
+  );
 
   if (!imageLoaded) {
     return (
