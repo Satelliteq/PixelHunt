@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useLocation } from "wouter";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient } from "@/lib/queryClient";
-import { useAuth } from "@/lib/AuthContext";
-import { useToast } from "@/hooks/use-toast";
-import { UserCircle2, ThumbsUp, Share2, Play, Clock, Calendar, User, MessageSquare, Loader2, Check } from "lucide-react";
-import { formatDistance } from "date-fns";
-import { tr } from "date-fns/locale";
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, useLocation } from 'wouter';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { queryClient } from '@/lib/queryClient';
+import { useAuth } from '@/lib/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { UserCircle2, ThumbsUp, Share2, Play, Clock, Calendar, User, MessageSquare, Loader2 } from 'lucide-react';
+import { formatDistance } from 'date-fns';
+import { tr } from 'date-fns/locale';
 import { doc, getDoc, collection, addDoc, query, where, orderBy, getDocs, updateDoc, increment, serverTimestamp, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
@@ -26,22 +26,15 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-function formatTime(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
-}
-
 export default function TestDetail() {
+  const [, setLocation] = useLocation();
   const { testId } = useParams<{ testId: string }>();
-  const [, navigate] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
-  const [commentText, setCommentText] = useState("");
-  const [shareUrl, setShareUrl] = useState("");
+  const [commentText, setCommentText] = useState('');
+  const [shareUrl, setShareUrl] = useState('');
   const [showShareAlert, setShowShareAlert] = useState(false);
   const [hasLiked, setHasLiked] = useState(false);
-  const [isAddingComment, setIsAddingComment] = useState(false);
 
   // Fetch test data
   const { data: test, isLoading: isTestLoading, refetch: refetchTest } = useQuery({
@@ -98,7 +91,7 @@ export default function TestDetail() {
     },
     enabled: !!testId
   });
-
+  
   // Fetch test comments
   const { data: comments = [], isLoading: isCommentsLoading, refetch: refetchComments } = useQuery({
     queryKey: [`test-comments-${testId}`],
@@ -111,47 +104,26 @@ export default function TestDetail() {
           commentsRef,
           where('testId', '==', testId),
           orderBy('createdAt', 'desc'),
-          limit(10)
+          limit(20)
         );
         
         const querySnapshot = await getDocs(q);
         
-        const commentsData = [];
-        for (const doc of querySnapshot.docs) {
-          const commentData = doc.data();
-          
-          // Fetch user data if userId exists
-          let userData = null;
-          if (commentData.userId) {
-            const userRef = doc(db, 'users', commentData.userId);
-            const userDoc = await getDoc(userRef);
-            if (userDoc.exists()) {
-              userData = {
-                id: userDoc.id,
-                ...userDoc.data()
-              };
-            }
-          }
-          
-          commentsData.push({
-            id: doc.id,
-            ...commentData,
-            user: userData,
-            createdAt: commentData.createdAt?.toDate()
-          });
-        }
-        
-        return commentsData;
+        return querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          createdAt: doc.data().createdAt?.toDate()
+        }));
       } catch (error) {
-        console.error("Error fetching comments:", error);
+        console.error("Error fetching test comments:", error);
         return [];
       }
     },
     enabled: !!testId
   });
-
-  // Fetch test leaderboard (top 5 scores by completion time)
-  const { data: leaderboard = [], isLoading: isLeaderboardLoading } = useQuery({
+  
+  // Fetch top scores
+  const { data: topScores = [], isLoading: isLeaderboardLoading } = useQuery({
     queryKey: [`test-leaderboard-${testId}`],
     queryFn: async () => {
       if (!testId) return [];
@@ -194,13 +166,13 @@ export default function TestDetail() {
         
         return scoresData;
       } catch (error) {
-        console.error("Error fetching leaderboard:", error);
+        console.error("Error fetching top scores:", error);
         return [];
       }
     },
     enabled: !!testId
   });
-
+  
   // Fetch similar tests (same category)
   const { data: similarTests = [], isLoading: isSimilarTestsLoading } = useQuery({
     queryKey: [`similar-tests-${test?.categoryId}`],
@@ -230,15 +202,15 @@ export default function TestDetail() {
     },
     enabled: !!test?.categoryId
   });
-  
+
   // Check if user has already liked this test
   useEffect(() => {
     if (user && testId) {
       const checkUserLike = async () => {
         try {
-          const likesRef = collection(db, 'userActivities');
+          const userActivitiesRef = collection(db, 'userActivities');
           const q = query(
-            likesRef,
+            userActivitiesRef,
             where('userId', '==', user.uid),
             where('entityId', '==', testId),
             where('activityType', '==', 'like_test'),
@@ -263,8 +235,20 @@ export default function TestDetail() {
         throw new Error("Test ID or user not found");
       }
       
-      if (hasLiked) {
-        throw new Error("Already liked");
+      // Check if user has already liked this test
+      const userActivitiesRef = collection(db, 'userActivities');
+      const q = query(
+        userActivitiesRef,
+        where('userId', '==', user.uid),
+        where('entityId', '==', testId),
+        where('activityType', '==', 'like_test'),
+        limit(1)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      
+      if (!querySnapshot.empty) {
+        throw new Error("You have already liked this test");
       }
       
       const testRef = doc(db, 'tests', testId);
@@ -286,26 +270,27 @@ export default function TestDetail() {
       return true;
     },
     onSuccess: () => {
-      setHasLiked(true);
-      
       toast({
         title: "Test beğenildi",
         description: "Bu testi beğendiniz!",
         variant: "default",
       });
       
+      setHasLiked(true);
+      
       // Refetch test data to update like count
       refetchTest();
     },
     onError: (error: any) => {
-      if (error.message === "Already liked") {
+      console.error("Error liking test:", error);
+      
+      if (error.message === "You have already liked this test") {
         toast({
           title: "Zaten beğendiniz",
           description: "Bu testi daha önce beğendiniz.",
           variant: "default",
         });
       } else {
-        console.error("Error liking test:", error);
         toast({
           title: "Hata",
           description: "Test beğenilirken bir hata oluştu.",
@@ -321,8 +306,6 @@ export default function TestDetail() {
       if (!testId || !user || !commentText.trim()) {
         throw new Error("Missing required data");
       }
-      
-      setIsAddingComment(true);
       
       const commentData = {
         testId: testId,
@@ -344,9 +327,13 @@ export default function TestDetail() {
         createdAt: serverTimestamp()
       });
       
-      return docRef.id;
+      return {
+        id: docRef.id,
+        ...commentData,
+        createdAt: new Date()
+      };
     },
-    onSuccess: () => {
+    onSuccess: (newComment) => {
       toast({
         title: "Yorum eklendi",
         description: "Yorumunuz başarıyla eklendi.",
@@ -354,10 +341,11 @@ export default function TestDetail() {
       });
       
       setCommentText("");
-      setIsAddingComment(false);
       
-      // Refetch comments to update the list
-      refetchComments();
+      // Add the new comment to the existing comments
+      queryClient.setQueryData([`test-comments-${testId}`], (oldData: any) => {
+        return [newComment, ...(oldData || [])];
+      });
     },
     onError: (error) => {
       console.error("Error adding comment:", error);
@@ -366,13 +354,12 @@ export default function TestDetail() {
         description: "Yorum eklenirken bir hata oluştu.",
         variant: "destructive",
       });
-      setIsAddingComment(false);
     }
   });
 
   // Handle start test
   const handleStartTest = () => {
-    navigate(`/play/${testId}`);
+    setLocation(`/play/${testId}`);
   };
 
   // Handle like test
@@ -382,6 +369,15 @@ export default function TestDetail() {
         title: "Giriş yapmalısınız",
         description: "Testi beğenmek için giriş yapmalısınız.",
         variant: "destructive",
+      });
+      return;
+    }
+    
+    if (hasLiked) {
+      toast({
+        title: "Zaten beğendiniz",
+        description: "Bu testi daha önce beğendiniz.",
+        variant: "default",
       });
       return;
     }
@@ -451,6 +447,13 @@ export default function TestDetail() {
     addCommentMutation.mutate();
   };
 
+  // Format time display
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
   // Get filtered similar tests (exclude current test)
   const filteredSimilarTests = similarTests.filter(t => t.id !== test?.id).slice(0, 4);
 
@@ -479,7 +482,7 @@ export default function TestDetail() {
             <CardDescription>İstediğiniz test mevcut değil veya kaldırılmış olabilir.</CardDescription>
           </CardHeader>
           <CardFooter>
-            <Button onClick={() => navigate("/tests")}>Tüm Testlere Dön</Button>
+            <Button onClick={() => setLocation("/tests")}>Tüm Testlere Dön</Button>
           </CardFooter>
         </Card>
       </div>
@@ -513,27 +516,19 @@ export default function TestDetail() {
                     )}
                     <div className="flex items-center text-xs text-muted-foreground">
                       <Calendar className="h-3 w-3 mr-1" />
-                      {test.createdAt ? new Date(test.createdAt.toDate()).toLocaleDateString() : ""}
+                      {test.createdAt ? new Date(test.createdAt).toLocaleDateString() : ""}
                     </div>
                   </div>
                 </div>
                 <div className="flex gap-2">
                   <Button 
-                    variant="outline" 
+                    variant={hasLiked ? "default" : "outline"}
                     size="sm" 
                     onClick={handleLikeTest}
                     className="flex gap-1 items-center"
                     disabled={likeTestMutation.isPending || hasLiked}
                   >
-                    {hasLiked ? (
-                      <>
-                        <Check className="h-4 w-4" /> {test.likeCount || 0}
-                      </>
-                    ) : (
-                      <>
-                        <ThumbsUp className="h-4 w-4" /> {test.likeCount || 0}
-                      </>
-                    )}
+                    <ThumbsUp className="h-4 w-4" /> {test.likeCount || 0}
                   </Button>
                   <Button 
                     variant="outline" 
@@ -622,16 +617,9 @@ export default function TestDetail() {
                       <div className="flex justify-end">
                         <Button 
                           onClick={handleAddComment}
-                          disabled={addCommentMutation.isPending || isAddingComment}
+                          disabled={addCommentMutation.isPending}
                         >
-                          {addCommentMutation.isPending || isAddingComment ? (
-                            <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Gönderiliyor...
-                            </>
-                          ) : (
-                            "Gönder"
-                          )}
+                          {addCommentMutation.isPending ? "Gönderiliyor..." : "Gönder"}
                         </Button>
                       </div>
                     </div>
@@ -694,13 +682,13 @@ export default function TestDetail() {
                     <div className="flex justify-center py-4">
                       <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     </div>
-                  ) : leaderboard.length === 0 ? (
+                  ) : topScores.length === 0 ? (
                     <div className="text-center py-6 text-muted-foreground">
                       Henüz skor kaydedilmemiş. İlk rekoru sen kır!
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      {leaderboard.map((score, index) => (
+                      {topScores.map((score, index) => (
                         <div 
                           key={score.id} 
                           className={`flex justify-between items-center p-3 rounded-md ${
@@ -761,7 +749,7 @@ export default function TestDetail() {
                     <div 
                       key={similarTest.id} 
                       className="p-3 border rounded-md cursor-pointer hover:bg-muted/50 transition-colors"
-                      onClick={() => navigate(`/test/${similarTest.id}`)}
+                      onClick={() => setLocation(`/test/${similarTest.id}`)}
                     >
                       <div className="font-medium mb-1 line-clamp-1">{similarTest.title}</div>
                       <div className="flex items-center text-xs text-muted-foreground justify-between">
@@ -781,7 +769,7 @@ export default function TestDetail() {
               <Button 
                 variant="outline" 
                 className="w-full" 
-                onClick={() => navigate(`/tests?category=${test.categoryId}`)}
+                onClick={() => setLocation(`/tests?category=${test.categoryId}`)}
               >
                 Daha Fazla Test Gör
               </Button>
