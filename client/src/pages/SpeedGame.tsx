@@ -12,125 +12,48 @@ import GameControls from "@/components/game/GameControls";
 import ScoreDisplay from "@/components/game/ScoreDisplay";
 import CategorySelector from "@/components/game/CategorySelector";
 import GameTimer from "@/components/game/GameTimer";
-import { calculateScore } from "@/lib/gameHelpers";
+import { calculateScore, playSoundEffect } from "@/lib/gameHelpers";
+import { Zap } from "lucide-react";
+import { getRandomImage, checkAnswer, saveGameScore } from "@/lib/firebaseHelpers";
 
 export default function SpeedGame() {
   const { toast } = useToast();
   const [_location, navigate] = useLocation();
   
-  const [selectedCategoryId, setSelectedCategoryId] = useState<number | undefined>(undefined);
-  const [currentImageId, setCurrentImageId] = useState<number | undefined>(undefined);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>(undefined);
+  const [currentImageId, setCurrentImageId] = useState<string | undefined>(undefined);
   const [revealPercent, setRevealPercent] = useState(10);
   const [score, setScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [gameWon, setGameWon] = useState(false);
   const [gameActive, setGameActive] = useState(false);
   const [timeElapsed, setTimeElapsed] = useState(0);
+  const [guessHistory, setGuessHistory] = useState<Array<{
+    guess: string;
+    isCorrect: boolean;
+    isClose?: boolean;
+  }>>([]);
   
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const revealTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const imageRevealRef = useRef<any>(null);
 
   // Fetch the current image
   const { data: currentImage, isLoading: isImageLoading } = useQuery<Image>({
-    queryKey: currentImageId ? [`/api/images/${currentImageId}`] : null,
+    queryKey: currentImageId ? [`image-${currentImageId}`] : null,
+    queryFn: async () => {
+      if (!currentImageId) return null;
+      return getRandomImage(selectedCategoryId);
+    },
     enabled: !!currentImageId,
   });
 
   // Fetch a random image when needed
   const { refetch: refetchRandomImage } = useQuery<Image>({
-    queryKey: ['/api/game/random-image', selectedCategoryId],
-    queryFn: () => {
-      const url = selectedCategoryId
-        ? `/api/game/random-image?categoryId=${selectedCategoryId}`
-        : '/api/game/random-image';
-      return fetch(url).then(res => res.json());
-    },
+    queryKey: ['random-image', selectedCategoryId],
+    queryFn: () => getRandomImage(selectedCategoryId),
     enabled: false,
   });
-
-  // Check answer mutation
-  const checkAnswerMutation = useMutation({
-    mutationFn: async (guess: string) => {
-      const response = await fetch('/api/game/check-answer', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageId: currentImageId, answer: guess }),
-      });
-      return response.json();
-    },
-    onSuccess: (data) => {
-      if (data.isCorrect) {
-        clearTimers();
-        
-        // Calculate score based on reveal percentage and time
-        const roundScore = calculateScore(revealPercent, timeElapsed);
-        setScore(prev => prev + roundScore);
-        setGameWon(true);
-        
-        toast({
-          title: "Doğru Tahmin!",
-          description: `Tebrikler! ${roundScore} puan kazandınız.`,
-          variant: "success",
-        });
-        
-        // Save game score in the background
-        saveGameScore({
-          userId: undefined, // Guest user
-          imageId: currentImageId!,
-          gameMode: "speed",
-          attemptsCount: 1,
-          timeSpent: timeElapsed,
-          score: roundScore,
-          completed: true
-        });
-      } else {
-        toast({
-          title: "Yanlış Tahmin",
-          description: "Tekrar deneyin.",
-          variant: "destructive",
-        });
-      }
-    },
-    onError: () => {
-      toast({
-        title: "Hata",
-        description: "Tahmin kontrol edilirken bir hata oluştu.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Save game score mutation
-  const saveGameScoreMutation = useMutation({
-    mutationFn: async (scoreData: any) => {
-      const response = await fetch('/api/game/scores', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(scoreData),
-      });
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/images/popular'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/images/favorites'] });
-    },
-  });
-
-  // Function to save game score
-  const saveGameScore = (scoreData: any) => {
-    saveGameScoreMutation.mutate(scoreData);
-  };
-
-  // Load a random image when component mounts or category changes
-  useEffect(() => {
-    if (!currentImageId) {
-      loadRandomImage();
-    }
-    
-    return () => {
-      clearTimers();
-    };
-  }, [selectedCategoryId]);
 
   // Function to clear all timers
   const clearTimers = () => {
@@ -149,6 +72,7 @@ export default function SpeedGame() {
   const startGame = () => {
     setGameActive(true);
     setTimeElapsed(0);
+    setGuessHistory([]);
     
     // Timer for counting elapsed time
     timerRef.current = setInterval(() => {
@@ -162,11 +86,42 @@ export default function SpeedGame() {
         if (newPercent >= 100) {
           clearTimers();
           setGameOver(true);
+          
+          // Play sound effect for game over
+          playSoundEffect('incorrect', 0.5);
+          
+          // Save a score of 0 for timeout
+          if (currentImageId) {
+            saveGameScore({
+              userId: undefined,
+              imageId: currentImageId,
+              gameMode: "speed",
+              attemptsCount: guessHistory.length,
+              timeSpent: timeElapsed,
+              score: 0,
+              completed: false
+            });
+          }
+          
+          toast({
+            title: "Zaman Doldu!",
+            description: "Resim tamamen açıldı. Bir sonraki resme geçebilirsiniz.",
+            variant: "destructive",
+          });
         }
         return newPercent;
       });
     }, 1000);
   };
+
+  // Load a random image when component mounts or category changes
+  useEffect(() => {
+    loadRandomImage();
+    
+    return () => {
+      clearTimers();
+    };
+  }, [selectedCategoryId]);
 
   // Function to load a random image
   const loadRandomImage = async () => {
@@ -181,8 +136,10 @@ export default function SpeedGame() {
         setGameWon(false);
         setGameActive(false);
         setTimeElapsed(0);
+        setGuessHistory([]);
       }
     } catch (error) {
+      console.error("Error loading random image:", error);
       toast({
         title: "Hata",
         description: "Yeni görsel yüklenirken bir hata oluştu.",
@@ -192,22 +149,81 @@ export default function SpeedGame() {
   };
 
   // Handle guess submission
-  const handleGuess = (guess: string) => {
-    if (gameOver || gameWon || !gameActive) return;
-    checkAnswerMutation.mutate(guess);
+  const handleGuess = async (guess: string) => {
+    if (gameOver || gameWon || !gameActive || !currentImage) return;
+    
+    // Add to guess history
+    const result = await checkAnswer(currentImage.id, guess);
+    const isCorrect = result.isCorrect;
+    const isClose = result.isClose;
+    
+    setGuessHistory(prev => [
+      { 
+        guess, 
+        isCorrect, 
+        isClose: !isCorrect && isClose
+      },
+      ...prev
+    ]);
+    
+    if (isCorrect) {
+      // Stop timers
+      clearTimers();
+      
+      // Play sound for correct answer
+      playSoundEffect('correct', 0.5);
+      
+      // Show correct guess effect
+      if (imageRevealRef.current) {
+        imageRevealRef.current.showCorrectGuessEffect();
+      }
+      
+      // Calculate score based on reveal percentage and time
+      const roundScore = calculateScore(revealPercent, timeElapsed);
+      setScore(prev => prev + roundScore);
+      setGameWon(true);
+      
+      toast({
+        title: "Doğru Tahmin!",
+        description: `Tebrikler! ${roundScore} puan kazandınız.`,
+        variant: "success",
+      });
+      
+      // Save game score in the background
+      saveGameScore({
+        userId: undefined, // Guest user
+        imageId: currentImageId!,
+        gameMode: "speed",
+        attemptsCount: guessHistory.length + 1,
+        timeSpent: timeElapsed,
+        score: roundScore,
+        completed: true
+      });
+    } else {
+      // Play sound for incorrect answer
+      if (isClose) {
+        playSoundEffect('close', 0.5);
+      } else {
+        playSoundEffect('incorrect', 0.5);
+      }
+      
+      toast({
+        title: isClose ? "Yaklaştınız!" : "Yanlış Tahmin",
+        description: isClose ? "Çok yaklaştınız, tekrar deneyin!" : "Tekrar deneyin.",
+        variant: isClose ? "default" : "destructive",
+      });
+    }
   };
 
   // Handle skipping current image
   const handleSkip = () => {
-    clearTimers();
-    
     // Save a score of 0 if skipping
     if (currentImageId && gameActive) {
       saveGameScore({
         userId: undefined, // Guest user
         imageId: currentImageId,
         gameMode: "speed",
-        attemptsCount: 0,
+        attemptsCount: guessHistory.length,
         timeSpent: timeElapsed,
         score: 0,
         completed: false
@@ -218,7 +234,7 @@ export default function SpeedGame() {
   };
 
   // Handle category change
-  const handleCategoryChange = (categoryId: number) => {
+  const handleCategoryChange = (categoryId: string) => {
     setSelectedCategoryId(categoryId);
     loadRandomImage();
   };
@@ -254,7 +270,10 @@ export default function SpeedGame() {
           <Card className="bg-zinc-900 border-zinc-800">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
-                <CardTitle>Resmi Tahmin Et</CardTitle>
+                <CardTitle className="flex items-center">
+                  <Zap className="w-5 h-5 mr-2 text-purple-500" />
+                  Resmi Tahmin Et
+                </CardTitle>
                 <CategorySelector
                   onCategoryChange={handleCategoryChange}
                   selectedCategoryId={selectedCategoryId}
@@ -263,16 +282,18 @@ export default function SpeedGame() {
             </CardHeader>
             <CardContent>
               {isImageLoading ? (
-                <div className="animate-pulse bg-zinc-800 h-96 rounded-lg flex items-center justify-center">
+                <div className="animate-pulse bg-zinc-800 h-80 rounded-lg flex items-center justify-center">
                   <p className="text-zinc-500">Görsel yükleniyor...</p>
                 </div>
               ) : currentImage ? (
                 <div className="space-y-6">
                   <div className="relative">
                     <ImageReveal
+                      ref={imageRevealRef}
                       imageUrl={currentImage.imageUrl}
                       revealPercent={revealPercent}
-                      className="w-full h-96"
+                      className="w-full h-80 object-contain"
+                      gridSize={5}
                     />
                     
                     {!gameActive && !gameOver && !gameWon && (
@@ -318,13 +339,14 @@ export default function SpeedGame() {
                     <GameControls
                       onGuess={handleGuess}
                       onSkip={handleSkip}
-                      isDisabled={!gameActive || checkAnswerMutation.isPending}
+                      isDisabled={!gameActive}
                       placeholder={gameActive ? "Tahmininizi yazın..." : "Oyunu başlatın..."}
+                      guessHistory={guessHistory}
                     />
                   )}
                 </div>
               ) : (
-                <div className="bg-zinc-800 h-96 rounded-lg flex items-center justify-center">
+                <div className="bg-zinc-800 h-80 rounded-lg flex items-center justify-center">
                   <p className="text-zinc-500">Görsel bulunamadı.</p>
                 </div>
               )}
@@ -336,12 +358,18 @@ export default function SpeedGame() {
           <ScoreDisplay
             score={score}
             mode="speed"
-            extraInfo={{ timeLeft: gameActive ? 0 : undefined }}
+            extraInfo={{ 
+              timeElapsed: gameActive ? timeElapsed : undefined,
+              revealPercent: revealPercent
+            }}
           />
           
           <Card className="bg-zinc-900 border-zinc-800 mt-4">
             <CardHeader>
-              <CardTitle className="text-lg">Nasıl Oynanır?</CardTitle>
+              <CardTitle className="text-lg flex items-center">
+                <Zap className="w-5 h-5 mr-2 text-purple-500" />
+                Nasıl Oynanır?
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
               <p>1. Oyun başladığında resim otomatik olarak açılır.</p>
