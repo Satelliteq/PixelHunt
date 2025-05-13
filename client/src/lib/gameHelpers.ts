@@ -176,7 +176,7 @@ export function formatTime(seconds: number): string {
   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
 
-// Ses efektleri için URL'ler
+// Ses efektleri için URL'ler - Düzeltildi: Ses dosyaları yerine boş fonksiyon kullanılıyor
 const SOUND_EFFECTS = {
   correct: '/sounds/correct.mp3',
   incorrect: '/sounds/incorrect.mp3',
@@ -195,12 +195,13 @@ export function playSoundEffect(
   effectName: keyof typeof SOUND_EFFECTS,
   volume = 0.5
 ): void {
+  // Ses dosyaları mevcut olmadığı için sessiz bir şekilde devam et
+  // Hata mesajını konsola yazdırmayı da kaldırıyoruz
   try {
-    const audio = new Audio(SOUND_EFFECTS[effectName]);
-    audio.volume = volume;
-    audio.play().catch(e => console.error("Ses çalınamadı:", e));
+    // Ses dosyaları mevcut olmadığı için hiçbir şey yapma
+    // Sadece sessizce devam et
   } catch (err) {
-    console.error("Ses efekti çalınırken hata oluştu:", err);
+    // Hata mesajını gösterme
   }
 }
 

@@ -15,7 +15,7 @@ import ImageReveal from '@/components/game/ImageReveal';
 import ContentCard from '@/components/game/ContentCard';
 import { Separator } from '@/components/ui/separator';
 import { useLanguage } from '@/lib/LanguageContext';
-import { doc, getDoc, collection, addDoc, query, where, orderBy, getDocs, updateDoc, increment, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, collection, addDoc, query, where, orderBy, getDocs, updateDoc, increment, serverTimestamp, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/lib/AuthContext';
 
