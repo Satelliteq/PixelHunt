@@ -20,7 +20,7 @@ export default function ContentCard({
 }: ContentCardProps) {
   return (
     <div 
-      className="rounded-xl overflow-hidden border border-border/50 bg-card hover:shadow-md transition-all duration-300 hover:border-primary/30 cursor-pointer group"
+      className="test-card rounded-xl overflow-hidden transition-all duration-200 hover:translate-y-[-5px] cursor-pointer group"
       onClick={onClick}
     >
       <div className="relative aspect-video">
@@ -35,7 +35,7 @@ export default function ContentCard({
             (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1592198084033-aade902d1aae?w=500";
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-center justify-center opacity-90 group-hover:opacity-100 transition-opacity">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-center justify-center opacity-90 group-hover:opacity-100 transition-opacity">
           <button 
             className="bg-primary/90 hover:bg-primary w-10 h-10 rounded-full flex items-center justify-center transform translate-y-4 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300"
             onClick={(e) => {

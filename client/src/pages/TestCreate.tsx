@@ -51,7 +51,6 @@ export default function TestCreate() {
   const { user } = useAuth();
   const [thumbnail, setThumbnail] = useState<string>("");
   const [uploading, setUploading] = useState<boolean>(false);
-  const [uploadProgress, setUploadProgress] = useState<{[key: number]: number}>({});
   
   // Giriş yapmamış kullanıcıları giriş sayfasına yönlendir
   useEffect(() => {
@@ -133,12 +132,6 @@ export default function TestCreate() {
       setThumbnail(downloadURL);
       form.setValue("thumbnailUrl", downloadURL);
       setUploading(false);
-      
-      toast({
-        title: "Başarılı",
-        description: "Kapak görseli başarıyla yüklendi.",
-        variant: "default",
-      });
     } catch (error) {
       setUploading(false);
       console.error("Error uploading thumbnail:", error);
@@ -298,46 +291,29 @@ export default function TestCreate() {
     }
     
     try {
-      // Update progress state
-      setUploadProgress(prev => ({...prev, [index]: 0}));
+      setUploading(true);
       
-      // Create a temporary URL for preview
-      const tempUrl = URL.createObjectURL(file);
+      // Create a reference to Firebase Storage
+      const storageRef = ref(storage, `test-images/${createId()}_${file.name}`);
       
-      // Update image inputs with file and temporary URL
+      // Upload the file
+      const snapshot = await uploadBytes(storageRef, file);
+      
+      // Get the download URL
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      
+      // Update image URL
       const newImages = [...imageInputs];
-      newImages[index].imageUrl = tempUrl;
-      newImages[index].file = file;
+      newImages[index].imageUrl = downloadURL;
       setImageInputs(newImages);
       
-      // Show success message
-      toast({
-        title: "Görsel hazır",
-        description: "Görsel başarıyla yüklendi. Test oluşturulduğunda sunucuya kaydedilecek.",
-        variant: "default",
-      });
-      
-      // Simulate progress for better UX
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress += 10;
-        setUploadProgress(prev => ({...prev, [index]: progress}));
-        if (progress >= 100) {
-          clearInterval(interval);
-          setTimeout(() => {
-            setUploadProgress(prev => {
-              const newState = {...prev};
-              delete newState[index];
-              return newState;
-            });
-          }, 1000);
-        }
-      }, 200);
+      setUploading(false);
     } catch (error) {
-      console.error("Error handling file:", error);
+      setUploading(false);
+      console.error("Error uploading image:", error);
       toast({
         title: "Hata",
-        description: "Görsel işlenirken bir hata oluştu.",
+        description: "Görsel yüklenirken bir hata oluştu.",
         variant: "destructive",
       });
     }
@@ -582,7 +558,6 @@ export default function TestCreate() {
                             placeholder="https://örnek.com/görsel.jpg"
                             value={image.imageUrl}
                             onChange={(e) => updateImageUrl(index, e.target.value)}
-                            disabled={!!image.file}
                           />
                         </div>
                         <div className="flex items-center gap-2">
@@ -593,27 +568,10 @@ export default function TestCreate() {
                               accept="image/*"
                               className="hidden"
                               onChange={(e) => handleFileUpload(index, e)}
-                              disabled={uploading || !!uploadProgress[index]}
+                              disabled={uploading}
                             />
-                            {uploadProgress[index] !== undefined ? (
-                              <div className="w-full">
-                                <div className="flex justify-between mb-1">
-                                  <span className="text-xs">Yükleniyor...</span>
-                                  <span className="text-xs">{uploadProgress[index]}%</span>
-                                </div>
-                                <div className="w-full bg-muted rounded-full h-1.5">
-                                  <div 
-                                    className="bg-primary h-1.5 rounded-full transition-all duration-300" 
-                                    style={{width: `${uploadProgress[index]}%`}}
-                                  ></div>
-                                </div>
-                              </div>
-                            ) : (
-                              <>
-                                <Upload className="h-4 w-4 mr-2" />
-                                {image.file ? 'Görsel Seçildi' : 'Bilgisayardan Görsel Yükle'}
-                              </>
-                            )}
+                            <Upload className="h-4 w-4 mr-2" />
+                            {uploading ? 'Yükleniyor...' : 'Bilgisayardan Görsel Yükle'}
                           </label>
                         </div>
                       </div>

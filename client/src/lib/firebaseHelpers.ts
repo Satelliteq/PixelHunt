@@ -1066,7 +1066,7 @@ export async function uploadFile(file: File, path: string): Promise<string> {
 }
 
 // Game functions
-export async function checkAnswer(imageId: string, answer: string): Promise<{isCorrect: boolean, isClose: boolean}> {
+export async function checkAnswer(imageId: string, answer: string): Promise<boolean> {
   try {
     const image = await getImage(imageId);
     
@@ -1079,66 +1079,23 @@ export async function checkAnswer(imageId: string, answer: string): Promise<{isC
       a.toLowerCase() === normalizedAnswer
     );
     
-    // If not correct, check if it's close
-    let isClose = false;
-    if (!isCorrect) {
-      for (const correctAnswer of image.answers) {
-        const similarity = calculateStringSimilarity(normalizedAnswer, correctAnswer.toLowerCase());
-        if (similarity >= 0.75) { // 75% similarity threshold
-          isClose = true;
-          break;
-        }
-      }
-    }
-    
-    return { isCorrect, isClose };
+    return isCorrect;
   } catch (error) {
     console.error('Error checking answer:', error);
-    return { isCorrect: false, isClose: false };
+    return false;
   }
 }
 
-// Calculate string similarity using Levenshtein distance
-function calculateStringSimilarity(a: string, b: string): number {
-  if (a.length === 0) return b.length === 0 ? 1 : 0;
-  if (b.length === 0) return 0;
-  
-  // Calculate Levenshtein distance
-  const matrix: number[][] = [];
-  
-  for (let i = 0; i <= b.length; i++) {
-    matrix[i] = [i];
-  }
-  
-  for (let j = 0; j <= a.length; j++) {
-    matrix[0][j] = j;
-  }
-  
-  for (let i = 1; i <= b.length; i++) {
-    for (let j = 1; j <= a.length; j++) {
-      const cost = b.charAt(i - 1) === a.charAt(j - 1) ? 0 : 1;
-      matrix[i][j] = Math.min(
-        matrix[i - 1][j] + 1,      // Deletion
-        matrix[i][j - 1] + 1,      // Insertion
-        matrix[i - 1][j - 1] + cost // Substitution
-      );
-    }
-  }
-  
-  const distance = matrix[b.length][a.length];
-  const maxLength = Math.max(a.length, b.length);
-  
-  // Return similarity as value between 0-1
-  return 1 - distance / maxLength;
-}
-
-export async function saveGameScore(scoreData: any): Promise<GameScore> {
+export async function saveGameScore(scoreData: Omit<GameScore, 'id' | 'createdAt'>): Promise<GameScore> {
   try {
-    // Add to Firestore
-    const docRef = await addDoc(collection(db, 'gameScores'), {
+    // Prepare score data
+    const newScore = {
       ...scoreData,
       createdAt: serverTimestamp()
-    });
+    };
+    
+    // Add to Firestore
+    const docRef = await addDoc(collection(db, 'gameScores'), newScore);
     
     // Update user score if userId is provided
     if (scoreData.userId) {

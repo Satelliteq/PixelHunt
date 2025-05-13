@@ -4,7 +4,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 import { useAuth } from '@/lib/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { UserCircle2, ThumbsUp, Share2, Play, Clock, Calendar, User, MessageSquare, Loader2, Check } from 'lucide-react';
+import { UserCircle2, ThumbsUp, Share2, Play, Clock, Calendar, User, MessageSquare, Loader2 } from 'lucide-react';
 import { formatDistance } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { doc, getDoc, collection, addDoc, query, where, orderBy, getDocs, updateDoc, increment, serverTimestamp, limit } from 'firebase/firestore';
@@ -35,7 +35,6 @@ export default function TestDetail() {
   const [shareUrl, setShareUrl] = useState('');
   const [showShareAlert, setShowShareAlert] = useState(false);
   const [hasLiked, setHasLiked] = useState(false);
-  const [isAddingComment, setIsAddingComment] = useState(false);
 
   // Fetch test data
   const { data: test, isLoading: isTestLoading, refetch: refetchTest } = useQuery({
@@ -445,7 +444,6 @@ export default function TestDetail() {
       return;
     }
     
-    setIsAddingComment(true);
     addCommentMutation.mutate();
   };
 
@@ -507,7 +505,7 @@ export default function TestDetail() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Test details */}
         <div className="md:col-span-2">
-          <Card className="border-primary/10 shadow-md">
+          <Card>
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div>
@@ -619,16 +617,9 @@ export default function TestDetail() {
                       <div className="flex justify-end">
                         <Button 
                           onClick={handleAddComment}
-                          disabled={isAddingComment || !commentText.trim()}
+                          disabled={addCommentMutation.isPending}
                         >
-                          {isAddingComment ? (
-                            <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Gönderiliyor...
-                            </>
-                          ) : (
-                            "Gönder"
-                          )}
+                          {addCommentMutation.isPending ? "Gönderiliyor..." : "Gönder"}
                         </Button>
                       </div>
                     </div>
@@ -736,7 +727,7 @@ export default function TestDetail() {
         
         {/* Similar tests section */}
         <div>
-          <Card className="border-primary/10 shadow-md">
+          <Card>
             <CardHeader>
               <CardTitle className="text-lg">Benzer Testler</CardTitle>
               <CardDescription>

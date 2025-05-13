@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Heart, Trophy, BookOpen, Filter, Clock, Users, Sparkles, Award, ChevronLeft, ChevronRight, Plus, Search, X, Loader2, Layers, Film, Music, Palette, Gamepad2, Dumbbell, FlaskConical, Landmark, Zap } from "lucide-react";
+import { Heart, Trophy, BookOpen, Filter, Clock, Users, Sparkles, Award, ChevronLeft, ChevronRight, Plus, Search, X, Loader2, Layers, Film, Music, Palette, Gamepad2, Dumbbell, FlaskConical, Landmark } from "lucide-react";
 import { Test, Category } from "@shared/schema";
 import { useLanguage } from "@/lib/LanguageContext";
 import { getAllCategories, getPopularTests, getNewestTests, getFeaturedTests, searchTests } from "@/lib/firebaseHelpers";
@@ -19,6 +19,9 @@ export default function Home() {
 
   // Active tab state
   const [activeTab, setActiveTab] = useState("featured");
+  
+  // Hero carousel state
+  const [activeHeroSlide, setActiveHeroSlide] = useState(0);
   
   // Arama durumu
   const [searchQuery, setSearchQuery] = useState("");
@@ -76,38 +79,220 @@ export default function Home() {
       setIsSearching(false);
     }
   };
+  
+  // Define hero slides using translation function
+  const heroSlides = [
+    {
+      title: t('heroTitle'),
+      description: t('heroDescription'),
+      icon: <Award className="h-4 w-4 mr-2" />,
+      cardTitle: t('featured'),
+      primaryAction: { 
+        text: t('createTest'), 
+        icon: <BookOpen className="mr-2 h-4 w-4" />, 
+        url: "/create-test" 
+      },
+      secondaryAction: { 
+        text: t('popular'), 
+        icon: <Trophy className="mr-2 h-4 w-4" />, 
+        url: "#popular" 
+      },
+    },
+    {
+      title: t('heroTitle'),
+      description: t('heroDescription'),
+      icon: <Trophy className="h-4 w-4 mr-2" />,
+      cardTitle: t('popular'),
+      primaryAction: { 
+        text: t('popular'), 
+        icon: <Trophy className="mr-2 h-4 w-4" />, 
+        url: "#popular" 
+      },
+      secondaryAction: { 
+        text: t('createTest'), 
+        icon: <Plus className="mr-2 h-4 w-4" />, 
+        url: "/create-test" 
+      },
+    },
+    {
+      title: t('heroTitle'),
+      description: t('heroDescription'),
+      icon: <Plus className="h-4 w-4 mr-2" />,
+      cardTitle: t('createTest'),
+      primaryAction: { 
+        text: t('createTest'), 
+        icon: <Plus className="mr-2 h-4 w-4" />, 
+        url: "/create-test" 
+      },
+      secondaryAction: { 
+        text: t('featured'), 
+        icon: <BookOpen className="mr-2 h-4 w-4" />, 
+        url: "#featured" 
+      },
+    }
+  ];
+
+  // Carousel state to track previous and next slides
+  const [slideState, setSlideState] = useState<{
+    prev: number | null;
+    active: number;
+    next: number | null;
+  }>({
+    prev: null,
+    active: 0,
+    next: 1
+  });
+
+  // Update slide state whenever active slide changes
+  useEffect(() => {
+    const prevIndex = (activeHeroSlide - 1 + heroSlides.length) % heroSlides.length;
+    const nextIndex = (activeHeroSlide + 1) % heroSlides.length;
+    
+    setSlideState({
+      prev: prevIndex,
+      active: activeHeroSlide,
+      next: nextIndex
+    });
+  }, [activeHeroSlide, heroSlides.length]);
+
+  // Carousel auto rotation
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveHeroSlide(prev => (prev + 1) % heroSlides.length);
+    }, 6000);
+    
+    return () => clearInterval(interval);
+  }, [heroSlides.length]);
+
+  // Reset animation helper function
+  const resetSlideAnimation = (callback: () => void) => {
+    const slides = document.querySelectorAll('.hero-carousel-slide');
+    slides.forEach(slide => {
+      slide.classList.add('animation-reset');
+    });
+    
+    // Use timeout to ensure DOM changes are processed
+    setTimeout(() => {
+      slides.forEach(slide => {
+        slide.classList.remove('animation-reset');
+      });
+      callback();
+    }, 10);
+  };
+  
+  // Navigation handlers with auto animation reset
+  const prevSlide = () => {
+    resetSlideAnimation(() => {
+      setActiveHeroSlide(prev => (prev - 1 + heroSlides.length) % heroSlides.length);
+    });
+  };
+  
+  const nextSlide = () => {
+    resetSlideAnimation(() => {
+      setActiveHeroSlide(prev => (prev + 1) % heroSlides.length);
+    });
+  };
+  
+  // For indicator dots
+  const goToSlide = (index: number) => {
+    if (index === activeHeroSlide) return;
+    resetSlideAnimation(() => {
+      setActiveHeroSlide(index);
+    });
+  };
+
+  // Örnek kategoriler (API'den veri gelmezse kullanılacak)
+  const defaultCategories: Array<{id?: string, name: string, iconName?: string}> = [
+    { id: "1", name: "Film & TV", iconName: "film" },
+    { id: "2", name: "Müzik", iconName: "music" },
+    { id: "3", name: "Sanat", iconName: "palette" },
+    { id: "4", name: "Oyunlar", iconName: "gamepad-2" },
+    { id: "5", name: "Spor", iconName: "dumbbell" },
+    { id: "6", name: "Bilim", iconName: "flask-conical" },
+  ];
+
+  // Kategorileri API'den veya varsayılan veriden al
+  const categories = categoriesData || defaultCategories;
 
   const handleTestClick = (testId: string) => {
     navigate(`/test/${testId}`);
   };
+  
+  // Kategori adına göre emoji döndüren yardımcı fonksiyon
+  const getCategoryEmoji = (categoryName: string, index: number): string => {
+    const name = categoryName.toLowerCase();
+    
+    if (name.includes("film") || name.includes("tv") || name.includes("dizi")) return "🎬";
+    if (name.includes("oyun") || name.includes("game")) return "🎮";
+    if (name.includes("müzik") || name.includes("music")) return "🎵";
+    if (name.includes("sanat") || name.includes("art")) return "🎨";
+    if (name.includes("spor") || name.includes("sport")) return "⚽";
+    if (name.includes("bilim") || name.includes("science")) return "🧪";
+    if (name.includes("tarih") || name.includes("history")) return "📜";
+    if (name.includes("coğrafya") || name.includes("geography")) return "🌍";
+    if (name.includes("yemek") || name.includes("food")) return "🍕";
+    if (name.includes("hayvan") || name.includes("animal")) return "🐱";
+    if (name.includes("eğitim") || name.includes("education")) return "📚";
+    
+    // Varsayılan emojiler
+    const defaultEmojis = ["🔍", "💡", "🎯", "📊", "🔮", "🌟", "💎"];
+    return defaultEmojis[index % defaultEmojis.length];
+  };
+  
+  // Icon ismine göre Lucide icon komponenti döndüren yardımcı fonksiyon
+  const getCategoryIcon = (iconName: string | null | undefined) => {
+    if (!iconName) return null;
+    
+    switch (iconName) {
+      case 'film':
+        return <Film className="w-6 h-6" />;
+      case 'music':
+        return <Music className="w-6 h-6" />;
+      case 'palette':
+        return <Palette className="w-6 h-6" />;
+      case 'gamepad-2':
+        return <Gamepad2 className="w-6 h-6" />;
+      case 'dumbbell':
+        return <Dumbbell className="w-6 h-6" />;
+      case 'flask-conical':
+        return <FlaskConical className="w-6 h-6" />;
+      case 'landmark':
+        return <Landmark className="w-6 h-6" />;
+      default:
+        return <Layers className="w-6 h-6" />;
+    }
+  };
 
   return (
     <div className="space-y-12">
-      {/* Modern Hero Section */}
+      {/* Basitleştirilmiş Hero Bölümü */}
       <section className="max-w-content mx-auto mb-12 md:mb-16">
-        <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 rounded-xl overflow-hidden shadow-lg border border-border/50">
-          <div className="p-8 md:p-12">
-            <div className="max-w-3xl">
-              <Badge className="bg-primary/10 text-primary py-1 px-3 text-xs font-medium mb-4">
-                ✨ Görsel Tahmin Platformu
-              </Badge>
+        <div className="bg-card rounded-xl overflow-hidden shadow-lg border border-border/50">
+          <div className="flex flex-col md:flex-row">
+            {/* Sol taraf - İçerik */}
+            <div className="p-6 md:p-8 flex flex-col justify-center w-full md:w-1/2">
+              <div className="flex items-center gap-2 mb-4">
+                <Badge className="bg-primary/10 text-primary py-1 px-3 text-xs font-medium">
+                  ✨ Görsel Tahmin Platformu
+                </Badge>
+                <div className="h-4 w-px bg-border/50"></div>
+                <span className="text-xs text-muted-foreground">Yeni Testler Her Gün</span>
+              </div>
               
-              <h1 className="text-3xl md:text-4xl font-bold mb-4">
-                Görsel tanıma yeteneklerinizi test edin
+              <h1 className="text-2xl md:text-3xl font-bold mb-3 bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+                Bilginizi Test Edin, <span className="text-primary">Yeni Testler Keşfedin</span>
               </h1>
               
-              <p className="text-muted-foreground mb-8 text-lg">
-                Pixelhunt'ta resimler kademeli olarak açılır ve doğru cevabı en hızlı şekilde bulmanız gerekir. 
-                Kendi testlerinizi oluşturabilir ve arkadaşlarınızla paylaşabilirsiniz.
+              <p className="text-muted-foreground mb-6 leading-relaxed">
+                Farklı kategorilerdeki görsel tahmin testleriyle kendinizi sınayın ve kendi testlerinizi oluşturarak platformumuza katkıda bulunun.
               </p>
               
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-3">
                 <Button 
                   onClick={() => navigate("/tests")}
                   className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
-                  size="lg"
                 >
-                  <BookOpen className="mr-2 h-5 w-5" />
+                  <BookOpen className="mr-2 h-4 w-4" />
                   Testleri Keşfet
                 </Button>
                 
@@ -115,14 +300,95 @@ export default function Home() {
                   variant="outline"
                   onClick={() => navigate("/create-test")}
                   className="border-border/50 hover:bg-accent/50"
-                  size="lg"
                 >
-                  <Plus className="mr-2 h-5 w-5" />
+                  <Plus className="mr-2 h-4 w-4" />
                   Test Oluştur
                 </Button>
               </div>
             </div>
+            
+            {/* Sağ taraf - Görsel */}
+            <div className="w-full md:w-1/2 bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 relative md:h-auto min-h-[200px] md:min-h-0">
+              <div className="absolute inset-0 flex items-center justify-center p-6">
+                <div className="relative w-full max-w-md">
+                  {/* Ana dekoratif element */}
+                  <div className="absolute w-48 h-48 bg-primary/20 rounded-full -top-12 -left-12 blur-2xl"></div>
+                  <div className="absolute w-48 h-48 bg-primary/10 rounded-full -bottom-12 -right-12 blur-2xl"></div>
+                  
+                  {/* Test kartları grid */}
+                  <div className="grid grid-cols-2 gap-4 relative z-10">
+                    {featuredTests && featuredTests.slice(0, 4).map((test, idx) => (
+                      <div 
+                        key={`featured-card-${idx}`}
+                        className={`bg-card/90 backdrop-blur-sm shadow-lg border border-border/50 rounded-xl overflow-hidden cursor-pointer transform hover:-translate-y-1 transition-all duration-300 ${idx >= 2 ? 'hidden md:block' : ''}`}
+                        onClick={() => navigate(`/test/${test.id}`)}
+                        style={{
+                          transform: `rotate(${idx % 2 === 0 ? '-2deg' : '2deg'})`,
+                          zIndex: idx === 1 ? 2 : 1
+                        }}
+                      >
+                        <div className="aspect-video relative group">
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-80 group-hover:opacity-60 transition-opacity"></div>
+                          <img 
+                            src={test.thumbnailUrl || 'https://images.unsplash.com/photo-1592198084033-aade902d1aae?w=500'} 
+                            alt={test.title}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute bottom-0 left-0 right-0 p-3">
+                            <div className="flex items-center gap-2 mb-1">
+                              <div className="w-2 h-2 rounded-full bg-primary"></div>
+                              <span className="text-xs font-medium text-white/90">Öne Çıkan</span>
+                            </div>
+                            <h3 className="text-sm font-medium text-white truncate">{test.title}</h3>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {/* Fallback cards if not enough tests */}
+                    {(!featuredTests || featuredTests.length < 2) && (
+                      <div 
+                        className="bg-primary/10 border border-primary/20 rounded-xl overflow-hidden cursor-pointer flex items-center justify-center p-4 aspect-video backdrop-blur-sm"
+                        onClick={() => navigate('/tests')}
+                      >
+                        <div className="text-center">
+                          <Award className="h-8 w-8 mx-auto text-primary mb-2" />
+                          <span className="text-sm font-medium text-primary">Testleri Keşfet</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
+        </div>
+        
+        {/* Kategori kartları - daha küçük ve sade */}
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 sm:gap-3 mt-8 md:mt-12">
+          {categories.slice(0, 6).map((category, index) => (
+            <Card 
+              key={category.id || index}
+              className="group cursor-pointer hover:border-primary/50 transition-all duration-300 overflow-hidden"
+              onClick={() => navigate(`/categories/${category.id || index + 1}`)}
+            >
+              <CardContent className="p-3 flex flex-col items-center text-center">
+                <div 
+                  className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center mb-2 ${
+                    index % 6 === 0 ? "bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400" : 
+                    index % 6 === 1 ? "bg-sky-100 text-sky-600 dark:bg-sky-950 dark:text-sky-400" : 
+                    index % 6 === 2 ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400" : 
+                    index % 6 === 3 ? "bg-violet-100 text-violet-600 dark:bg-violet-950 dark:text-violet-400" : 
+                    index % 6 === 4 ? "bg-yellow-100 text-yellow-600 dark:bg-yellow-950 dark:text-yellow-400" : 
+                    "bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-400"
+                  }`}
+                >
+                  {category.iconName ? getCategoryIcon(category.iconName) : getCategoryEmoji(category.name || "", index)}
+                </div>
+                <h3 className="text-card-foreground font-medium text-xs sm:text-sm">{category.name}</h3>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </section>
 
@@ -181,64 +447,6 @@ export default function Home() {
         </section>
       )}
       
-      {/* Game Modes Section */}
-      <section className="max-w-content mx-auto">
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold mb-2">Oyun Modları</h2>
-          <p className="text-muted-foreground">Farklı oyun modlarında kendinizi test edin</p>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 hover:shadow-md transition-all duration-300 cursor-pointer" onClick={() => navigate("/game/classic")}>
-            <CardContent className="p-6">
-              <div className="mb-4">
-                <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center mb-3">
-                  <Trophy className="h-6 w-6 text-blue-500" />
-                </div>
-                <h3 className="text-xl font-bold">Klasik Mod</h3>
-              </div>
-              <p className="text-sm text-muted-foreground">Resim kademeli olarak açılır. Ne kadar az açılmışken doğru tahmin ederseniz o kadar çok puan kazanırsınız.</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 hover:shadow-md transition-all duration-300 cursor-pointer" onClick={() => navigate("/game/speed")}>
-            <CardContent className="p-6">
-              <div className="mb-4">
-                <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center mb-3">
-                  <Zap className="h-6 w-6 text-purple-500" />
-                </div>
-                <h3 className="text-xl font-bold">Hızlı Mod</h3>
-              </div>
-              <p className="text-sm text-muted-foreground">Resim otomatik olarak açılmaya devam eder. Ne kadar hızlı doğru tahminde bulunursanız o kadar çok puan kazanırsınız.</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gradient-to-br from-green-500/10 to-green-600/5 hover:shadow-md transition-all duration-300 cursor-pointer" onClick={() => navigate("/game/time")}>
-            <CardContent className="p-6">
-              <div className="mb-4">
-                <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center mb-3">
-                  <Clock className="h-6 w-6 text-green-500" />
-                </div>
-                <h3 className="text-xl font-bold">Zamanlı Mod</h3>
-              </div>
-              <p className="text-sm text-muted-foreground">Belirli bir süre içinde doğru tahmini yapmalısınız. Kalan süre bonus puan olarak eklenir.</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gradient-to-br from-red-500/10 to-red-600/5 hover:shadow-md transition-all duration-300 cursor-pointer" onClick={() => navigate("/game/test")}>
-            <CardContent className="p-6">
-              <div className="mb-4">
-                <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center mb-3">
-                  <Gamepad2 className="h-6 w-6 text-red-500" />
-                </div>
-                <h3 className="text-xl font-bold">Test Modu</h3>
-              </div>
-              <p className="text-sm text-muted-foreground">Kullanıcılar tarafından oluşturulan testleri çözün ve puanınızı diğer kullanıcılarla karşılaştırın.</p>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-      
       {/* Main Content */}
       <section id="featured-tests" className="max-w-content mx-auto">
         <Card className="border shadow-sm">
@@ -249,29 +457,15 @@ export default function Home() {
                 Tüm Testler
               </CardTitle>
               
-              <div className="flex items-center gap-3">
-                <div className="relative w-full sm:w-72">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="text"
-                    placeholder="Test ara..."
-                    className="pl-9"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
-                  />
-                </div>
-                
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="flex items-center gap-2 text-xs self-end sm:self-auto"
-                  onClick={() => navigate("/tests")}
-                >
-                  <Filter className="w-4 h-4" />
-                  <span>{t('allTests')}</span>
-                </Button>
-              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex items-center gap-2 text-xs self-end sm:self-auto"
+                onClick={() => navigate("/tests")}
+              >
+                <Filter className="w-4 h-4" />
+                <span>{t('allTests')}</span>
+              </Button>
             </div>
           </CardHeader>
           
@@ -383,28 +577,105 @@ export default function Home() {
         </Card>
       </section>
 
-      {/* Call to Action Section */}
-      <section className="max-w-content mx-auto mb-8">
-        <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-          <CardContent className="p-8">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-              <div>
-                <h2 className="text-2xl font-bold mb-2">Kendi Testinizi Oluşturun</h2>
-                <p className="text-muted-foreground max-w-lg">
-                  Kendi görsellerinizi yükleyin, cevapları belirleyin ve arkadaşlarınızla paylaşın. 
-                  Yaratıcılığınızı gösterin ve topluluğa katkıda bulunun.
-                </p>
-              </div>
+      {/* Categories Section */}
+      <section className="max-w-content mx-auto">
+        <Card className="border shadow-sm mb-8">
+          <CardHeader className="pb-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <CardTitle className="text-xl flex items-center">
+                <Layers className="w-5 h-5 mr-2 text-primary" /> {t('discoverByCategory')}
+              </CardTitle>
+              
               <Button 
-                size="lg" 
-                className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                onClick={() => navigate("/create-test")}
+                variant="outline" 
+                size="sm" 
+                className="text-xs self-end sm:self-auto"
+                onClick={() => navigate("/categories")}
               >
-                <Plus className="mr-2 h-5 w-5" />
-                Test Oluştur
+                {t('allCategories')}
               </Button>
             </div>
+            <CardDescription>
+              Farklı kategorilerdeki içerikleri keşfedin
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {/* Category cards - Featured categories */}
+              <Card
+                className="hover:border-primary/50 transition-colors p-4 text-center cursor-pointer border shadow-sm"
+                onClick={() => navigate("/categories/1")}
+              >
+                <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <BookOpen className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="font-medium">{t('catLiterature')}</h3>
+                <p className="text-xs text-muted-foreground mt-1">120+ {t('tests').toLowerCase()}</p>
+              </Card>
+              
+              <Card
+                className="hover:border-primary/50 transition-colors p-4 text-center cursor-pointer border shadow-sm"
+                onClick={() => navigate("/categories/2")}
+              >
+                <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-xl text-white">🌎</span>
+                </div>
+                <h3 className="font-medium">{t('catGeography')}</h3>
+                <p className="text-xs text-muted-foreground mt-1">86 {t('tests').toLowerCase()}</p>
+              </Card>
+              
+              <Card
+                className="hover:border-primary/50 transition-colors p-4 text-center cursor-pointer border shadow-sm"
+                onClick={() => navigate("/categories/3")}
+              >
+                <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-xl text-white">🎬</span>
+                </div>
+                <h3 className="font-medium">{t('catFilmTV')}</h3>
+                <p className="text-xs text-muted-foreground mt-1">214 {t('tests').toLowerCase()}</p>
+              </Card>
+              
+              <Card
+                className="hover:border-primary/50 transition-colors p-4 text-center cursor-pointer border shadow-sm"
+                onClick={() => navigate("/categories/4")}
+              >
+                <div className="w-12 h-12 bg-yellow-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-xl text-white">🎨</span>
+                </div>
+                <h3 className="font-medium">{t('catArt')}</h3>
+                <p className="text-xs text-muted-foreground mt-1">73 {t('tests').toLowerCase()}</p>
+              </Card>
+              
+              <Card
+                className="hover:border-primary/50 transition-colors p-4 text-center cursor-pointer border shadow-sm"
+                onClick={() => navigate("/categories/5")}
+              >
+                <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-xl text-white">🎮</span>
+                </div>
+                <h3 className="font-medium">{t('catGames')}</h3>
+                <p className="text-xs text-muted-foreground mt-1">95 {t('tests').toLowerCase()}</p>
+              </Card>
+              
+              <Card
+                className="hover:border-primary/50 transition-colors p-4 text-center cursor-pointer border shadow-sm"
+                onClick={() => navigate("/categories")}
+              >
+                <div className="w-12 h-12 bg-orange-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-xl text-white">+</span>
+                </div>
+                <h3 className="font-medium">{t('catMore')}</h3>
+                <p className="text-xs text-muted-foreground mt-1">300+ {t('tests').toLowerCase()}</p>
+              </Card>
+            </div>
           </CardContent>
+          
+          <CardFooter className="flex justify-center">
+            <Button onClick={() => navigate("/categories")}>
+              Tüm Kategorileri Görüntüle
+            </Button>
+          </CardFooter>
         </Card>
       </section>
     </div>

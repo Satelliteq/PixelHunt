@@ -44,11 +44,7 @@ import {
   Loader2,
   Filter,
   Sun,
-  LogOut,
-  Zap,
-  Trophy,
-  Clock,
-  Heart
+  LogOut
 } from "lucide-react";
 
 export default function Header() {
@@ -149,14 +145,14 @@ export default function Header() {
   };
 
   return (
-    <header className="border-b border-border/50 sticky top-0 bg-background/95 backdrop-blur-sm z-20">
-      <div className="max-w-content mx-auto py-3 px-4 flex items-center justify-between">
+    <header className="border-b border-border sticky top-0 bg-background z-20">
+      <div className="max-w-content py-3 flex items-center justify-between">
         <div className="flex items-center space-x-6">
           <Link href="/" className="flex items-center">
             <LogoWithText className="h-8" textClassName="text-xl tracking-wide" />
           </Link>
           
-          <nav className="hidden md:flex items-center space-x-1">
+          <nav className="hidden md:flex items-center space-x-4">
             {/* Simplified Navigation */}
             <Button
               variant="ghost"
@@ -176,48 +172,31 @@ export default function Header() {
               {t('tests')}
             </Button>
             
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="text-foreground hover:bg-accent text-sm font-medium"
-                >
-                  <PlayCircle className="w-4 h-4 mr-2" />
-                  Oyun Modları
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-56">
-                <DropdownMenuItem onClick={() => handleNavigation("/game/classic")}>
-                  <Trophy className="w-4 h-4 mr-2 text-yellow-500" />
-                  <span>Klasik Mod</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleNavigation("/game/speed")}>
-                  <Zap className="w-4 h-4 mr-2 text-purple-500" />
-                  <span>Hızlı Mod</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleNavigation("/game/time")}>
-                  <Clock className="w-4 h-4 mr-2 text-blue-500" />
-                  <span>Zamanlı Mod</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleNavigation("/game/live")}>
-                  <Heart className="w-4 h-4 mr-2 text-red-500" />
-                  <span>Canlı Mod</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => handleNavigation("/game/test")}>
-                  <BookOpen className="w-4 h-4 mr-2 text-green-500" />
-                  <span>Test Modu</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            
             <Button
               variant="ghost"
               className="text-foreground hover:bg-accent text-sm font-medium"
               onClick={() => handleNavigation("/how-to-play")}
             >
-              <HelpCircle className="w-4 h-4 mr-2" />
+              <PlayCircle className="w-4 h-4 mr-2" />
               {t('howToPlay')}
+            </Button>
+            
+            <Button
+              variant="ghost"
+              className="text-foreground hover:bg-accent text-sm font-medium"
+              onClick={() => handleNavigation("/support")}
+            >
+              <HelpCircle className="w-4 h-4 mr-2" />
+              Destek
+            </Button>
+            
+            <Button
+              variant="ghost"
+              className="text-foreground hover:bg-accent text-sm font-medium"
+              onClick={() => handleNavigation("/contact")}
+            >
+              <Mail className="w-4 h-4 mr-2" />
+              İletişim
             </Button>
           </nav>
         </div>
@@ -395,17 +374,17 @@ export default function Header() {
       
       {/* Mobile Menu Overlay */}
       <div 
-        className={`fixed inset-0 bg-black/60 z-40 transition-opacity duration-300 ${mobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        className={`mobile-menu-overlay ${mobileMenuOpen ? 'open' : ''}`}
         onClick={() => setMobileMenuOpen(false)}
         aria-hidden="true"
       ></div>
       
       {/* Mobile Menu */}
       <div 
-        className={`fixed inset-y-0 right-0 w-[280px] bg-background border-l border-border z-50 transform transition-transform duration-300 ease-in-out ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}
+        className={`mobile-menu ${mobileMenuOpen ? 'open' : ''}`}
         aria-hidden={!mobileMenuOpen}
       >
-        <div className="flex justify-between items-center p-4 border-b border-border">
+        <div className="flex justify-between items-center mb-8">
           <Link href="/" onClick={() => setMobileMenuOpen(false)}>
             <LogoWithText className="h-8" textClassName="text-xl tracking-wide" />
           </Link>
@@ -414,163 +393,109 @@ export default function Header() {
           </Button>
         </div>
         
-        <div className="p-4">
-          <div className="relative mb-6">
-            <Input
-              type="text"
-              placeholder={t('search')}
-              className="bg-muted w-full rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-theme-muted h-8 w-8 icon-hover-effect"
-              onClick={handleSearch}
-            >
-              {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-            </Button>
-          </div>
-          
-          <div className="space-y-1">
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start text-foreground" 
-              onClick={() => handleNavigation("/categories")}
-            >
-              <Grid2X2 className="w-5 h-5 mr-3" /> {t('categories')}
-            </Button>
-            
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start text-foreground" 
-              onClick={() => handleNavigation("/tests")}
-            >
-              <BookOpen className="w-5 h-5 mr-3" /> {t('tests')}
-            </Button>
-            
-            <div className="pt-2 pb-1">
-              <p className="text-xs font-medium text-muted-foreground px-3 py-2">Oyun Modları</p>
-            </div>
-            
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start text-foreground" 
-              onClick={() => handleNavigation("/game/classic")}
-            >
-              <Trophy className="w-5 h-5 mr-3 text-yellow-500" /> Klasik Mod
-            </Button>
-            
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start text-foreground" 
-              onClick={() => handleNavigation("/game/speed")}
-            >
-              <Zap className="w-5 h-5 mr-3 text-purple-500" /> Hızlı Mod
-            </Button>
-            
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start text-foreground" 
-              onClick={() => handleNavigation("/game/time")}
-            >
-              <Clock className="w-5 h-5 mr-3 text-blue-500" /> Zamanlı Mod
-            </Button>
-            
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start text-foreground" 
-              onClick={() => handleNavigation("/game/live")}
-            >
-              <Heart className="w-5 h-5 mr-3 text-red-500" /> Canlı Mod
-            </Button>
-            
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start text-foreground" 
-              onClick={() => handleNavigation("/game/test")}
-            >
-              <BookOpen className="w-5 h-5 mr-3 text-green-500" /> Test Modu
-            </Button>
-            
-            <div className="pt-2 pb-1">
-              <p className="text-xs font-medium text-muted-foreground px-3 py-2">Diğer</p>
-            </div>
-            
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start text-foreground" 
-              onClick={() => handleNavigation("/how-to-play")}
-            >
-              <HelpCircle className="w-5 h-5 mr-3" /> {t('howToPlay')}
-            </Button>
-            
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start text-foreground" 
-              onClick={() => handleNavigation("/contact")}
-            >
-              <Mail className="w-5 h-5 mr-3" /> {t('contact')}
-            </Button>
-          </div>
+        <div className="relative mb-6">
+          <Input
+            type="text"
+            placeholder={t('search')}
+            className="bg-muted w-full rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+          />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-theme-muted h-8 w-8 icon-hover-effect"
+            onClick={handleSearch}
+          >
+            {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+          </Button>
         </div>
         
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border">
+        <div className="flex flex-col space-y-4">
+          <Button 
+            variant="ghost" 
+            className="justify-start text-foreground" 
+            onClick={() => handleNavigation("/categories")}
+          >
+            <Grid2X2 className="w-5 h-5 mr-3" /> {t('categories')}
+          </Button>
+          
+          <Button 
+            variant="ghost" 
+            className="justify-start text-foreground" 
+            onClick={() => handleNavigation("/tests")}
+          >
+            <BookOpen className="w-5 h-5 mr-3" /> {t('tests')}
+          </Button>
+          
+          <Button 
+            variant="ghost" 
+            className="justify-start text-foreground" 
+            onClick={() => handleNavigation("/how-to-play")}
+          >
+            <PlayCircle className="w-5 h-5 mr-3" /> {t('howToPlay')}
+          </Button>
+          
+          <Button 
+            variant="ghost" 
+            className="justify-start text-foreground" 
+            onClick={() => handleNavigation("/support")}
+          >
+            <HelpCircle className="w-5 h-5 mr-3" /> Destek Ol
+          </Button>
+          
+          <Button 
+            variant="ghost" 
+            className="justify-start text-foreground" 
+            onClick={() => handleNavigation("/contact")}
+          >
+            <Mail className="w-5 h-5 mr-3" /> {t('contact')}
+          </Button>
+        </div>
+        
+        <div className="mt-auto pt-8 flex flex-col space-y-4">
+          <Button 
+            className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold w-full" 
+            onClick={() => handleNavigation("/create-test")}
+          >
+            <PlusCircle className="w-5 h-5 mr-2" /> {t('createTest')}
+          </Button>
+          
           {!loading && !user ? (
-            <div className="space-y-2">
-              <Button 
-                className="w-full"
-                onClick={() => handleNavigation("/login")}
-              >
-                <User className="w-5 h-5 mr-2" /> {t('login')}
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => handleNavigation("/create-test")}
-              >
-                <PlusCircle className="w-5 h-5 mr-2" /> {t('createTest')}
-              </Button>
-            </div>
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => handleNavigation("/login")}
+            >
+              <User className="w-5 h-5 mr-2" /> {t('login')}
+            </Button>
           ) : !loading && user ? (
-            <div className="space-y-2">
-              <div className="flex items-center gap-3 mb-3">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src={user?.photoURL || undefined} alt={user?.displayName || user?.email || ''} />
-                  <AvatarFallback>{user?.email?.[0].toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="text-sm font-medium">{user?.displayName || 'Kullanıcı'}</p>
-                  <p className="text-xs text-muted-foreground">{user?.email}</p>
-                </div>
-              </div>
-              
-              <Button 
-                className="w-full"
-                onClick={() => handleNavigation("/create-test")}
-              >
-                <PlusCircle className="w-5 h-5 mr-2" /> {t('createTest')}
-              </Button>
-              
+            <>
               <Button 
                 variant="outline" 
-                className="w-full"
+                className="w-full justify-start"
                 onClick={() => handleNavigation("/profile")}
               >
                 <User className="w-5 h-5 mr-2" /> Profilim
               </Button>
-              
+              {user.uid === '108973046762004266106' || user.email === 'pixelhuntfun@gmail.com' ? (
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => handleNavigation("/admin")}
+                >
+                  <Settings className="w-5 h-5 mr-2" /> Admin Paneli
+                </Button>
+              ) : null}
               <Button 
                 variant="destructive" 
                 className="w-full"
                 onClick={handleSignOut}
               >
-                <LogOut className="w-5 h-5 mr-2" /> Çıkış Yap
+                Çıkış Yap
               </Button>
-            </div>
+            </>
           ) : null}
         </div>
       </div>
