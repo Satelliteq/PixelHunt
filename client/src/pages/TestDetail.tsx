@@ -8,7 +8,7 @@ import {
   AlertTriangle, Heart, Share2, Play, Clock, Calendar, User, MessageSquare, Loader2,
   ThumbsUp, Check, X, Trophy, Eye, UserCircle2
 } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { formatDistance } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { doc, getDoc, collection, addDoc, query, where, orderBy, getDocs, updateDoc, increment, serverTimestamp, limit } from 'firebase/firestore';

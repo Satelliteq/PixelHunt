@@ -1,24 +1,40 @@
-import { db } from './firebase';
-import { 
-  collection, 
-  doc, 
-  getDoc, 
-  getDocs, 
-  query, 
-  where, 
-  orderBy, 
-  limit, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  increment, 
-  serverTimestamp,
-  DocumentData,
-  QueryDocumentSnapshot,
-  FirestoreDataConverter
-} from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { createId } from '@paralleldrive/cuid2';
+import { initializeApp } from 'firebase/app';
+import { getAuth, connectAuthEmulator } from 'firebase/auth';
+import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+import { getStorage, connectStorageEmulator } from 'firebase/storage';
+import { getDatabase, connectDatabaseEmulator } from 'firebase/database';
+
+// Firebase configuration
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyBtHxrkA9kcUQZyJp9bA48Evyt5U-7AVoQ",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "pixelhunt-7afa8.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "pixelhunt-7afa8",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "pixelhunt-7afa8.appspot.com",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "595531085941",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:595531085941:web:9bd7b5f890098211d2a03c",
+  databaseURL: "https://pixelhunt-7afa8-default-rtdb.firebaseio.com"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+const rtdb = getDatabase(app);
+
+// Connect to emulators in development
+if (import.meta.env.DEV && window.location.hostname === 'localhost') {
+  try {
+    connectAuthEmulator(auth, 'http://localhost:9099');
+    connectFirestoreEmulator(db, 'localhost', 8080);
+    connectStorageEmulator(storage, 'localhost', 9199);
+    connectDatabaseEmulator(rtdb, 'localhost', 9000);
+  } catch (error) {
+    console.error('Error connecting to Firebase emulators:', error);
+  }
+}
+
+export { app, auth, db, storage, rtdb };
 
 // Type definitions
 export interface User {
@@ -406,9 +422,32 @@ export async function initializeSampleData() {
   }
 }
 
+// Import necessary Firebase functions
+import { 
+  collection, 
+  doc, 
+  getDoc, 
+  getDocs, 
+  query, 
+  where, 
+  orderBy, 
+  limit, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  increment, 
+  serverTimestamp,
+  DocumentData,
+  QueryDocumentSnapshot,
+  FirestoreDataConverter
+} from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { createId } from '@paralleldrive/cuid2';
+
 // Categories
 export async function getAllCategories(): Promise<Category[]> {
   try {
+    // Base query
     const categoriesRef = collection(db, 'categories');
     const q = query(
       categoriesRef, 
@@ -762,49 +801,42 @@ export async function getTestsByCategory(categoryId: string): Promise<Test[]> {
 
 export async function createTest(testData: any): Promise<Test> {
   try {
-    // Generate a unique ID for sharing
-    const uuid = createId();
+    // Process images
+    const processedQuestions = await Promise.all(
+      testData.questions.map(async (question: any) => {
+        return {
+          imageUrl: question.imageUrl,
+          answers: question.answers,
+          question: question.question || "Bu görselde ne görüyorsunuz?"
+        };
+      })
+    );
     
-    // Prepare test data
+    // Create test in Firestore
     const newTest = {
       ...testData,
-      uuid,
+      uuid: createId(),
+      questions: processedQuestions,
+      thumbnailUrl: testData.thumbnailUrl || (processedQuestions[0]?.imageUrl || ''),
       playCount: 0,
       likeCount: 0,
-      createdAt: serverTimestamp(),
-      isAnonymous: testData.isAnonymous || false
+      createdAt: serverTimestamp()
     };
     
-    // Add to Firestore
     const docRef = await addDoc(collection(db, 'tests'), newTest);
-    
-    // Record user activity if creator is specified
-    if (testData.creatorId) {
-      await addDoc(collection(db, 'userActivities'), {
-        userId: testData.creatorId,
-        activityType: 'create_test',
-        details: `Yeni test oluşturuldu: ${testData.title}`,
-        entityId: docRef.id,
-        entityType: 'test',
-        createdAt: serverTimestamp()
-      });
-    }
     
     // Return the created test
     return {
       id: docRef.id,
-      uuid,
-      ...testData,
-      playCount: 0,
-      likeCount: 0,
-      isPublic: testData.isPublic !== false,
-      isAnonymous: testData.isAnonymous === true,
-      approved: testData.approved === true,
-      featured: testData.featured === true,
-      createdAt: new Date()
+      ...newTest,
+      createdAt: new Date(),
+      isPublic: newTest.isPublic !== false,
+      isAnonymous: newTest.isAnonymous === true,
+      approved: newTest.approved === true,
+      featured: newTest.featured === true
     };
   } catch (error) {
-    console.error('Error creating test:', error);
+    console.error("Test creation error:", error);
     throw new Error('Test creation failed');
   }
 }
@@ -831,7 +863,7 @@ export async function incrementTestLikeCount(id: string): Promise<void> {
   }
 }
 
-export async function getPopularTests(limit: number = 5): Promise<Test[]> {
+export async function getPopularTests(limitCount: number = 5): Promise<Test[]> {
   try {
     const testsRef = collection(db, 'tests');
     const q = query(
@@ -839,7 +871,7 @@ export async function getPopularTests(limit: number = 5): Promise<Test[]> {
       where('isPublic', '==', true),
       where('approved', '==', true),
       orderBy('playCount', 'desc'),
-      limit(limit)
+      limit(limitCount)
     );
     
     const querySnapshot = await getDocs(q);
@@ -871,7 +903,7 @@ export async function getPopularTests(limit: number = 5): Promise<Test[]> {
   }
 }
 
-export async function getNewestTests(limit: number = 5): Promise<Test[]> {
+export async function getNewestTests(limitCount: number = 5): Promise<Test[]> {
   try {
     const testsRef = collection(db, 'tests');
     const q = query(
@@ -879,7 +911,7 @@ export async function getNewestTests(limit: number = 5): Promise<Test[]> {
       where('isPublic', '==', true),
       where('approved', '==', true),
       orderBy('createdAt', 'desc'),
-      limit(limit)
+      limit(limitCount)
     );
     
     const querySnapshot = await getDocs(q);
@@ -911,17 +943,16 @@ export async function getNewestTests(limit: number = 5): Promise<Test[]> {
   }
 }
 
-export async function getFeaturedTests(limit: number = 5): Promise<Test[]> {
+export async function getFeaturedTests(limitCount: number = 5): Promise<Test[]> {
   try {
     const testsRef = collection(db, 'tests');
-    // Adjust the query to match the existing index structure
     const q = query(
       testsRef,
       where('isPublic', '==', true),
       where('approved', '==', true),
       where('featured', '==', true),
       orderBy('createdAt', 'desc'),
-      limit(limit)
+      limit(limitCount)
     );
     
     const querySnapshot = await getDocs(q);
