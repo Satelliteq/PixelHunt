@@ -1,24 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation } from 'wouter';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { queryClient } from '@/lib/queryClient';
-import { useAuth } from '@/lib/AuthContext';
-import { useToast } from '@/hooks/use-toast';
-import { UserCircle2, ThumbsUp, Share2, Play, Clock, Calendar, User, MessageSquare, Loader2, Check } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { 
+  AlertTriangle, Heart, Share2, Play, Clock, Calendar, User, MessageSquare, Loader2,
+  ThumbsUp, Check, X, Trophy, Eye, UserCircle2
+} from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 import { formatDistance } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { doc, getDoc, collection, addDoc, query, where, orderBy, getDocs, updateDoc, increment, serverTimestamp, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -183,12 +178,17 @@ export default function TestDetail() {
   }, [user, testId]);
 
   // Like test mutation
-  const likeTestMutation = useMutation({
-    mutationFn: async () => {
-      if (!testId || !user) {
-        throw new Error("Test ID or user not found");
-      }
-      
+  const handleLikeTest = async () => {
+    if (!testId || !user) {
+      toast({
+        title: "Giriş Yapmalısınız",
+        description: "Testi beğenmek için giriş yapmalısınız.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
       // Check if user has already liked this test
       const likesRef = collection(db, 'userActivities');
       const q = query(
@@ -202,9 +202,15 @@ export default function TestDetail() {
       const querySnapshot = await getDocs(q);
       
       if (!querySnapshot.empty) {
-        throw new Error("You have already liked this test");
+        toast({
+          title: "Zaten Beğendiniz",
+          description: "Bu testi daha önce beğendiniz.",
+          variant: "default",
+        });
+        return;
       }
       
+      // Update test like count
       const testRef = doc(db, 'tests', testId);
       await updateDoc(testRef, {
         likeCount: increment(1)
@@ -221,54 +227,60 @@ export default function TestDetail() {
         createdAt: serverTimestamp()
       });
       
-      return true;
-    },
-    onSuccess: () => {
+      setHasLiked(true);
+      
       toast({
-        title: "Test beğenildi",
+        title: "Test Beğenildi",
         description: "Bu testi beğendiniz!",
         variant: "default",
       });
       
-      setHasLiked(true);
-      
       // Refetch test data to update like count
       refetchTest();
-    },
-    onError: (error: any) => {
+    } catch (error) {
       console.error("Error liking test:", error);
-      
-      if (error.message === "You have already liked this test") {
-        toast({
-          title: "Zaten beğendiniz",
-          description: "Bu testi daha önce beğendiniz.",
-          variant: "default",
-        });
-      } else {
-        toast({
-          title: "Hata",
-          description: "Test beğenilirken bir hata oluştu.",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Hata",
+        description: "Test beğenilirken bir hata oluştu.",
+        variant: "destructive",
+      });
     }
-  });
+  };
 
-  // Add comment mutation
-  const addCommentMutation = useMutation({
-    mutationFn: async () => {
-      if (!testId || !user || !commentText.trim()) {
-        throw new Error("Missing required data");
-      }
-      
-      const commentData = {
+  // Add comment
+  const handleAddComment = async () => {
+    if (!testId || !user) {
+      toast({
+        title: "Giriş Yapmalısınız",
+        description: "Yorum yapmak için giriş yapmalısınız.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!commentText.trim()) {
+      toast({
+        title: "Yorum Boş Olamaz",
+        description: "Lütfen bir yorum yazın.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsAddingComment(true);
+    
+    try {
+      // Add comment
+      await addDoc(collection(db, 'testComments'), {
         testId: testId,
         userId: user.uid,
         comment: commentText.trim(),
-        createdAt: serverTimestamp()
-      };
-      
-      const docRef = await addDoc(collection(db, 'testComments'), commentData);
+        createdAt: serverTimestamp(),
+        user: {
+          displayName: user.displayName || user.email?.split('@')[0],
+          photoURL: user.photoURL
+        }
+      });
       
       // Add user activity
       await addDoc(collection(db, 'userActivities'), {
@@ -281,62 +293,24 @@ export default function TestDetail() {
         createdAt: serverTimestamp()
       });
       
-      return {
-        id: docRef.id,
-        ...commentData,
-        createdAt: new Date()
-      };
-    },
-    onSuccess: (newComment) => {
       toast({
-        title: "Yorum eklendi",
+        title: "Yorum Eklendi",
         description: "Yorumunuz başarıyla eklendi.",
         variant: "default",
       });
       
-      setCommentText("");
-      
-      // Add the new comment to the existing comments
-      queryClient.setQueryData([`test-comments-${testId}`], (oldData: any) => {
-        return [newComment, ...(oldData || [])];
-      });
-    },
-    onError: (error) => {
+      setCommentText('');
+      refetchComments();
+    } catch (error) {
       console.error("Error adding comment:", error);
       toast({
         title: "Hata",
         description: "Yorum eklenirken bir hata oluştu.",
         variant: "destructive",
       });
+    } finally {
+      setIsAddingComment(false);
     }
-  });
-
-  // Handle start test
-  const handleStartTest = () => {
-    setLocation(`/play/${testId}`);
-  };
-
-  // Handle like test
-  const handleLikeTest = () => {
-    if (!user) {
-      toast({
-        title: "Giriş yapmalısınız",
-        description: "Testi beğenmek için giriş yapmalısınız.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (hasLiked) {
-      toast({
-        title: "Zaten beğendiniz",
-        description: "Bu testi daha önce beğendiniz.",
-        variant: "default",
-      });
-      return;
-    }
-    
-    likeTestMutation.mutate();
   };
 
   // Handle share test
@@ -366,7 +340,7 @@ export default function TestDetail() {
       setShowShareAlert(true);
       
       toast({
-        title: "Bağlantı kopyalandı",
+        title: "Bağlantı Kopyalandı",
         description: "Test bağlantısı panoya kopyalandı.",
         variant: "default",
       });
@@ -378,28 +352,9 @@ export default function TestDetail() {
     });
   };
 
-  // Handle add comment
-  const handleAddComment = () => {
-    if (!user) {
-      toast({
-        title: "Giriş yapmalısınız",
-        description: "Yorum yapmak için giriş yapmalısınız.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (!commentText.trim()) {
-      toast({
-        title: "Yorum boş olamaz",
-        description: "Lütfen bir yorum yazın.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setIsAddingComment(true);
-    addCommentMutation.mutate();
+  // Handle start test
+  const handleStartTest = () => {
+    setLocation(`/play/${testId}`);
   };
 
   // Format time display
@@ -409,20 +364,12 @@ export default function TestDetail() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Get filtered similar tests (exclude current test)
-  const filteredSimilarTests = [];
-
   // Loading state
   if (isTestLoading) {
     return (
-      <div className="container py-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-muted rounded w-1/3"></div>
-          <div className="h-4 bg-muted rounded w-1/2"></div>
-          <div className="h-32 bg-muted rounded"></div>
-          <div className="h-8 bg-muted rounded w-1/4"></div>
-          <div className="h-48 bg-muted rounded"></div>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary mr-2" />
+        <span>Test yükleniyor...</span>
       </div>
     );
   }
@@ -430,22 +377,19 @@ export default function TestDetail() {
   // Test not found
   if (!test) {
     return (
-      <div className="container py-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Test Bulunamadı</CardTitle>
-            <CardDescription>İstediğiniz test mevcut değil veya kaldırılmış olabilir.</CardDescription>
-          </CardHeader>
-          <CardFooter>
-            <Button onClick={() => setLocation("/tests")}>Tüm Testlere Dön</Button>
-          </CardFooter>
-        </Card>
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <AlertTriangle className="h-12 w-12 text-yellow-500 mb-4" />
+        <h1 className="text-2xl font-bold mb-2">Test Bulunamadı</h1>
+        <p className="text-muted-foreground mb-4 text-center">
+          İstediğiniz test mevcut değil veya kaldırılmış olabilir.
+        </p>
+        <Button onClick={() => setLocation("/")}>Ana Sayfaya Dön</Button>
       </div>
     );
   }
 
   return (
-    <div className="container py-8">
+    <div className="container max-w-6xl mx-auto py-8 px-4">
       {/* Share alert */}
       {showShareAlert && (
         <Alert className="mb-4">
@@ -457,34 +401,73 @@ export default function TestDetail() {
         </Alert>
       )}
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Test details */}
-        <div className="md:col-span-2">
-          <Card className="border-primary/10 shadow-md">
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-2xl">{test.title}</CardTitle>
-                  <div className="flex items-center gap-2 mt-2">
-                    {test.category && (
-                      <Badge variant="outline">{test.category.name}</Badge>
-                    )}
-                    <div className="flex items-center text-xs text-muted-foreground">
-                      <Calendar className="h-3 w-3 mr-1" />
-                      {test.createdAt ? new Date(test.createdAt).toLocaleDateString() : ""}
+        <div className="lg:col-span-2">
+          <Card className="border shadow-md overflow-hidden">
+            {test.thumbnailUrl && (
+              <div className="relative w-full h-48 md:h-64">
+                <img 
+                  src={test.thumbnailUrl} 
+                  alt={test.title} 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1592198084033-aade902d1aae?w=500";
+                  }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end">
+                  <div className="p-4 w-full">
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {test.category && (
+                        <Badge variant="outline" className="bg-primary/20 border-primary/30 text-primary-foreground">
+                          {test.category.name}
+                        </Badge>
+                      )}
+                      <Badge variant="outline" className="bg-background/20 border-background/30">
+                        {test.questions?.length || 0} Soru
+                      </Badge>
                     </div>
                   </div>
                 </div>
-                <div className="flex gap-2">
+              </div>
+            )}
+            
+            <CardHeader className={test.thumbnailUrl ? "pt-2" : ""}>
+              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                <div>
+                  <CardTitle className="text-2xl">{test.title}</CardTitle>
+                  <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
+                    <Calendar className="h-4 w-4" />
+                    <span>
+                      {test.createdAt ? new Date(test.createdAt.seconds * 1000).toLocaleDateString() : ""}
+                    </span>
+                    
+                    <span className="mx-1">•</span>
+                    
+                    <User className="h-4 w-4" />
+                    <span>
+                      {test.isAnonymous || !test.creatorId 
+                        ? "Anonim" 
+                        : test.creator 
+                          ? test.creator.displayName || test.creator.username || "Kullanıcı"
+                          : "Kullanıcı"
+                      }
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="flex gap-2 self-end md:self-start">
                   <Button 
                     variant={hasLiked ? "default" : "outline"}
                     size="sm" 
                     onClick={handleLikeTest}
                     className="flex gap-1 items-center"
-                    disabled={likeTestMutation.isPending || hasLiked}
+                    disabled={hasLiked}
                   >
-                    <ThumbsUp className="h-4 w-4" /> {test.likeCount || 0}
+                    <ThumbsUp className="h-4 w-4" /> 
+                    <span>{test.likeCount || 0}</span>
                   </Button>
+                  
                   <Button 
                     variant="outline" 
                     size="sm" 
@@ -495,58 +478,43 @@ export default function TestDetail() {
                 </div>
               </div>
             </CardHeader>
+            
             <CardContent>
-              <div className="flex items-center gap-2 mb-4">
-                <UserCircle2 className="h-5 w-5 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">
-                  {test.isAnonymous || !test.creatorId 
-                    ? "Anonim kullanıcı tarafından oluşturuldu" 
-                    : test.creator 
-                      ? `${test.creator.displayName || test.creator.username || "Kullanıcı"} tarafından oluşturuldu`
-                      : "Kullanıcı tarafından oluşturuldu"
-                  }
-                </span>
-              </div>
+              <p className="text-muted-foreground mb-6">{test.description}</p>
               
-              {test.thumbnailUrl && (
-                <div className="mb-4 rounded-md overflow-hidden">
-                  <img 
-                    src={test.thumbnailUrl} 
-                    alt={test.title} 
-                    className="w-full h-48 object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1592198084033-aade902d1aae?w=500";
-                    }}
-                  />
-                </div>
-              )}
-              
-              <div className="flex justify-between mb-4">
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-1 text-sm">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <span>{test.playCount || 0} Oynama</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-sm">
-                    <MessageSquare className="h-4 w-4 text-muted-foreground" />
-                    <span>{comments.length} Yorum</span>
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="bg-muted/30 rounded-lg p-3 text-center">
+                  <div className="text-sm text-muted-foreground mb-1">Oynanma</div>
+                  <div className="font-semibold flex items-center justify-center">
+                    <Play className="h-4 w-4 mr-1 text-primary" />
+                    {test.playCount || 0}
                   </div>
                 </div>
-              </div>
-              
-              <div className="space-y-4">
-                <p className="text-muted-foreground">{test.description}</p>
                 
-                <div className="w-full">
-                  <Button 
-                    className="w-full mt-4" 
-                    size="lg"
-                    onClick={handleStartTest}
-                  >
-                    <Play className="mr-2 h-4 w-4" /> Testi Başlat
-                  </Button>
+                <div className="bg-muted/30 rounded-lg p-3 text-center">
+                  <div className="text-sm text-muted-foreground mb-1">Beğeni</div>
+                  <div className="font-semibold flex items-center justify-center">
+                    <Heart className="h-4 w-4 mr-1 text-red-500" />
+                    {test.likeCount || 0}
+                  </div>
+                </div>
+                
+                <div className="bg-muted/30 rounded-lg p-3 text-center">
+                  <div className="text-sm text-muted-foreground mb-1">Yorum</div>
+                  <div className="font-semibold flex items-center justify-center">
+                    <MessageSquare className="h-4 w-4 mr-1 text-blue-500" />
+                    {comments.length}
+                  </div>
                 </div>
               </div>
+              
+              <Button 
+                className="w-full" 
+                size="lg"
+                onClick={handleStartTest}
+              >
+                <Play className="mr-2 h-5 w-5" /> Testi Başlat
+              </Button>
             </CardContent>
           </Card>
           
@@ -557,7 +525,7 @@ export default function TestDetail() {
               <TabsTrigger value="leaderboard">En İyi Skorlar</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="comments" className="mt-4 space-y-4">
+            <TabsContent value="comments" className="mt-4">
               <Card>
                 <CardContent className="pt-6">
                   {/* Comment input */}
@@ -593,8 +561,9 @@ export default function TestDetail() {
                       <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     </div>
                   ) : comments.length === 0 ? (
-                    <div className="text-center py-4 text-muted-foreground">
-                      Henüz yorum yapılmamış. İlk yorumu sen yap!
+                    <div className="text-center py-8 bg-muted/20 rounded-lg">
+                      <MessageSquare className="h-12 w-12 text-muted-foreground/40 mx-auto mb-2" />
+                      <p className="text-muted-foreground">Henüz yorum yapılmamış. İlk yorumu sen yap!</p>
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -609,7 +578,7 @@ export default function TestDetail() {
                                 <AvatarFallback>{comment.user?.displayName?.[0] || comment.user?.email?.[0] || 'U'}</AvatarFallback>
                               )}
                             </Avatar>
-                            <div className="space-y-1">
+                            <div className="space-y-1 flex-1">
                               <div className="flex items-center gap-2">
                                 <span className="text-sm font-medium">
                                   {comment.user?.displayName || comment.user?.email?.split('@')[0] || "Anonim"}
@@ -645,8 +614,9 @@ export default function TestDetail() {
                       <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     </div>
                   ) : topScores.length === 0 ? (
-                    <div className="text-center py-6 text-muted-foreground">
-                      Henüz skor kaydedilmemiş. İlk rekoru sen kır!
+                    <div className="text-center py-8 bg-muted/20 rounded-lg">
+                      <Trophy className="h-12 w-12 text-muted-foreground/40 mx-auto mb-2" />
+                      <p className="text-muted-foreground">Henüz skor kaydedilmemiş. İlk rekoru sen kır!</p>
                     </div>
                   ) : (
                     <div className="space-y-2">
@@ -654,7 +624,10 @@ export default function TestDetail() {
                         <div 
                           key={score.id} 
                           className={`flex justify-between items-center p-3 rounded-md ${
-                            index === 0 ? 'bg-amber-500/10' : 'bg-card-secondary/10'
+                            index === 0 ? 'bg-amber-500/10 border border-amber-500/20' : 
+                            index === 1 ? 'bg-zinc-400/10 border border-zinc-400/20' :
+                            index === 2 ? 'bg-amber-800/10 border border-amber-800/20' :
+                            'bg-muted/30'
                           }`}
                         >
                           <div className="flex items-center gap-3">
@@ -687,9 +660,91 @@ export default function TestDetail() {
           </Tabs>
         </div>
         
-        {/* Similar tests section */}
-        <div>
-          <Card className="border-primary/10 shadow-md">
+        {/* Sidebar */}
+        <div className="lg:col-span-1">
+          {/* Creator card */}
+          <Card className="border shadow-md mb-6">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center">
+                <UserCircle2 className="h-5 w-5 mr-2 text-primary" /> Oluşturan
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {test.isAnonymous || !test.creatorId ? (
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback>A</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-medium">Anonim Kullanıcı</p>
+                    <p className="text-xs text-muted-foreground">Kullanıcı bilgileri gizlenmiş</p>
+                  </div>
+                </div>
+              ) : test.creator ? (
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-10 w-10">
+                    {test.creator.photoURL ? (
+                      <AvatarImage src={test.creator.photoURL} alt={test.creator.displayName || 'User'} />
+                    ) : (
+                      <AvatarFallback>{test.creator.displayName?.[0] || test.creator.email?.[0] || 'U'}</AvatarFallback>
+                    )}
+                  </Avatar>
+                  <div>
+                    <p className="font-medium">{test.creator.displayName || test.creator.username || "Kullanıcı"}</p>
+                    <p className="text-xs text-muted-foreground">Test Oluşturucu</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback>U</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-medium">Kullanıcı</p>
+                    <p className="text-xs text-muted-foreground">Kullanıcı bilgisi bulunamadı</p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          
+          {/* Test info card */}
+          <Card className="border shadow-md mb-6">
+            <CardHeader>
+              <CardTitle className="text-lg">Test Bilgileri</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Kategori</span>
+                <span className="font-medium">{test.category?.name || "Genel"}</span>
+              </div>
+              <Separator />
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Soru Sayısı</span>
+                <span className="font-medium">{test.questions?.length || 0}</span>
+              </div>
+              <Separator />
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Oluşturulma</span>
+                <span className="font-medium">
+                  {test.createdAt ? new Date(test.createdAt.seconds * 1000).toLocaleDateString() : ""}
+                </span>
+              </div>
+              <Separator />
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Oynanma</span>
+                <span className="font-medium">{test.playCount || 0}</span>
+              </div>
+              <Separator />
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Beğeni</span>
+                <span className="font-medium">{test.likeCount || 0}</span>
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* Similar tests */}
+          <Card className="border shadow-md">
             <CardHeader>
               <CardTitle className="text-lg">Benzer Testler</CardTitle>
               <CardDescription>
@@ -697,9 +752,12 @@ export default function TestDetail() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-6 text-muted-foreground">
-                Bu kategoride başka test bulunamadı.
-              </div>
+              <div className="space-y-4">
+                {/* This would be populated with similar tests */}
+                <div className="text-center py-4 text-muted-foreground">
+                  Bu kategoride başka test bulunamadı.
+                </div>
+              </CardContent>
             </CardContent>
           </Card>
         </div>
