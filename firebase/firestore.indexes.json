@@ -34,7 +34,6 @@
       "fields": [
         { "fieldPath": "categoryId", "order": "ASCENDING" },
         { "fieldPath": "isPublic", "order": "ASCENDING" },
-        { "fieldPath": "approved", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
