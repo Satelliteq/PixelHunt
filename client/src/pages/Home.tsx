@@ -265,12 +265,12 @@ export default function Home() {
 
   return (
     <div className="space-y-12">
-      {/* Basitleştirilmiş Hero Bölümü */}
+      {/* New Hero Section */}
       <section className="max-w-content mx-auto mb-12 md:mb-16">
-        <div className="bg-card rounded-xl overflow-hidden shadow-lg border border-border/50">
+        <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 rounded-xl overflow-hidden shadow-lg border border-border/50">
           <div className="flex flex-col md:flex-row">
-            {/* Sol taraf - İçerik */}
-            <div className="p-6 md:p-8 flex flex-col justify-center w-full md:w-1/2">
+            {/* Left side - Content */}
+            <div className="p-6 md:p-10 flex flex-col justify-center w-full md:w-1/2">
               <div className="flex items-center gap-2 mb-4">
                 <Badge className="bg-primary/10 text-primary py-1 px-3 text-xs font-medium">
                   ✨ Görsel Tahmin Platformu
@@ -279,11 +279,11 @@ export default function Home() {
                 <span className="text-xs text-muted-foreground">Yeni Testler Her Gün</span>
               </div>
               
-              <h1 className="text-2xl md:text-3xl font-bold mb-3 bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+              <h1 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
                 Bilginizi Test Edin, <span className="text-primary">Yeni Testler Keşfedin</span>
               </h1>
               
-              <p className="text-muted-foreground mb-6 leading-relaxed">
+              <p className="text-muted-foreground mb-6 leading-relaxed max-w-md">
                 Farklı kategorilerdeki görsel tahmin testleriyle kendinizi sınayın ve kendi testlerinizi oluşturarak platformumuza katkıda bulunun.
               </p>
               
@@ -307,15 +307,15 @@ export default function Home() {
               </div>
             </div>
             
-            {/* Sağ taraf - Görsel */}
-            <div className="w-full md:w-1/2 bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 relative md:h-auto min-h-[200px] md:min-h-0">
+            {/* Right side - Visual */}
+            <div className="w-full md:w-1/2 relative md:h-auto min-h-[300px] md:min-h-0">
               <div className="absolute inset-0 flex items-center justify-center p-6">
                 <div className="relative w-full max-w-md">
-                  {/* Ana dekoratif element */}
+                  {/* Decorative elements */}
                   <div className="absolute w-48 h-48 bg-primary/20 rounded-full -top-12 -left-12 blur-2xl"></div>
                   <div className="absolute w-48 h-48 bg-primary/10 rounded-full -bottom-12 -right-12 blur-2xl"></div>
                   
-                  {/* Test kartları grid */}
+                  {/* Featured test cards grid */}
                   <div className="grid grid-cols-2 gap-4 relative z-10">
                     {featuredTests && featuredTests.slice(0, 4).map((test, idx) => (
                       <div 
@@ -362,33 +362,6 @@ export default function Home() {
               </div>
             </div>
           </div>
-        </div>
-        
-        {/* Kategori kartları - daha küçük ve sade */}
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 sm:gap-3 mt-8 md:mt-12">
-          {categories.slice(0, 6).map((category, index) => (
-            <Card 
-              key={category.id || index}
-              className="group cursor-pointer hover:border-primary/50 transition-all duration-300 overflow-hidden"
-              onClick={() => navigate(`/categories/${category.id || index + 1}`)}
-            >
-              <CardContent className="p-3 flex flex-col items-center text-center">
-                <div 
-                  className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center mb-2 ${
-                    index % 6 === 0 ? "bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400" : 
-                    index % 6 === 1 ? "bg-sky-100 text-sky-600 dark:bg-sky-950 dark:text-sky-400" : 
-                    index % 6 === 2 ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400" : 
-                    index % 6 === 3 ? "bg-violet-100 text-violet-600 dark:bg-violet-950 dark:text-violet-400" : 
-                    index % 6 === 4 ? "bg-yellow-100 text-yellow-600 dark:bg-yellow-950 dark:text-yellow-400" : 
-                    "bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-400"
-                  }`}
-                >
-                  {category.iconName ? getCategoryIcon(category.iconName) : getCategoryEmoji(category.name || "", index)}
-                </div>
-                <h3 className="text-card-foreground font-medium text-xs sm:text-sm">{category.name}</h3>
-              </CardContent>
-            </Card>
-          ))}
         </div>
       </section>
 
@@ -457,15 +430,29 @@ export default function Home() {
                 Tüm Testler
               </CardTitle>
               
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex items-center gap-2 text-xs self-end sm:self-auto"
-                onClick={() => navigate("/tests")}
-              >
-                <Filter className="w-4 h-4" />
-                <span>{t('allTests')}</span>
-              </Button>
+              <div className="flex items-center gap-3">
+                <div className="relative w-full sm:w-72">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Test ara..."
+                    className="pl-9"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
+                  />
+                </div>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex items-center gap-2 text-xs self-end sm:self-auto"
+                  onClick={() => navigate("/tests")}
+                >
+                  <Filter className="w-4 h-4" />
+                  <span>{t('allTests')}</span>
+                </Button>
+              </div>
             </div>
           </CardHeader>
           
@@ -577,103 +564,177 @@ export default function Home() {
         </Card>
       </section>
 
-      {/* Categories Section */}
+      {/* Game Modes Section */}
       <section className="max-w-content mx-auto">
-        <Card className="border shadow-sm mb-8">
-          <CardHeader className="pb-2">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <CardTitle className="text-xl flex items-center">
-                <Layers className="w-5 h-5 mr-2 text-primary" /> {t('discoverByCategory')}
-              </CardTitle>
-              
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="text-xs self-end sm:self-auto"
-                onClick={() => navigate("/categories")}
-              >
-                {t('allCategories')}
-              </Button>
-            </div>
+        <Card className="border shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-xl flex items-center">
+              <Gamepad2 className="w-5 h-5 mr-2 text-primary" /> Oyun Modları
+            </CardTitle>
             <CardDescription>
-              Farklı kategorilerdeki içerikleri keşfedin
+              Farklı oyun modlarını keşfedin ve yeteneklerinizi test edin
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card className="bg-gradient-to-br from-yellow-500/10 to-yellow-500/5 hover:from-yellow-500/20 hover:to-yellow-500/10 transition-all border-yellow-500/20 cursor-pointer" onClick={() => navigate("/game/classic")}>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center">
+                    <div className="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center mr-2">
+                      <Eye className="h-4 w-4 text-yellow-950" />
+                    </div>
+                    Klasik Mod
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">Görsel kademeli olarak açılır. Ne kadar az açılmışken doğru tahmini yaparsanız, o kadar çok puan kazanırsınız.</p>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-gradient-to-br from-purple-500/10 to-purple-500/5 hover:from-purple-500/20 hover:to-purple-500/10 transition-all border-purple-500/20 cursor-pointer" onClick={() => navigate("/game/speed")}>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center">
+                    <div className="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center mr-2">
+                      <Clock className="h-4 w-4 text-purple-950" />
+                    </div>
+                    Hızlı Mod
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">Görsel otomatik olarak açılır. Ne kadar hızlı doğru tahmini yaparsanız, o kadar çok puan kazanırsınız.</p>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 hover:from-blue-500/20 hover:to-blue-500/10 transition-all border-blue-500/20 cursor-pointer" onClick={() => navigate("/game/time")}>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center">
+                    <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center mr-2">
+                      <Clock className="h-4 w-4 text-blue-950" />
+                    </div>
+                    Zamanlı Mod
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">Belirli bir süre içinde doğru tahmini yapmalısınız. Kalan süre bonus puan olarak eklenir.</p>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-gradient-to-br from-red-500/10 to-red-500/5 hover:from-red-500/20 hover:to-red-500/10 transition-all border-red-500/20 cursor-pointer" onClick={() => navigate("/game/live")}>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center">
+                    <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center mr-2">
+                      <Heart className="h-4 w-4 text-red-950" />
+                    </div>
+                    Canlı Mod
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">Sınırlı can hakkınız var. Her yanlış tahminde bir can kaybedersiniz. Kalan canlar bonus puan olarak eklenir.</p>
+                </CardContent>
+              </Card>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Popular Categories Section */}
+      <section className="max-w-content mx-auto">
+        <Card className="border shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-xl flex items-center">
+              <Layers className="w-5 h-5 mr-2 text-primary" /> Popüler Kategoriler
+            </CardTitle>
+            <CardDescription>
+              İlgi alanınıza göre testleri keşfedin
             </CardDescription>
           </CardHeader>
           
           <CardContent>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-              {/* Category cards - Featured categories */}
-              <Card
-                className="hover:border-primary/50 transition-colors p-4 text-center cursor-pointer border shadow-sm"
-                onClick={() => navigate("/categories/1")}
-              >
-                <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <BookOpen className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="font-medium">{t('catLiterature')}</h3>
-                <p className="text-xs text-muted-foreground mt-1">120+ {t('tests').toLowerCase()}</p>
-              </Card>
-              
-              <Card
-                className="hover:border-primary/50 transition-colors p-4 text-center cursor-pointer border shadow-sm"
-                onClick={() => navigate("/categories/2")}
-              >
-                <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-xl text-white">🌎</span>
-                </div>
-                <h3 className="font-medium">{t('catGeography')}</h3>
-                <p className="text-xs text-muted-foreground mt-1">86 {t('tests').toLowerCase()}</p>
-              </Card>
-              
-              <Card
-                className="hover:border-primary/50 transition-colors p-4 text-center cursor-pointer border shadow-sm"
-                onClick={() => navigate("/categories/3")}
-              >
-                <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-xl text-white">🎬</span>
-                </div>
-                <h3 className="font-medium">{t('catFilmTV')}</h3>
-                <p className="text-xs text-muted-foreground mt-1">214 {t('tests').toLowerCase()}</p>
-              </Card>
-              
-              <Card
-                className="hover:border-primary/50 transition-colors p-4 text-center cursor-pointer border shadow-sm"
-                onClick={() => navigate("/categories/4")}
-              >
-                <div className="w-12 h-12 bg-yellow-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-xl text-white">🎨</span>
-                </div>
-                <h3 className="font-medium">{t('catArt')}</h3>
-                <p className="text-xs text-muted-foreground mt-1">73 {t('tests').toLowerCase()}</p>
-              </Card>
-              
-              <Card
-                className="hover:border-primary/50 transition-colors p-4 text-center cursor-pointer border shadow-sm"
-                onClick={() => navigate("/categories/5")}
-              >
-                <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-xl text-white">🎮</span>
-                </div>
-                <h3 className="font-medium">{t('catGames')}</h3>
-                <p className="text-xs text-muted-foreground mt-1">95 {t('tests').toLowerCase()}</p>
-              </Card>
-              
-              <Card
-                className="hover:border-primary/50 transition-colors p-4 text-center cursor-pointer border shadow-sm"
-                onClick={() => navigate("/categories")}
-              >
-                <div className="w-12 h-12 bg-orange-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-xl text-white">+</span>
-                </div>
-                <h3 className="font-medium">{t('catMore')}</h3>
-                <p className="text-xs text-muted-foreground mt-1">300+ {t('tests').toLowerCase()}</p>
-              </Card>
+              {categories.slice(0, 6).map((category, index) => (
+                <Card 
+                  key={category.id || index}
+                  className="group cursor-pointer hover:border-primary/50 transition-all duration-300 overflow-hidden"
+                  onClick={() => navigate(`/categories/${category.id || index + 1}`)}
+                >
+                  <CardContent className="p-3 flex flex-col items-center text-center">
+                    <div 
+                      className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center mb-2 ${
+                        index % 6 === 0 ? "bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400" : 
+                        index % 6 === 1 ? "bg-sky-100 text-sky-600 dark:bg-sky-950 dark:text-sky-400" : 
+                        index % 6 === 2 ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400" : 
+                        index % 6 === 3 ? "bg-violet-100 text-violet-600 dark:bg-violet-950 dark:text-violet-400" : 
+                        index % 6 === 4 ? "bg-yellow-100 text-yellow-600 dark:bg-yellow-950 dark:text-yellow-400" : 
+                        "bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-400"
+                      }`}
+                    >
+                      {category.iconName ? getCategoryIcon(category.iconName) : getCategoryEmoji(category.name || "", index)}
+                    </div>
+                    <h3 className="text-card-foreground font-medium text-xs sm:text-sm">{category.name}</h3>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </CardContent>
           
           <CardFooter className="flex justify-center">
             <Button onClick={() => navigate("/categories")}>
               Tüm Kategorileri Görüntüle
+            </Button>
+          </CardFooter>
+        </Card>
+      </section>
+
+      {/* How It Works Section */}
+      <section className="max-w-content mx-auto">
+        <Card className="border shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-xl flex items-center">
+              <Award className="w-5 h-5 mr-2 text-primary" /> Nasıl Çalışır?
+            </CardTitle>
+            <CardDescription>
+              Pixelhunt'ta görsel tahmin yeteneklerinizi geliştirin
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="flex flex-col items-center text-center p-4">
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <Search className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="text-lg font-medium mb-2">Test Seçin</h3>
+                <p className="text-sm text-muted-foreground">
+                  İlgi alanınıza göre kategorilerden veya öne çıkan testlerden birini seçin.
+                </p>
+              </div>
+              
+              <div className="flex flex-col items-center text-center p-4">
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <Eye className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="text-lg font-medium mb-2">Tahmin Edin</h3>
+                <p className="text-sm text-muted-foreground">
+                  Kademeli olarak açılan görselleri inceleyin ve doğru tahmini yapmaya çalışın.
+                </p>
+              </div>
+              
+              <div className="flex flex-col items-center text-center p-4">
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <Trophy className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="text-lg font-medium mb-2">Puan Kazanın</h3>
+                <p className="text-sm text-muted-foreground">
+                  Doğru tahminler yaparak puan kazanın ve sıralamada yerinizi alın.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+          
+          <CardFooter className="flex justify-center">
+            <Button onClick={() => navigate("/how-to-play")}>
+              Daha Fazla Bilgi
             </Button>
           </CardFooter>
         </Card>

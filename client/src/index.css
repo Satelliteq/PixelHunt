@@ -408,6 +408,8 @@
     grid-template-columns: minmax(0, 1fr) minmax(auto, 800px) minmax(0, 1fr);
     gap: 1rem;
     padding: 1rem;
+    max-width: 1400px;
+    margin: 0 auto;
   }
   
   .game-content {

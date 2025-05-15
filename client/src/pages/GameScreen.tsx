@@ -18,6 +18,7 @@ import { useLanguage } from '@/lib/LanguageContext';
 import { doc, getDoc, collection, addDoc, query, where, orderBy, getDocs, updateDoc, increment, serverTimestamp, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/lib/AuthContext';
+import { Badge } from '@/components/ui/badge';
 
 export default function GameScreen() {
   const [, setLocation] = useLocation();
@@ -139,6 +140,7 @@ export default function GameScreen() {
         if (currentImageIndex < test.questions.length - 1) {
           setCurrentImageIndex(prev => prev + 1);
           setRevealPercent(30); // Reset reveal percentage
+          setGuessHistory([]);
         } else {
           // Game finished
           setGameStatus('finished');
@@ -376,114 +378,109 @@ export default function GameScreen() {
   // Game finished screen
   if (gameStatus === 'finished') {
     return (
-      <div className="game-layout">
-        <div className="game-ad-left"></div>
-        <div className="game-content">
-          <div className="p-4 md:p-6">
-            <Card className="border-primary/10 shadow-md">
-              <CardHeader className="text-center">
-                <CardTitle className="text-2xl">Test Tamamlandı! 🎉</CardTitle>
-                <CardDescription>
-                  {test.title} testini tamamladınız.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex flex-col items-center justify-center py-8">
-                  <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                    <Trophy className="h-12 w-12 text-primary" />
-                  </div>
-                  <h2 className="text-3xl font-bold">{score} Puan</h2>
-                  <p className="text-muted-foreground mt-2">
-                    Toplam süre: {formatTime(timeElapsed)}
-                  </p>
+      <div className="max-w-4xl mx-auto px-4 py-8 flex justify-center">
+        <div className="w-full max-w-2xl">
+          <Card className="border-primary/10 shadow-md">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl">Test Tamamlandı! 🎉</CardTitle>
+              <CardDescription>
+                {test.title} testini tamamladınız.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex flex-col items-center justify-center py-8">
+                <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <Trophy className="h-12 w-12 text-primary" />
                 </div>
+                <h2 className="text-3xl font-bold">{score} Puan</h2>
+                <p className="text-muted-foreground mt-2">
+                  Toplam süre: {formatTime(timeElapsed)}
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => setLocation(`/test/${testId}`)}
+                >
+                  <Eye className="mr-2 h-4 w-4" />
+                  Test Detaylarını Gör
+                </Button>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={() => setLocation(`/test/${testId}`)}
-                  >
-                    <Eye className="mr-2 h-4 w-4" />
-                    Test Detaylarını Gör
-                  </Button>
-                  
-                  <Button 
-                    className="w-full"
-                    onClick={() => {
-                      setCurrentImageIndex(0);
-                      setScore(0);
-                      setTimeElapsed(0);
-                      setRevealPercent(30);
-                      setGuessHistory([]);
-                      setGameStatus('playing');
-                    }}
-                  >
-                    <Play className="mr-2 h-4 w-4" />
-                    Tekrar Oyna
-                  </Button>
-                </div>
+                <Button 
+                  className="w-full"
+                  onClick={() => {
+                    setCurrentImageIndex(0);
+                    setScore(0);
+                    setTimeElapsed(0);
+                    setRevealPercent(30);
+                    setGuessHistory([]);
+                    setGameStatus('playing');
+                  }}
+                >
+                  <Play className="mr-2 h-4 w-4" />
+                  Tekrar Oyna
+                </Button>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setLocation("/")}
+                >
+                  Ana Sayfaya Dön
+                </Button>
                 
-                <div className="flex justify-between items-center">
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => setLocation("/")}
-                  >
-                    Ana Sayfaya Dön
-                  </Button>
-                  
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={handleLikeTest}
-                    disabled={hasLiked}
-                  >
-                    <ThumbsUp className="mr-2 h-4 w-4" />
-                    {hasLiked ? "Beğenildi" : "Beğen"}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={handleLikeTest}
+                  disabled={hasLiked}
+                >
+                  <ThumbsUp className="mr-2 h-4 w-4" />
+                  {hasLiked ? "Beğenildi" : "Beğen"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-        <div className="game-ad-right"></div>
       </div>
     );
   }
 
   return (
-    <div className="game-layout">
-      <div className="game-ad-left"></div>
-      <div className="game-content">
-        <div className="p-4 md:p-6">
-          <div className="flex flex-col gap-4">
-            {/* Game header */}
-            <div className="flex justify-between items-center">
-              <h1 className="text-xl font-bold">{test.title}</h1>
-              <ScoreDisplay 
-                score={score} 
-                mode="test" 
-                extraInfo={{
-                  correctAnswers: currentImageIndex,
-                  totalQuestions: test.questions?.length || 0,
-                  timeElapsed: timeElapsed,
-                  revealPercent: revealPercent
-                }}
-                compact={true}
-              />
-            </div>
-            
-            {/* Progress indicator */}
-            <div className="w-full bg-muted h-1 rounded-full overflow-hidden">
-              <div 
-                className="bg-primary h-1 transition-all duration-300 ease-out"
-                style={{ width: `${(currentImageIndex / (test.questions?.length || 1)) * 100}%` }}
-              ></div>
-            </div>
-            
-            {/* Main game area */}
-            <Card className="border-primary/10 shadow-md">
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="flex flex-col gap-4">
+        {/* Game header */}
+        <div className="flex justify-between items-center">
+          <h1 className="text-xl font-bold">{test.title}</h1>
+          <ScoreDisplay 
+            score={score} 
+            mode="test" 
+            extraInfo={{
+              correctAnswers: currentImageIndex,
+              totalQuestions: test.questions?.length || 0,
+              timeElapsed: timeElapsed,
+              revealPercent: revealPercent
+            }}
+            compact={true}
+          />
+        </div>
+        
+        {/* Progress indicator */}
+        <div className="w-full bg-muted h-1 rounded-full overflow-hidden">
+          <div 
+            className="bg-primary h-1 transition-all duration-300 ease-out"
+            style={{ width: `${(currentImageIndex / (test.questions?.length || 1)) * 100}%` }}
+          ></div>
+        </div>
+        
+        {/* Main game area */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="md:col-span-2">
+            <Card className="border-primary/10 shadow-md h-full">
               <CardHeader className="pb-2 flex flex-row justify-between items-center">
                 <CardTitle className="text-lg">
                   Soru {currentImageIndex + 1}/{test.questions?.length || 0}
@@ -500,61 +497,14 @@ export default function GameScreen() {
                       <p className="text-lg">{currentQuestion.question || "Bu görselde ne görüyorsunuz?"}</p>
                     </div>
                     
-                    <ImageReveal
-                      ref={imageRevealRef}
-                      imageUrl={currentQuestion.imageUrl}
-                      revealPercent={revealPercent}
-                      className="w-full aspect-video max-h-[60vh] object-contain"
-                    />
-                    
-                    <form onSubmit={handleSubmit} className="mt-4">
-                      <div className="flex gap-2">
-                        <Input
-                          type="text"
-                          placeholder="Cevabınızı yazın..."
-                          value={userAnswer}
-                          onChange={(e) => setUserAnswer(e.target.value)}
-                          className="flex-grow"
-                        />
-                        <Button type="submit">
-                          Tahmin Et
-                        </Button>
-                      </div>
-                      
-                      <div className="flex justify-end mt-2">
-                        <Button 
-                          type="button" 
-                          variant="outline" 
-                          size="sm"
-                          onClick={handleSkip}
-                        >
-                          Soruyu Atla
-                        </Button>
-                      </div>
-                    </form>
-                    
-                    {/* Guess history */}
-                    {guessHistory.length > 0 && (
-                      <div className="mt-4">
-                        <h3 className="text-sm font-medium mb-2">Tahmin Geçmişi</h3>
-                        <div className="space-y-1">
-                          {guessHistory.map((item, index) => (
-                            <div key={index} className="flex items-center justify-between bg-muted/30 p-2 rounded">
-                              <span className="text-sm">{item.guess}</span>
-                              <div>
-                                {item.isCorrect ? (
-                                  <Badge className="bg-green-500">Doğru</Badge>
-                                ) : item.isClose ? (
-                                  <Badge variant="outline" className="border-yellow-500 text-yellow-500">Yakın</Badge>
-                                ) : (
-                                  <Badge variant="outline" className="border-red-500 text-red-500">Yanlış</Badge>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                    <div className="flex justify-center">
+                      <ImageReveal
+                        ref={imageRevealRef}
+                        imageUrl={currentQuestion.imageUrl}
+                        revealPercent={revealPercent}
+                        className="w-full h-[400px] object-contain"
+                      />
+                    </div>
                   </>
                 ) : (
                   <div className="flex flex-col items-center justify-center py-12">
@@ -565,9 +515,64 @@ export default function GameScreen() {
               </CardContent>
             </Card>
           </div>
+          
+          <div className="md:col-span-1">
+            <Card className="border-primary/10 shadow-md h-full">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Cevabınız</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <form onSubmit={handleSubmit}>
+                  <div className="flex flex-col gap-2">
+                    <Input
+                      type="text"
+                      placeholder="Cevabınızı yazın..."
+                      value={userAnswer}
+                      onChange={(e) => setUserAnswer(e.target.value)}
+                      className="w-full"
+                    />
+                    <Button type="submit" className="w-full">
+                      Tahmin Et
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={handleSkip}
+                      className="w-full mt-1"
+                    >
+                      Soruyu Atla
+                    </Button>
+                  </div>
+                </form>
+                
+                {/* Guess history */}
+                {guessHistory.length > 0 && (
+                  <div className="mt-4">
+                    <h3 className="text-sm font-medium mb-2">Tahmin Geçmişi</h3>
+                    <div className="space-y-1 max-h-[300px] overflow-y-auto">
+                      {guessHistory.map((item, index) => (
+                        <div key={index} className="flex items-center justify-between bg-muted/30 p-2 rounded">
+                          <span className="text-sm">{item.guess}</span>
+                          <div>
+                            {item.isCorrect ? (
+                              <Badge className="bg-green-500">Doğru</Badge>
+                            ) : item.isClose ? (
+                              <Badge variant="outline" className="border-yellow-500 text-yellow-500">Yakın</Badge>
+                            ) : (
+                              <Badge variant="outline" className="border-red-500 text-red-500">Yanlış</Badge>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
-      <div className="game-ad-right"></div>
     </div>
   );
 }
