@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import GameTimer from '@/components/game/GameTimer';
 import ScoreDisplay from '@/components/game/ScoreDisplay';
-import { UserCircle, Mail, KeyRound, LogOut, AlertTriangle, Sparkles, Globe, User, Settings, Heart, Calendar, Clock, Trophy, Medal, Award, BookOpen, History, Edit, Save, Loader2, Play, Eye } from 'lucide-react';
+import { UserCircle, Mail, KeyRound, LogOut, AlertTriangle, Sparkles, Globe, User, Settings, Heart, Calendar, Clock, Trophy, Medal, Award, BookOpen, History, Edit, Save, Loader2, Play, Eye, Plus } from 'lucide-react';
 import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import ContentCard from '@/components/game/ContentCard';

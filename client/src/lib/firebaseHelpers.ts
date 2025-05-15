@@ -831,7 +831,7 @@ export async function incrementTestLikeCount(id: string): Promise<void> {
   }
 }
 
-export async function getPopularTests(limitCount: number = 5): Promise<Test[]> {
+export async function getPopularTests(limit: number = 5): Promise<Test[]> {
   try {
     const testsRef = collection(db, 'tests');
     const q = query(
@@ -839,7 +839,7 @@ export async function getPopularTests(limitCount: number = 5): Promise<Test[]> {
       where('isPublic', '==', true),
       where('approved', '==', true),
       orderBy('playCount', 'desc'),
-      limit(limitCount)
+      limit(limit)
     );
     
     const querySnapshot = await getDocs(q);
@@ -871,7 +871,7 @@ export async function getPopularTests(limitCount: number = 5): Promise<Test[]> {
   }
 }
 
-export async function getNewestTests(limitCount: number = 5): Promise<Test[]> {
+export async function getNewestTests(limit: number = 5): Promise<Test[]> {
   try {
     const testsRef = collection(db, 'tests');
     const q = query(
@@ -879,7 +879,7 @@ export async function getNewestTests(limitCount: number = 5): Promise<Test[]> {
       where('isPublic', '==', true),
       where('approved', '==', true),
       orderBy('createdAt', 'desc'),
-      limit(limitCount)
+      limit(limit)
     );
     
     const querySnapshot = await getDocs(q);
@@ -911,16 +911,17 @@ export async function getNewestTests(limitCount: number = 5): Promise<Test[]> {
   }
 }
 
-export async function getFeaturedTests(limitCount: number = 5): Promise<Test[]> {
+export async function getFeaturedTests(limit: number = 5): Promise<Test[]> {
   try {
     const testsRef = collection(db, 'tests');
+    // Adjust the query to match the existing index structure
     const q = query(
       testsRef,
       where('isPublic', '==', true),
       where('approved', '==', true),
       where('featured', '==', true),
       orderBy('createdAt', 'desc'),
-      limit(limitCount)
+      limit(limit)
     );
     
     const querySnapshot = await getDocs(q);
