@@ -757,7 +757,7 @@ export default function TestDetail() {
                 <div className="text-center py-4 text-muted-foreground">
                   Bu kategoride başka test bulunamadı.
                 </div>
-              </CardContent>
+              </div>
             </CardContent>
           </Card>
         </div>
