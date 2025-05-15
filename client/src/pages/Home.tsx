@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Heart, Trophy, BookOpen, Filter, Clock, Users, Sparkles, Award, ChevronLeft, ChevronRight, Plus, Search, X, Loader2, Layers, Film, Music, Palette, Gamepad2, Dumbbell, FlaskConical, Landmark, Eye } from "lucide-react";
+import { Heart, Trophy, BookOpen, Filter, Clock, Users, Sparkles, Award, ChevronLeft, ChevronRight, Plus, Search, X, Loader2, Layers, Film, Music, Palette, Gamepad2, Dumbbell, FlaskConical, Landmark } from "lucide-react";
 import { Test, Category } from "@shared/schema";
 import { useLanguage } from "@/lib/LanguageContext";
 import { getAllCategories, getPopularTests, getNewestTests, getFeaturedTests, searchTests } from "@/lib/firebaseHelpers";
@@ -572,6 +572,108 @@ export default function Home() {
               onClick={() => navigate("/tests")}
             >
               Tüm Testleri Gör
+            </Button>
+          </CardFooter>
+        </Card>
+      </section>
+
+      {/* Categories Section */}
+      <section className="max-w-content mx-auto">
+        <Card className="border shadow-sm mb-8">
+          <CardHeader className="pb-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <CardTitle className="text-xl flex items-center">
+                <Layers className="w-5 h-5 mr-2 text-primary" /> {t('discoverByCategory')}
+              </CardTitle>
+              
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-xs self-end sm:self-auto"
+                onClick={() => navigate("/categories")}
+              >
+                {t('allCategories')}
+              </Button>
+            </div>
+            <CardDescription>
+              Farklı kategorilerdeki içerikleri keşfedin
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {/* Category cards - Featured categories */}
+              <Card
+                className="hover:border-primary/50 transition-colors p-4 text-center cursor-pointer border shadow-sm"
+                onClick={() => navigate("/categories/1")}
+              >
+                <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <BookOpen className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="font-medium">{t('catLiterature')}</h3>
+                <p className="text-xs text-muted-foreground mt-1">120+ {t('tests').toLowerCase()}</p>
+              </Card>
+              
+              <Card
+                className="hover:border-primary/50 transition-colors p-4 text-center cursor-pointer border shadow-sm"
+                onClick={() => navigate("/categories/2")}
+              >
+                <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-xl text-white">🌎</span>
+                </div>
+                <h3 className="font-medium">{t('catGeography')}</h3>
+                <p className="text-xs text-muted-foreground mt-1">86 {t('tests').toLowerCase()}</p>
+              </Card>
+              
+              <Card
+                className="hover:border-primary/50 transition-colors p-4 text-center cursor-pointer border shadow-sm"
+                onClick={() => navigate("/categories/3")}
+              >
+                <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-xl text-white">🎬</span>
+                </div>
+                <h3 className="font-medium">{t('catFilmTV')}</h3>
+                <p className="text-xs text-muted-foreground mt-1">214 {t('tests').toLowerCase()}</p>
+              </Card>
+              
+              <Card
+                className="hover:border-primary/50 transition-colors p-4 text-center cursor-pointer border shadow-sm"
+                onClick={() => navigate("/categories/4")}
+              >
+                <div className="w-12 h-12 bg-yellow-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-xl text-white">🎨</span>
+                </div>
+                <h3 className="font-medium">{t('catArt')}</h3>
+                <p className="text-xs text-muted-foreground mt-1">73 {t('tests').toLowerCase()}</p>
+              </Card>
+              
+              <Card
+                className="hover:border-primary/50 transition-colors p-4 text-center cursor-pointer border shadow-sm"
+                onClick={() => navigate("/categories/5")}
+              >
+                <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-xl text-white">🎮</span>
+                </div>
+                <h3 className="font-medium">{t('catGames')}</h3>
+                <p className="text-xs text-muted-foreground mt-1">95 {t('tests').toLowerCase()}</p>
+              </Card>
+              
+              <Card
+                className="hover:border-primary/50 transition-colors p-4 text-center cursor-pointer border shadow-sm"
+                onClick={() => navigate("/categories")}
+              >
+                <div className="w-12 h-12 bg-orange-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-xl text-white">+</span>
+                </div>
+                <h3 className="font-medium">{t('catMore')}</h3>
+                <p className="text-xs text-muted-foreground mt-1">300+ {t('tests').toLowerCase()}</p>
+              </Card>
+            </div>
+          </CardContent>
+          
+          <CardFooter className="flex justify-center">
+            <Button onClick={() => navigate("/categories")}>
+              Tüm Kategorileri Görüntüle
             </Button>
           </CardFooter>
         </Card>
