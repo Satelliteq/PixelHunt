@@ -1,5 +1,5 @@
 import React from "react";
-import { Play, Users, Heart } from "lucide-react";
+import { Play, Users, Heart, Clock, Calendar, BookOpen } from "lucide-react";
 
 type ContentCardProps = {
   title: string;
@@ -20,7 +20,7 @@ export default function ContentCard({
 }: ContentCardProps) {
   return (
     <div 
-      className="test-card rounded-xl overflow-hidden transition-all duration-200 hover:translate-y-[-5px] cursor-pointer group"
+      className="test-card rounded-xl overflow-hidden transition-all duration-200 hover:translate-y-[-5px] cursor-pointer group border border-border/30 bg-card shadow-sm"
       onClick={onClick}
     >
       <div className="relative aspect-video">
