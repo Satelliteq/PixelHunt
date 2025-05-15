@@ -1,79 +1,103 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation } from 'wouter';
-import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { 
-  AlertTriangle, Heart, Share2, Play, Clock, Calendar, User, MessageSquare, Loader2,
-  ThumbsUp, Check, X, Trophy
-} from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
-import { formatTime, checkAnswer, calculateScore, playSoundEffect } from '@/lib/gameHelpers';
-import ScoreDisplay from '@/components/game/ScoreDisplay';
-import ImageReveal from '@/components/game/ImageReveal';
-import ContentCard from '@/components/game/ContentCard';
-import { Separator } from '@/components/ui/separator';
-import { useLanguage } from '@/lib/LanguageContext';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { queryClient } from '@/lib/queryClient';
+import { useAuth } from '@/lib/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { UserCircle2, ThumbsUp, Share2, Play, Clock, Calendar, User, MessageSquare, Loader2, Check } from 'lucide-react';
+import { formatDistance } from 'date-fns';
+import { tr } from 'date-fns/locale';
 import { doc, getDoc, collection, addDoc, query, where, orderBy, getDocs, updateDoc, increment, serverTimestamp, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { useAuth } from '@/lib/AuthContext';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 
-export default function GameScreen() {
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
+export default function TestDetail() {
   const [, setLocation] = useLocation();
   const { testId } = useParams<{ testId: string }>();
   const { user } = useAuth();
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [userAnswer, setUserAnswer] = useState('');
-  const [score, setScore] = useState(0);
-  const [timeElapsed, setTimeElapsed] = useState(0);
-  const [gameStatus, setGameStatus] = useState<'playing' | 'finished'>('playing');
-  const [revealPercent, setRevealPercent] = useState(30);
-  const [guessHistory, setGuessHistory] = useState<Array<{
-    guess: string;
-    isCorrect: boolean;
-    isClose?: boolean;
-  }>>([]);
-  const [hasLiked, setHasLiked] = useState(false);
+  const { toast } = useToast();
   const [commentText, setCommentText] = useState('');
+  const [shareUrl, setShareUrl] = useState('');
+  const [showShareAlert, setShowShareAlert] = useState(false);
+  const [hasLiked, setHasLiked] = useState(false);
   const [isAddingComment, setIsAddingComment] = useState(false);
-  
-  const correctAnswersRef = useRef<string[]>([]);
-  const imageRevealRef = useRef<any>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch test data
-  const { data: test, isLoading: isTestLoading } = useQuery({
+  const { data: test, isLoading: isTestLoading, refetch: refetchTest } = useQuery({
     queryKey: [`test-${testId}`],
     queryFn: async () => {
       if (!testId) return null;
       
       try {
-        const testDoc = await getDoc(doc(db, 'tests', testId));
-        if (!testDoc.exists()) return null;
+        const testRef = doc(db, 'tests', testId);
+        const testDoc = await getDoc(testRef);
+        
+        if (!testDoc.exists()) {
+          return null;
+        }
         
         const testData = testDoc.data();
         
+        // Fetch category if categoryId exists
+        let category = null;
+        if (testData.categoryId) {
+          const categoryRef = doc(db, 'categories', testData.categoryId);
+          const categoryDoc = await getDoc(categoryRef);
+          if (categoryDoc.exists()) {
+            category = {
+              id: categoryDoc.id,
+              ...categoryDoc.data()
+            };
+          }
+        }
+        
+        // Fetch creator if creatorId exists and test is not anonymous
+        let creator = null;
+        if (testData.creatorId && !testData.isAnonymous) {
+          const userRef = doc(db, 'users', testData.creatorId);
+          const userDoc = await getDoc(userRef);
+          if (userDoc.exists()) {
+            creator = {
+              id: userDoc.id,
+              ...userDoc.data()
+            };
+          }
+        }
+        
         // Increment play count
-        await updateDoc(doc(db, 'tests', testId), {
+        await updateDoc(testRef, {
           playCount: increment(1)
         });
         
         return {
           id: testDoc.id,
-          ...testData
+          ...testData,
+          category,
+          creator
         };
       } catch (error) {
-        console.error('Error fetching test:', error);
+        console.error("Error fetching test:", error);
         return null;
       }
-    }
+    },
+    enabled: !!testId
   });
-
+  
   // Fetch test comments
   const { data: comments = [], isLoading: isCommentsLoading, refetch: refetchComments } = useQuery({
     queryKey: [`test-comments-${testId}`],
@@ -81,26 +105,29 @@ export default function GameScreen() {
       if (!testId) return [];
       
       try {
-        const commentsQuery = query(
-          collection(db, 'testComments'),
+        const commentsRef = collection(db, 'testComments');
+        const q = query(
+          commentsRef,
           where('testId', '==', testId),
-          orderBy('createdAt', 'desc')
+          orderBy('createdAt', 'desc'),
+          limit(20)
         );
         
-        const commentsSnapshot = await getDocs(commentsQuery);
+        const querySnapshot = await getDocs(q);
         
-        return commentsSnapshot.docs.map(doc => ({
+        return querySnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
           createdAt: doc.data().createdAt?.toDate()
         }));
       } catch (error) {
-        console.error('Error fetching test comments:', error);
+        console.error("Error fetching test comments:", error);
         return [];
       }
-    }
+    },
+    enabled: !!testId
   });
-
+  
   // Fetch top scores
   const { data: topScores = [], isLoading: isLeaderboardLoading } = useQuery({
     queryKey: [`top-scores-${testId}`],
@@ -108,24 +135,26 @@ export default function GameScreen() {
       if (!testId) return [];
       
       try {
-        const scoresQuery = query(
-          collection(db, 'gameScores'),
+        const scoresRef = collection(db, 'gameScores');
+        const q = query(
+          scoresRef,
           where('testId', '==', testId),
           orderBy('score', 'desc'),
           limit(5)
         );
         
-        const scoresSnapshot = await getDocs(scoresQuery);
+        const querySnapshot = await getDocs(q);
         
-        return scoresSnapshot.docs.map(doc => ({
+        return querySnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         }));
       } catch (error) {
-        console.error('Error fetching top scores:', error);
+        console.error("Error fetching top scores:", error);
         return [];
       }
-    }
+    },
+    enabled: !!testId
   });
 
   // Check if user has already liked this test
@@ -133,18 +162,19 @@ export default function GameScreen() {
     if (user && testId) {
       const checkUserLike = async () => {
         try {
-          const likesQuery = query(
-            collection(db, 'userActivities'),
+          const likesRef = collection(db, 'userActivities');
+          const q = query(
+            likesRef,
             where('userId', '==', user.uid),
             where('entityId', '==', testId),
             where('activityType', '==', 'like_test'),
             limit(1)
           );
           
-          const likesSnapshot = await getDocs(likesQuery);
-          setHasLiked(!likesSnapshot.empty);
+          const querySnapshot = await getDocs(q);
+          setHasLiked(!querySnapshot.empty);
         } catch (error) {
-          console.error('Error checking if user liked test:', error);
+          console.error("Error checking if user liked test:", error);
         }
       };
       
@@ -152,152 +182,142 @@ export default function GameScreen() {
     }
   }, [user, testId]);
 
-  // Start timer when test is loaded
-  useEffect(() => {
-    if (test && gameStatus === 'playing') {
-      timerRef.current = setInterval(() => {
-        setTimeElapsed(prev => prev + 1);
-      }, 1000);
-    }
-    
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    };
-  }, [test, gameStatus]);
-
-  // Set correct answers when test changes
-  useEffect(() => {
-    if (test && test.questions && test.questions.length > 0) {
-      const currentQuestion = test.questions[currentImageIndex];
-      correctAnswersRef.current = currentQuestion.answers || [];
-    }
-  }, [test, currentImageIndex]);
-
-  // Handle user guess
-  const handleGuess = () => {
-    if (!userAnswer.trim() || gameStatus !== 'playing') return;
-    
-    const currentQuestion = test?.questions?.[currentImageIndex];
-    if (!currentQuestion) return;
-    
-    const { isCorrect, isClose } = checkAnswer(userAnswer, correctAnswersRef.current);
-    
-    // Add to guess history
-    setGuessHistory(prev => [
-      { guess: userAnswer, isCorrect, isClose },
-      ...prev
-    ]);
-    
-    if (isCorrect) {
-      // Play correct sound
-      playSoundEffect('correct');
-      
-      // Show correct guess effect
-      if (imageRevealRef.current) {
-        imageRevealRef.current.showCorrectGuessEffect();
+  // Like test mutation
+  const likeTestMutation = useMutation({
+    mutationFn: async () => {
+      if (!testId || !user) {
+        throw new Error("Test ID or user not found");
       }
       
-      // Calculate score based on reveal percentage
-      const earnedScore = calculateScore(revealPercent);
-      setScore(prev => prev + earnedScore);
+      // Check if user has already liked this test
+      const likesRef = collection(db, 'userActivities');
+      const q = query(
+        likesRef,
+        where('userId', '==', user.uid),
+        where('entityId', '==', testId),
+        where('activityType', '==', 'like_test'),
+        limit(1)
+      );
       
-      // Move to next question or finish game
-      setTimeout(() => {
-        if (currentImageIndex < (test?.questions?.length || 0) - 1) {
-          setCurrentImageIndex(prev => prev + 1);
-          setRevealPercent(30);
-          setUserAnswer('');
-        } else {
-          // Game finished
-          setGameStatus('finished');
-          if (timerRef.current) {
-            clearInterval(timerRef.current);
-          }
-          
-          // Save game score
-          saveGameScore(score + earnedScore, true);
-        }
-      }, 1500);
-    } else {
-      // Play incorrect sound
-      playSoundEffect('incorrect');
+      const querySnapshot = await getDocs(q);
       
-      // Increase reveal percentage
-      setRevealPercent(prev => Math.min(prev + 10, 100));
-      
-      // Clear input
-      setUserAnswer('');
-    }
-  };
-
-  // Handle skip question
-  const handleSkip = () => {
-    if (gameStatus !== 'playing') return;
-    
-    const currentQuestion = test?.questions?.[currentImageIndex];
-    if (!currentQuestion) return;
-    
-    // Show correct answer
-    toast({
-      title: "Soru atlandı",
-      description: `Doğru cevap: ${correctAnswersRef.current[0]}`,
-      variant: "destructive",
-    });
-    
-    // Move to next question or finish game
-    if (currentImageIndex < (test?.questions?.length || 0) - 1) {
-      setCurrentImageIndex(prev => prev + 1);
-      setRevealPercent(30);
-      setUserAnswer('');
-    } else {
-      // Game finished
-      setGameStatus('finished');
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
+      if (!querySnapshot.empty) {
+        throw new Error("You have already liked this test");
       }
       
-      // Save game score
-      saveGameScore(score, false);
-    }
-  };
-
-  // Save game score
-  const saveGameScore = async (earnedScore: number, completed: boolean) => {
-    try {
-      if (!testId) return;
+      const testRef = doc(db, 'tests', testId);
+      await updateDoc(testRef, {
+        likeCount: increment(1)
+      });
       
-      const scoreData = {
+      // Add user activity
+      await addDoc(collection(db, 'userActivities'), {
+        userId: user.uid,
+        userName: user.displayName || user.email?.split('@')[0],
+        activityType: 'like_test',
+        details: `Teste beğeni verildi: ${test?.title}`,
+        entityId: testId,
+        entityType: 'test',
+        createdAt: serverTimestamp()
+      });
+      
+      return true;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Test beğenildi",
+        description: "Bu testi beğendiniz!",
+        variant: "default",
+      });
+      
+      setHasLiked(true);
+      
+      // Refetch test data to update like count
+      refetchTest();
+    },
+    onError: (error: any) => {
+      console.error("Error liking test:", error);
+      
+      if (error.message === "You have already liked this test") {
+        toast({
+          title: "Zaten beğendiniz",
+          description: "Bu testi daha önce beğendiniz.",
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Hata",
+          description: "Test beğenilirken bir hata oluştu.",
+          variant: "destructive",
+        });
+      }
+    }
+  });
+
+  // Add comment mutation
+  const addCommentMutation = useMutation({
+    mutationFn: async () => {
+      if (!testId || !user || !commentText.trim()) {
+        throw new Error("Missing required data");
+      }
+      
+      const commentData = {
         testId: testId,
-        userId: user?.uid || null,
-        score: earnedScore,
-        completionTime: timeElapsed,
-        attemptsCount: guessHistory.length,
-        completed: completed,
+        userId: user.uid,
+        comment: commentText.trim(),
         createdAt: serverTimestamp()
       };
       
-      await addDoc(collection(db, 'gameScores'), scoreData);
+      const docRef = await addDoc(collection(db, 'testComments'), commentData);
       
-      if (user) {
-        await addDoc(collection(db, 'userActivities'), {
-          userId: user.uid,
-          userName: user.displayName || user.email?.split('@')[0],
-          activityType: 'play_test',
-          details: `Test oynandı: ${test?.title}, Skor: ${earnedScore}`,
-          entityId: testId,
-          entityType: 'test',
-          createdAt: serverTimestamp()
-        });
-      }
-    } catch (error) {
-      console.error("Error saving game score:", error);
+      // Add user activity
+      await addDoc(collection(db, 'userActivities'), {
+        userId: user.uid,
+        userName: user.displayName || user.email?.split('@')[0],
+        activityType: 'comment_test',
+        details: `Teste yorum yapıldı: ${test?.title}`,
+        entityId: testId,
+        entityType: 'test',
+        createdAt: serverTimestamp()
+      });
+      
+      return {
+        id: docRef.id,
+        ...commentData,
+        createdAt: new Date()
+      };
+    },
+    onSuccess: (newComment) => {
+      toast({
+        title: "Yorum eklendi",
+        description: "Yorumunuz başarıyla eklendi.",
+        variant: "default",
+      });
+      
+      setCommentText("");
+      
+      // Add the new comment to the existing comments
+      queryClient.setQueryData([`test-comments-${testId}`], (oldData: any) => {
+        return [newComment, ...(oldData || [])];
+      });
+    },
+    onError: (error) => {
+      console.error("Error adding comment:", error);
+      toast({
+        title: "Hata",
+        description: "Yorum eklenirken bir hata oluştu.",
+        variant: "destructive",
+      });
     }
+  });
+
+  // Handle start test
+  const handleStartTest = () => {
+    setLocation(`/play/${testId}`);
   };
 
-  // Like test
-  const handleLikeTest = async () => {
+  // Handle like test
+  const handleLikeTest = () => {
     if (!user) {
       toast({
         title: "Giriş yapmalısınız",
@@ -316,78 +336,50 @@ export default function GameScreen() {
       return;
     }
     
-    try {
-      // Update test like count
-      await updateDoc(doc(db, 'tests', testId), {
-        likeCount: increment(1)
-      });
-      
-      // Add user activity
-      await addDoc(collection(db, 'userActivities'), {
-        userId: user.uid,
-        userName: user.displayName || user.email?.split('@')[0],
-        activityType: 'like_test',
-        details: `Teste beğeni verildi: ${test?.title}`,
-        entityId: testId,
-        entityType: 'test',
-        createdAt: serverTimestamp()
-      });
-      
-      setHasLiked(true);
-      
-      toast({
-        title: "Test beğenildi",
-        description: "Bu testi beğendiniz!",
-        variant: "default",
-      });
-    } catch (error) {
-      console.error('Error liking test:', error);
-      toast({
-        title: "Hata",
-        description: "Test beğenilirken bir hata oluştu.",
-        variant: "destructive",
-      });
-    }
+    likeTestMutation.mutate();
   };
 
-  // Share test
+  // Handle share test
   const handleShareTest = () => {
     const shareUrl = `${window.location.origin}/test/${testId}`;
     
+    // Try to use share API if available
     if (navigator.share) {
       navigator.share({
-        title: test?.title || 'Pixelhunt Test',
-        text: test?.description || 'Bu testi çözmeyi deneyin!',
+        title: test?.title || 'Test Paylaşımı',
+        text: test?.description || '',
         url: shareUrl,
-      }).catch(err => {
-        console.error('Error sharing:', err);
+      }).catch(() => {
+        // Fallback - copy to clipboard
         copyToClipboard(shareUrl);
       });
     } else {
+      // Copy to clipboard
       copyToClipboard(shareUrl);
     }
   };
-
+  
   // Copy to clipboard helper
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text).then(() => {
+      setShareUrl(text);
+      setShowShareAlert(true);
+      
       toast({
         title: "Bağlantı kopyalandı",
         description: "Test bağlantısı panoya kopyalandı.",
         variant: "default",
       });
-    }).catch(err => {
-      console.error('Failed to copy:', err);
-      toast({
-        title: "Hata",
-        description: "Bağlantı kopyalanırken bir hata oluştu.",
-        variant: "destructive",
-      });
+      
+      // Hide alert after 3 seconds
+      setTimeout(() => {
+        setShowShareAlert(false);
+      }, 3000);
     });
   };
 
-  // Add comment
-  const handleAddComment = async () => {
+  // Handle add comment
+  const handleAddComment = () => {
     if (!user) {
       toast({
         title: "Giriş yapmalısınız",
@@ -407,34 +399,18 @@ export default function GameScreen() {
     }
     
     setIsAddingComment(true);
-    
-    try {
-      await addDoc(collection(db, 'testComments'), {
-        testId: testId,
-        userId: user.uid,
-        comment: commentText.trim(),
-        createdAt: serverTimestamp()
-      });
-      
-      toast({
-        title: "Yorum eklendi",
-        description: "Yorumunuz başarıyla eklendi.",
-        variant: "default",
-      });
-      
-      setCommentText("");
-      refetchComments();
-    } catch (error) {
-      console.error('Error adding comment:', error);
-      toast({
-        title: "Hata",
-        description: "Yorum eklenirken bir hata oluştu.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsAddingComment(false);
-    }
+    addCommentMutation.mutate();
   };
+
+  // Format time display
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Get filtered similar tests (exclude current test)
+  const filteredSimilarTests = [];
 
   // Loading state
   if (isTestLoading) {
@@ -468,11 +444,19 @@ export default function GameScreen() {
     );
   }
 
-  // Current question
-  const currentQuestion = test.questions?.[currentImageIndex];
-
   return (
     <div className="container py-8">
+      {/* Share alert */}
+      {showShareAlert && (
+        <Alert className="mb-4">
+          <Share2 className="h-4 w-4" />
+          <AlertTitle>Bağlantı Kopyalandı</AlertTitle>
+          <AlertDescription>
+            Test bağlantısı: <code className="bg-muted px-1 py-0.5 rounded text-sm">{shareUrl}</code>
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Test details */}
         <div className="md:col-span-2">
@@ -487,7 +471,7 @@ export default function GameScreen() {
                     )}
                     <div className="flex items-center text-xs text-muted-foreground">
                       <Calendar className="h-3 w-3 mr-1" />
-                      {test.createdAt ? new Date(test.createdAt.seconds * 1000).toLocaleDateString() : ""}
+                      {test.createdAt ? new Date(test.createdAt).toLocaleDateString() : ""}
                     </div>
                   </div>
                 </div>
@@ -497,7 +481,7 @@ export default function GameScreen() {
                     size="sm" 
                     onClick={handleLikeTest}
                     className="flex gap-1 items-center"
-                    disabled={hasLiked}
+                    disabled={likeTestMutation.isPending || hasLiked}
                   >
                     <ThumbsUp className="h-4 w-4" /> {test.likeCount || 0}
                   </Button>
@@ -513,7 +497,7 @@ export default function GameScreen() {
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-2 mb-4">
-                <User className="h-5 w-5 text-muted-foreground" />
+                <UserCircle2 className="h-5 w-5 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">
                   {test.isAnonymous || !test.creatorId 
                     ? "Anonim kullanıcı tarafından oluşturuldu" 
@@ -557,7 +541,7 @@ export default function GameScreen() {
                   <Button 
                     className="w-full mt-4" 
                     size="lg"
-                    onClick={() => setLocation(`/play/${testId}`)}
+                    onClick={handleStartTest}
                   >
                     <Play className="mr-2 h-4 w-4" /> Testi Başlat
                   </Button>
@@ -631,7 +615,11 @@ export default function GameScreen() {
                                   {comment.user?.displayName || comment.user?.email?.split('@')[0] || "Anonim"}
                                 </span>
                                 <span className="text-xs text-muted-foreground">
-                                  {comment.createdAt ? new Date(comment.createdAt).toLocaleDateString() : ""}
+                                  {comment.createdAt ? formatDistance(
+                                    new Date(comment.createdAt), 
+                                    new Date(), 
+                                    { addSuffix: true, locale: tr }
+                                  ) : ""}
                                 </span>
                               </div>
                               <p className="text-sm">{comment.comment}</p>
