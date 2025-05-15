@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
   AlertTriangle, Heart, Share2, Play, Clock, Calendar, User, MessageSquare, Loader2,
-  ThumbsUp, Check, X, Trophy as TrophyIcon
+  ThumbsUp, Check, X, Trophy, Eye
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { formatTime, checkAnswer, calculateScore, playSoundEffect } from '@/lib/gameHelpers';
@@ -38,7 +38,6 @@ export default function GameScreen() {
   
   const correctAnswersRef = useRef<string[]>([]);
   const imageRevealRef = useRef<any>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch test data
   const { data: test, isLoading: isTestLoading } = useQuery({
@@ -47,51 +46,162 @@ export default function GameScreen() {
       if (!testId) return null;
       
       try {
-        const testDoc = await getDoc(doc(db, 'tests', testId));
-        if (!testDoc.exists()) return null;
+        const testRef = doc(db, 'tests', testId);
+        const testDoc = await getDoc(testRef);
+        
+        if (!testDoc.exists()) {
+          return null;
+        }
+        
+        const testData = testDoc.data();
         
         // Increment play count
-        await updateDoc(doc(db, 'tests', testId), {
+        await updateDoc(testRef, {
           playCount: increment(1)
         });
         
-        return { id: testDoc.id, ...testDoc.data() };
+        return {
+          id: testDoc.id,
+          ...testData
+        };
       } catch (error) {
-        console.error('Error fetching test:', error);
-        throw error;
+        console.error("Error fetching test:", error);
+        return null;
       }
     },
     enabled: !!testId
   });
 
-  // Start timer when game starts
+  // Timer effect
   useEffect(() => {
-    if (test && test.questions && test.questions.length > 0) {
-      startTimer();
+    if (gameStatus === 'playing') {
+      const timer = setInterval(() => {
+        setTimeElapsed(prev => prev + 1);
+      }, 1000);
+      
+      return () => clearInterval(timer);
     }
-    
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    };
-  }, [test]);
+  }, [gameStatus]);
 
-  // Set correct answers for current question
+  // Set correct answers when test data is loaded
   useEffect(() => {
-    if (test && test.questions && test.questions[currentImageIndex]) {
-      correctAnswersRef.current = test.questions[currentImageIndex].answers || [];
+    if (test?.questions && test.questions.length > 0 && currentImageIndex < test.questions.length) {
+      const currentQuestion = test.questions[currentImageIndex];
+      correctAnswersRef.current = currentQuestion.answers || [];
     }
   }, [test, currentImageIndex]);
 
-  // Timer function
-  const startTimer = () => {
-    timerRef.current = setInterval(() => {
-      setTimeElapsed(prev => prev + 1);
-    }, 1000);
+  // Handle form submission
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!userAnswer.trim() || gameStatus !== 'playing') return;
+    
+    handleGuess(userAnswer);
+    setUserAnswer('');
   };
 
-  // Save game score to Firestore
+  // Handle guess
+  const handleGuess = (guess: string) => {
+    if (!test?.questions || currentImageIndex >= test.questions.length) return;
+    
+    const currentQuestion = test.questions[currentImageIndex];
+    const { isCorrect, isClose } = checkAnswer(guess, currentQuestion.answers || []);
+    
+    // Add to guess history
+    setGuessHistory(prev => [...prev, { guess, isCorrect, isClose }]);
+    
+    if (isCorrect) {
+      // Play correct sound
+      playSoundEffect('correct');
+      
+      // Show correct effect
+      if (imageRevealRef.current) {
+        imageRevealRef.current.showCorrectGuessEffect();
+      }
+      
+      // Calculate score based on reveal percentage and time
+      const questionScore = calculateScore(revealPercent);
+      setScore(prev => prev + questionScore);
+      
+      // Show toast
+      toast({
+        title: "Doğru!",
+        description: `+${questionScore} puan kazandınız.`,
+        variant: "default",
+      });
+      
+      // Save score for this question
+      saveGameScore(questionScore, true);
+      
+      // Move to next question after a delay
+      setTimeout(() => {
+        if (currentImageIndex < test.questions.length - 1) {
+          setCurrentImageIndex(prev => prev + 1);
+          setRevealPercent(30); // Reset reveal percentage
+        } else {
+          // Game finished
+          setGameStatus('finished');
+          
+          toast({
+            title: "Tebrikler!",
+            description: "Testi tamamladınız.",
+            variant: "default",
+          });
+        }
+      }, 1500);
+    } else {
+      // Play incorrect sound
+      playSoundEffect('incorrect');
+      
+      // Increase reveal percentage
+      setRevealPercent(prev => Math.min(prev + 10, 100));
+      
+      // Show toast for close answers
+      if (isClose) {
+        toast({
+          title: "Yaklaştınız!",
+          description: "Cevaba çok yakınsınız.",
+          variant: "default",
+        });
+        playSoundEffect('close');
+      } else {
+        toast({
+          title: "Yanlış",
+          description: "Tekrar deneyin.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  // Handle skip
+  const handleSkip = () => {
+    if (!test?.questions || currentImageIndex >= test.questions.length) return;
+    
+    // Save score of 0 for skipped question
+    saveGameScore(0, false);
+    
+    // Show correct answer
+    const currentQuestion = test.questions[currentImageIndex];
+    toast({
+      title: "Soru Atlandı",
+      description: `Doğru cevap: ${currentQuestion.answers[0]}`,
+      variant: "default",
+    });
+    
+    // Move to next question
+    if (currentImageIndex < test.questions.length - 1) {
+      setCurrentImageIndex(prev => prev + 1);
+      setRevealPercent(30); // Reset reveal percentage
+      setGuessHistory([]);
+    } else {
+      // Game finished
+      setGameStatus('finished');
+    }
+  };
+
+  // Save game score
   const saveGameScore = async (earnedScore: number, completed: boolean) => {
     try {
       if (!testId) return;
@@ -124,101 +234,9 @@ export default function GameScreen() {
     }
   };
 
-  // Handle guess submission
-  const handleGuess = async () => {
-    if (!userAnswer.trim() || !test || !test.questions) return;
-    
-    const currentQuestion = test.questions[currentImageIndex];
-    if (!currentQuestion) return;
-    
-    const { isCorrect, isClose } = checkAnswer(userAnswer, correctAnswersRef.current);
-    
-    // Add to guess history
-    setGuessHistory(prev => [...prev, { 
-      guess: userAnswer, 
-      isCorrect, 
-      isClose 
-    }]);
-    
-    if (isCorrect) {
-      // Play correct sound
-      playSoundEffect('correct');
-      
-      // Show correct animation
-      if (imageRevealRef.current) {
-        imageRevealRef.current.showCorrectGuessEffect();
-      }
-      
-      // Calculate score based on reveal percentage
-      const questionScore = calculateScore(revealPercent);
-      setScore(prev => prev + questionScore);
-      
-      // Move to next question or finish game
-      setTimeout(() => {
-        if (currentImageIndex < test.questions.length - 1) {
-          setCurrentImageIndex(prev => prev + 1);
-          setRevealPercent(30);
-          setUserAnswer('');
-          setGuessHistory([]);
-        } else {
-          // Game finished
-          setGameStatus('finished');
-          if (timerRef.current) {
-            clearInterval(timerRef.current);
-          }
-          
-          // Save final score
-          saveGameScore(score + questionScore, true);
-          
-          toast({
-            title: "Tebrikler!",
-            description: `Testi tamamladınız. Toplam puanınız: ${score + questionScore}`,
-          });
-        }
-      }, 1500);
-    } else {
-      // Play wrong sound
-      playSoundEffect('incorrect');
-      
-      // Increase reveal percentage for wrong guess
-      setRevealPercent(prev => Math.min(prev + 10, 100));
-      
-      // Clear input
-      setUserAnswer('');
-    }
-  };
-
-  // Handle skip question
-  const handleSkip = () => {
-    if (!test || !test.questions) return;
-    
-    toast({
-      title: "Soru Atlandı",
-      description: `Doğru cevap: ${correctAnswersRef.current[0]}`,
-      variant: "destructive",
-    });
-    
-    // Move to next question or finish game
-    if (currentImageIndex < test.questions.length - 1) {
-      setCurrentImageIndex(prev => prev + 1);
-      setRevealPercent(30);
-      setUserAnswer('');
-      setGuessHistory([]);
-    } else {
-      // Game finished
-      setGameStatus('finished');
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-      
-      // Save final score
-      saveGameScore(score, false);
-    }
-  };
-
   // Handle like test
   const handleLikeTest = async () => {
-    if (!testId || !user) {
+    if (!user) {
       toast({
         title: "Giriş yapmalısınız",
         description: "Testi beğenmek için giriş yapmalısınız.",
@@ -231,31 +249,15 @@ export default function GameScreen() {
       toast({
         title: "Zaten beğendiniz",
         description: "Bu testi daha önce beğendiniz.",
+        variant: "default",
       });
       return;
     }
     
     try {
-      // Check if user already liked this test
-      const likesQuery = query(
-        collection(db, 'userActivities'),
-        where('userId', '==', user.uid),
-        where('entityId', '==', testId),
-        where('activityType', '==', 'like_test')
-      );
-      
-      const likesSnapshot = await getDocs(likesQuery);
-      
-      if (!likesSnapshot.empty) {
-        toast({
-          title: "Zaten beğendiniz",
-          description: "Bu testi daha önce beğendiniz.",
-        });
-        return;
-      }
-      
-      // Increment like count
-      await updateDoc(doc(db, 'tests', testId), {
+      // Update test like count
+      const testRef = doc(db, 'tests', testId!);
+      await updateDoc(testRef, {
         likeCount: increment(1)
       });
       
@@ -275,9 +277,10 @@ export default function GameScreen() {
       toast({
         title: "Test beğenildi",
         description: "Bu testi beğendiniz!",
+        variant: "default",
       });
     } catch (error) {
-      console.error('Error liking test:', error);
+      console.error("Error liking test:", error);
       toast({
         title: "Hata",
         description: "Test beğenilirken bir hata oluştu.",
@@ -286,9 +289,9 @@ export default function GameScreen() {
     }
   };
 
-  // Handle adding comment
+  // Handle add comment
   const handleAddComment = async (comment: string) => {
-    if (!testId || !user) {
+    if (!user) {
       toast({
         title: "Giriş yapmalısınız",
         description: "Yorum yapmak için giriş yapmalısınız.",
@@ -307,6 +310,7 @@ export default function GameScreen() {
     }
     
     try {
+      // Add comment
       await addDoc(collection(db, 'testComments'), {
         testId: testId,
         userId: user.uid,
@@ -314,12 +318,24 @@ export default function GameScreen() {
         createdAt: serverTimestamp()
       });
       
+      // Add user activity
+      await addDoc(collection(db, 'userActivities'), {
+        userId: user.uid,
+        userName: user.displayName || user.email?.split('@')[0],
+        activityType: 'comment_test',
+        details: `Teste yorum yapıldı: ${test?.title}`,
+        entityId: testId,
+        entityType: 'test',
+        createdAt: serverTimestamp()
+      });
+      
       toast({
         title: "Yorum eklendi",
         description: "Yorumunuz başarıyla eklendi.",
+        variant: "default",
       });
     } catch (error) {
-      console.error('Error adding comment:', error);
+      console.error("Error adding comment:", error);
       toast({
         title: "Hata",
         description: "Yorum eklenirken bir hata oluştu.",
@@ -332,7 +348,7 @@ export default function GameScreen() {
   if (isTestLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
         <span className="ml-2">Test yükleniyor...</span>
       </div>
     );
@@ -341,240 +357,217 @@ export default function GameScreen() {
   // Test not found
   if (!test) {
     return (
-      <div className="container py-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Test Bulunamadı</CardTitle>
-            <CardDescription>İstediğiniz test mevcut değil veya kaldırılmış olabilir.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => setLocation("/tests")}>Tüm Testlere Dön</Button>
-          </CardContent>
-        </Card>
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <AlertTriangle className="h-12 w-12 text-yellow-500 mb-4" />
+        <h1 className="text-2xl font-bold mb-2">Test Bulunamadı</h1>
+        <p className="text-muted-foreground mb-4 text-center">
+          İstediğiniz test mevcut değil veya kaldırılmış olabilir.
+        </p>
+        <Button onClick={() => setLocation("/")}>Ana Sayfaya Dön</Button>
       </div>
     );
   }
 
-  // No questions
-  if (!test.questions || test.questions.length === 0) {
+  // Get current question
+  const currentQuestion = test.questions && test.questions.length > 0 && currentImageIndex < test.questions.length
+    ? test.questions[currentImageIndex]
+    : null;
+
+  // Game finished screen
+  if (gameStatus === 'finished') {
     return (
-      <div className="container py-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>{test.title}</CardTitle>
-            <CardDescription>Bu testte henüz soru bulunmuyor.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => setLocation("/tests")}>Tüm Testlere Dön</Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  const currentQuestion = test.questions[currentImageIndex];
-
-  return (
-    <div className="game-layout min-h-screen bg-background">
-      <div className="game-ad-left"></div>
-      
-      <div className="game-content">
-        {/* Game Header */}
-        <div className="p-4 md:p-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-            <div>
-              <h1 className="text-xl md:text-2xl font-bold">{test.title}</h1>
-              <p className="text-muted-foreground text-sm">{test.description}</p>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleLikeTest}
-                disabled={hasLiked}
-              >
-                <ThumbsUp className="w-4 h-4 mr-1" />
-                {hasLiked ? 'Beğenildi' : 'Beğen'}
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => {
-                  const shareUrl = `${window.location.origin}/test/${testId}`;
-                  if (navigator.share) {
-                    navigator.share({
-                      title: test.title,
-                      text: test.description,
-                      url: shareUrl
-                    }).catch(console.error);
-                  } else {
-                    navigator.clipboard.writeText(shareUrl);
-                    toast({
-                      title: "Bağlantı kopyalandı",
-                      description: "Test bağlantısı panoya kopyalandı."
-                    });
-                  }
-                }}
-              >
-                <Share2 className="w-4 h-4 mr-1" />
-                Paylaş
-              </Button>
-            </div>
-          </div>
-          
-          {/* Game Status */}
-          <div className="mb-6">
-            <ScoreDisplay
-              score={score}
-              mode="test"
-              compact={true}
-              extraInfo={{
-                correctAnswers: currentImageIndex,
-                totalQuestions: test.questions.length,
-                revealPercent: revealPercent,
-                timeElapsed: timeElapsed
-              }}
-            />
-          </div>
-          
-          {/* Game Content */}
-          {gameStatus === 'playing' ? (
-            <div className="space-y-6">
-              {/* Question */}
-              <div className="bg-card border rounded-lg p-4">
-                <h3 className="text-lg font-medium mb-2">
-                  Soru {currentImageIndex + 1}/{test.questions.length}
-                </h3>
-                <p className="text-muted-foreground">
-                  {currentQuestion.question || "Bu görselde ne görüyorsunuz?"}
-                </p>
-              </div>
-              
-              {/* Image */}
-              <div className="relative">
-                <ImageReveal
-                  ref={imageRevealRef}
-                  imageUrl={currentQuestion.imageUrl}
-                  revealPercent={revealPercent}
-                  className="w-full aspect-video max-h-[500px] object-contain"
-                />
-              </div>
-              
-              {/* Answer Input */}
-              <div className="bg-card border rounded-lg p-4">
-                <div className="flex gap-2 mb-4">
-                  <Input
-                    value={userAnswer}
-                    onChange={(e) => setUserAnswer(e.target.value)}
-                    placeholder="Cevabınızı yazın..."
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleGuess();
-                      }
-                    }}
-                  />
-                  <Button onClick={handleGuess}>
-                    <Check className="w-4 h-4 mr-2" />
-                    Cevapla
-                  </Button>
+      <div className="game-layout">
+        <div className="game-ad-left"></div>
+        <div className="game-content">
+          <div className="p-4 md:p-6">
+            <Card className="border-primary/10 shadow-md">
+              <CardHeader className="text-center">
+                <CardTitle className="text-2xl">Test Tamamlandı! 🎉</CardTitle>
+                <CardDescription>
+                  {test.title} testini tamamladınız.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex flex-col items-center justify-center py-8">
+                  <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                    <Trophy className="h-12 w-12 text-primary" />
+                  </div>
+                  <h2 className="text-3xl font-bold">{score} Puan</h2>
+                  <p className="text-muted-foreground mt-2">
+                    Toplam süre: {formatTime(timeElapsed)}
+                  </p>
                 </div>
                 
-                <div className="flex justify-between">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Button 
                     variant="outline" 
-                    size="sm" 
-                    onClick={() => setRevealPercent(prev => Math.min(prev + 10, 100))}
+                    className="w-full"
+                    onClick={() => setLocation(`/test/${testId}`)}
                   >
-                    <Eye className="w-4 h-4 mr-1" />
-                    Daha Fazla Göster
+                    <Eye className="mr-2 h-4 w-4" />
+                    Test Detaylarını Gör
                   </Button>
                   
                   <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={handleSkip}
+                    className="w-full"
+                    onClick={() => {
+                      setCurrentImageIndex(0);
+                      setScore(0);
+                      setTimeElapsed(0);
+                      setRevealPercent(30);
+                      setGuessHistory([]);
+                      setGameStatus('playing');
+                    }}
                   >
-                    <X className="w-4 h-4 mr-1" />
-                    Bu Soruyu Atla
+                    <Play className="mr-2 h-4 w-4" />
+                    Tekrar Oyna
                   </Button>
                 </div>
                 
-                {/* Guess History */}
-                {guessHistory.length > 0 && (
-                  <div className="mt-4">
-                    <h4 className="text-sm font-medium mb-2">Tahminleriniz:</h4>
-                    <div className="space-y-1">
-                      {guessHistory.map((item, index) => (
-                        <div key={index} className="flex items-center gap-2">
-                          <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${
-                            item.isCorrect ? 'bg-green-500 text-white' : 
-                            item.isClose ? 'bg-yellow-500 text-white' : 
-                            'bg-red-500 text-white'
-                          }`}>
-                            {item.isCorrect ? '✓' : item.isClose ? '~' : '✗'}
-                          </span>
-                          <span>{item.guess}</span>
-                        </div>
-                      ))}
+                <div className="flex justify-between items-center">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => setLocation("/")}
+                  >
+                    Ana Sayfaya Dön
+                  </Button>
+                  
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={handleLikeTest}
+                    disabled={hasLiked}
+                  >
+                    <ThumbsUp className="mr-2 h-4 w-4" />
+                    {hasLiked ? "Beğenildi" : "Beğen"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+        <div className="game-ad-right"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="game-layout">
+      <div className="game-ad-left"></div>
+      <div className="game-content">
+        <div className="p-4 md:p-6">
+          <div className="flex flex-col gap-4">
+            {/* Game header */}
+            <div className="flex justify-between items-center">
+              <h1 className="text-xl font-bold">{test.title}</h1>
+              <ScoreDisplay 
+                score={score} 
+                mode="test" 
+                extraInfo={{
+                  correctAnswers: currentImageIndex,
+                  totalQuestions: test.questions?.length || 0,
+                  timeElapsed: timeElapsed,
+                  revealPercent: revealPercent
+                }}
+                compact={true}
+              />
+            </div>
+            
+            {/* Progress indicator */}
+            <div className="w-full bg-muted h-1 rounded-full overflow-hidden">
+              <div 
+                className="bg-primary h-1 transition-all duration-300 ease-out"
+                style={{ width: `${(currentImageIndex / (test.questions?.length || 1)) * 100}%` }}
+              ></div>
+            </div>
+            
+            {/* Main game area */}
+            <Card className="border-primary/10 shadow-md">
+              <CardHeader className="pb-2 flex flex-row justify-between items-center">
+                <CardTitle className="text-lg">
+                  Soru {currentImageIndex + 1}/{test.questions?.length || 0}
+                </CardTitle>
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <Clock className="h-4 w-4 mr-1" />
+                  {formatTime(timeElapsed)}
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {currentQuestion ? (
+                  <>
+                    <div className="question-text mb-4">
+                      <p className="text-lg">{currentQuestion.question || "Bu görselde ne görüyorsunuz?"}</p>
                     </div>
+                    
+                    <ImageReveal
+                      ref={imageRevealRef}
+                      imageUrl={currentQuestion.imageUrl}
+                      revealPercent={revealPercent}
+                      className="w-full aspect-video max-h-[60vh] object-contain"
+                    />
+                    
+                    <form onSubmit={handleSubmit} className="mt-4">
+                      <div className="flex gap-2">
+                        <Input
+                          type="text"
+                          placeholder="Cevabınızı yazın..."
+                          value={userAnswer}
+                          onChange={(e) => setUserAnswer(e.target.value)}
+                          className="flex-grow"
+                        />
+                        <Button type="submit">
+                          Tahmin Et
+                        </Button>
+                      </div>
+                      
+                      <div className="flex justify-end mt-2">
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="sm"
+                          onClick={handleSkip}
+                        >
+                          Soruyu Atla
+                        </Button>
+                      </div>
+                    </form>
+                    
+                    {/* Guess history */}
+                    {guessHistory.length > 0 && (
+                      <div className="mt-4">
+                        <h3 className="text-sm font-medium mb-2">Tahmin Geçmişi</h3>
+                        <div className="space-y-1">
+                          {guessHistory.map((item, index) => (
+                            <div key={index} className="flex items-center justify-between bg-muted/30 p-2 rounded">
+                              <span className="text-sm">{item.guess}</span>
+                              <div>
+                                {item.isCorrect ? (
+                                  <Badge className="bg-green-500">Doğru</Badge>
+                                ) : item.isClose ? (
+                                  <Badge variant="outline" className="border-yellow-500 text-yellow-500">Yakın</Badge>
+                                ) : (
+                                  <Badge variant="outline" className="border-red-500 text-red-500">Yanlış</Badge>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+                    <p>Soru yükleniyor...</p>
                   </div>
                 )}
-              </div>
-            </div>
-          ) : (
-            // Game Finished
-            <div className="bg-card border rounded-lg p-6 text-center">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <TrophyIcon className="w-8 h-8 text-primary" />
-              </div>
-              
-              <h2 className="text-2xl font-bold mb-2">Test Tamamlandı!</h2>
-              <p className="text-muted-foreground mb-4">
-                Tebrikler! {test.questions.length} sorudan {currentImageIndex + 1} tanesini doğru cevapladınız.
-              </p>
-              
-              <div className="bg-muted/30 rounded-lg p-4 mb-6">
-                <div className="text-3xl font-bold text-primary mb-2">{score} Puan</div>
-                <div className="text-sm text-muted-foreground">
-                  Süre: {formatTime(timeElapsed)}
-                </div>
-              </div>
-              
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button onClick={() => setLocation(`/test/${testId}`)}>
-                  <TrophyIcon className="w-4 h-4 mr-2" />
-                  Test Detaylarına Dön
-                </Button>
-                
-                <Button variant="outline" onClick={() => setLocation('/tests')}>
-                  Diğer Testlere Göz At
-                </Button>
-              </div>
-            </div>
-          )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
-      
       <div className="game-ad-right"></div>
     </div>
   );
 }
-
-// Add missing Eye component
-const Eye = ({ className }: { className?: string }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-    <circle cx="12" cy="12" r="3" />
-  </svg>
-);

@@ -1,29 +1,63 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation } from 'wouter';
-import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { 
-  AlertTriangle, Heart, Share2, Play, Clock, Calendar, User, MessageSquare, Loader2,
-  ThumbsUp, Check, X, Trophy as TrophyIcon
-} from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
-import { formatTime, checkAnswer, calculateScore, playSoundEffect } from '@/lib/gameHelpers';
-import ScoreDisplay from '@/components/game/ScoreDisplay';
-import ImageReveal from '@/components/game/ImageReveal';
-import ContentCard from '@/components/game/ContentCard';
-import { Separator } from '@/components/ui/separator';
-import { useLanguage } from '@/lib/LanguageContext';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { queryClient } from '@/lib/queryClient';
+import { useAuth } from '@/lib/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { UserCircle2, ThumbsUp, Share2, Play, Clock, Calendar, User, MessageSquare, Loader2, Check } from 'lucide-react';
 import { doc, getDoc, collection, addDoc, query, where, orderBy, getDocs, updateDoc, increment, serverTimestamp, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { useAuth } from '@/lib/AuthContext';
+
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
+import { 
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger 
+} from "@/components/ui/tabs";
+import { 
+  Alert, 
+  AlertDescription, 
+  AlertTitle 
+} from "@/components/ui/alert";
+
+// Simple date-fns formatDistance replacement
+const formatDistance = (date: Date, baseDate: Date, options: any = {}) => {
+  const seconds = Math.floor((baseDate.getTime() - date.getTime()) / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  const months = Math.floor(days / 30);
+  const years = Math.floor(days / 365);
+
+  if (years > 0) return `${years} yıl${options.addSuffix ? ' önce' : ''}`;
+  if (months > 0) return `${months} ay${options.addSuffix ? ' önce' : ''}`;
+  if (days > 0) return `${days} gün${options.addSuffix ? ' önce' : ''}`;
+  if (hours > 0) return `${hours} saat${options.addSuffix ? ' önce' : ''}`;
+  if (minutes > 0) return `${minutes} dakika${options.addSuffix ? ' önce' : ''}`;
+  return `${seconds} saniye${options.addSuffix ? ' önce' : ''}`;
+};
+
+// Simple locale object for Turkish
+const tr = { locale: 'tr-TR' };
 
 export default function TestDetail() {
   const [, setLocation] = useLocation();
   const { testId } = useParams<{ testId: string }>();
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { toast } = useToast();
   const [commentText, setCommentText] = useState('');
   const [shareUrl, setShareUrl] = useState('');
   const [showShareAlert, setShowShareAlert] = useState(false);
@@ -37,15 +71,20 @@ export default function TestDetail() {
       if (!testId) return null;
       
       try {
-        const testDoc = await getDoc(doc(db, 'tests', testId));
-        if (!testDoc.exists()) return null;
+        const testRef = doc(db, 'tests', testId);
+        const testDoc = await getDoc(testRef);
+        
+        if (!testDoc.exists()) {
+          return null;
+        }
         
         const testData = testDoc.data();
         
         // Fetch category if categoryId exists
         let category = null;
         if (testData.categoryId) {
-          const categoryDoc = await getDoc(doc(db, 'categories', testData.categoryId));
+          const categoryRef = doc(db, 'categories', testData.categoryId);
+          const categoryDoc = await getDoc(categoryRef);
           if (categoryDoc.exists()) {
             category = {
               id: categoryDoc.id,
@@ -57,7 +96,8 @@ export default function TestDetail() {
         // Fetch creator if creatorId exists and test is not anonymous
         let creator = null;
         if (testData.creatorId && !testData.isAnonymous) {
-          const userDoc = await getDoc(doc(db, 'users', testData.creatorId));
+          const userRef = doc(db, 'users', testData.creatorId);
+          const userDoc = await getDoc(userRef);
           if (userDoc.exists()) {
             creator = {
               id: userDoc.id,
@@ -67,7 +107,7 @@ export default function TestDetail() {
         }
         
         // Increment play count
-        await updateDoc(doc(db, 'tests', testId), {
+        await updateDoc(testRef, {
           playCount: increment(1)
         });
         
@@ -79,7 +119,7 @@ export default function TestDetail() {
         };
       } catch (error) {
         console.error("Error fetching test:", error);
-        throw error;
+        return null;
       }
     },
     enabled: !!testId
@@ -92,39 +132,24 @@ export default function TestDetail() {
       if (!testId) return [];
       
       try {
-        const commentsQuery = query(
-          collection(db, 'testComments'),
+        const commentsRef = collection(db, 'testComments');
+        const q = query(
+          commentsRef,
           where('testId', '==', testId),
-          orderBy('createdAt', 'desc')
+          orderBy('createdAt', 'desc'),
+          limit(20)
         );
         
-        const querySnapshot = await getDocs(commentsQuery);
+        const querySnapshot = await getDocs(q);
         
-        const commentsData = [];
-        for (const doc of querySnapshot.docs) {
-          const commentData = {
-            id: doc.id,
-            ...doc.data()
-          };
-          
-          // Fetch user data if userId exists
-          if (commentData.userId) {
-            const userDoc = await getDoc(doc(db, 'users', commentData.userId));
-            if (userDoc.exists()) {
-              commentData.user = {
-                id: userDoc.id,
-                ...userDoc.data()
-              };
-            }
-          }
-          
-          commentsData.push(commentData);
-        }
-        
-        return commentsData;
+        return querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          createdAt: doc.data().createdAt?.toDate()
+        }));
       } catch (error) {
         console.error("Error fetching test comments:", error);
-        throw error;
+        return [];
       }
     },
     enabled: !!testId
@@ -137,40 +162,23 @@ export default function TestDetail() {
       if (!testId) return [];
       
       try {
-        const scoresQuery = query(
-          collection(db, 'gameScores'),
+        const scoresRef = collection(db, 'gameScores');
+        const q = query(
+          scoresRef,
           where('testId', '==', testId),
           orderBy('score', 'desc'),
           limit(5)
         );
         
-        const querySnapshot = await getDocs(scoresQuery);
+        const querySnapshot = await getDocs(q);
         
-        const scoresData = [];
-        for (const doc of querySnapshot.docs) {
-          const scoreData = {
-            id: doc.id,
-            ...doc.data()
-          };
-          
-          // Fetch user data if userId exists
-          if (scoreData.userId) {
-            const userDoc = await getDoc(doc(db, 'users', scoreData.userId));
-            if (userDoc.exists()) {
-              scoreData.user = {
-                id: userDoc.id,
-                ...userDoc.data()
-              };
-            }
-          }
-          
-          scoresData.push(scoreData);
-        }
-        
-        return scoresData;
+        return querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
       } catch (error) {
         console.error("Error fetching top scores:", error);
-        throw error;
+        return [];
       }
     },
     enabled: !!testId
@@ -181,14 +189,16 @@ export default function TestDetail() {
     if (user && testId) {
       const checkUserLike = async () => {
         try {
-          const likesQuery = query(
-            collection(db, 'userActivities'),
+          const likesRef = collection(db, 'userActivities');
+          const q = query(
+            likesRef,
             where('userId', '==', user.uid),
             where('entityId', '==', testId),
-            where('activityType', '==', 'like_test')
+            where('activityType', '==', 'like_test'),
+            limit(1)
           );
           
-          const querySnapshot = await getDocs(likesQuery);
+          const querySnapshot = await getDocs(q);
           setHasLiked(!querySnapshot.empty);
         } catch (error) {
           console.error("Error checking if user liked test:", error);
@@ -199,13 +209,142 @@ export default function TestDetail() {
     }
   }, [user, testId]);
 
+  // Like test mutation
+  const likeTestMutation = useMutation({
+    mutationFn: async () => {
+      if (!testId || !user) {
+        throw new Error("Test ID or user not found");
+      }
+      
+      // Check if user has already liked this test
+      const likesRef = collection(db, 'userActivities');
+      const q = query(
+        likesRef,
+        where('userId', '==', user.uid),
+        where('entityId', '==', testId),
+        where('activityType', '==', 'like_test'),
+        limit(1)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      
+      if (!querySnapshot.empty) {
+        throw new Error("You have already liked this test");
+      }
+      
+      const testRef = doc(db, 'tests', testId);
+      await updateDoc(testRef, {
+        likeCount: increment(1)
+      });
+      
+      // Add user activity
+      await addDoc(collection(db, 'userActivities'), {
+        userId: user.uid,
+        userName: user.displayName || user.email?.split('@')[0],
+        activityType: 'like_test',
+        details: `Teste beğeni verildi: ${test?.title}`,
+        entityId: testId,
+        entityType: 'test',
+        createdAt: serverTimestamp()
+      });
+      
+      return true;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Test beğenildi",
+        description: "Bu testi beğendiniz!",
+        variant: "default",
+      });
+      
+      setHasLiked(true);
+      
+      // Refetch test data to update like count
+      refetchTest();
+    },
+    onError: (error: any) => {
+      console.error("Error liking test:", error);
+      
+      if (error.message === "You have already liked this test") {
+        toast({
+          title: "Zaten beğendiniz",
+          description: "Bu testi daha önce beğendiniz.",
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Hata",
+          description: "Test beğenilirken bir hata oluştu.",
+          variant: "destructive",
+        });
+      }
+    }
+  });
+
+  // Add comment mutation
+  const addCommentMutation = useMutation({
+    mutationFn: async () => {
+      if (!testId || !user || !commentText.trim()) {
+        throw new Error("Missing required data");
+      }
+      
+      const commentData = {
+        testId: testId,
+        userId: user.uid,
+        comment: commentText.trim(),
+        createdAt: serverTimestamp()
+      };
+      
+      const docRef = await addDoc(collection(db, 'testComments'), commentData);
+      
+      // Add user activity
+      await addDoc(collection(db, 'userActivities'), {
+        userId: user.uid,
+        userName: user.displayName || user.email?.split('@')[0],
+        activityType: 'comment_test',
+        details: `Teste yorum yapıldı: ${test?.title}`,
+        entityId: testId,
+        entityType: 'test',
+        createdAt: serverTimestamp()
+      });
+      
+      return {
+        id: docRef.id,
+        ...commentData,
+        createdAt: new Date()
+      };
+    },
+    onSuccess: (newComment) => {
+      toast({
+        title: "Yorum eklendi",
+        description: "Yorumunuz başarıyla eklendi.",
+        variant: "default",
+      });
+      
+      setCommentText("");
+      
+      // Add the new comment to the existing comments
+      queryClient.setQueryData([`test-comments-${testId}`], (oldData: any) => {
+        return [newComment, ...(oldData || [])];
+      });
+    },
+    onError: (error) => {
+      console.error("Error adding comment:", error);
+      toast({
+        title: "Hata",
+        description: "Yorum eklenirken bir hata oluştu.",
+        variant: "destructive",
+      });
+    }
+  });
+
   // Handle start test
   const handleStartTest = () => {
     setLocation(`/play/${testId}`);
   };
 
   // Handle like test
-  const handleLikeTest = async () => {
+  const handleLikeTest = () => {
     if (!user) {
       toast({
         title: "Giriş yapmalısınız",
@@ -224,41 +363,7 @@ export default function TestDetail() {
       return;
     }
     
-    try {
-      // Increment like count
-      await updateDoc(doc(db, 'tests', testId), {
-        likeCount: increment(1)
-      });
-      
-      // Add user activity
-      await addDoc(collection(db, 'userActivities'), {
-        userId: user.uid,
-        userName: user.displayName || user.email?.split('@')[0],
-        activityType: 'like_test',
-        details: `Teste beğeni verildi: ${test?.title}`,
-        entityId: testId,
-        entityType: 'test',
-        createdAt: serverTimestamp()
-      });
-      
-      setHasLiked(true);
-      
-      toast({
-        title: "Test beğenildi",
-        description: "Bu testi beğendiniz!",
-        variant: "default",
-      });
-      
-      // Refetch test data to update like count
-      refetchTest();
-    } catch (error) {
-      console.error("Error liking test:", error);
-      toast({
-        title: "Hata",
-        description: "Test beğenilirken bir hata oluştu.",
-        variant: "destructive",
-      });
-    }
+    likeTestMutation.mutate();
   };
 
   // Handle share test
@@ -301,7 +406,7 @@ export default function TestDetail() {
   };
 
   // Handle add comment
-  const handleAddComment = async () => {
+  const handleAddComment = () => {
     if (!user) {
       toast({
         title: "Giriş yapmalısınız",
@@ -321,39 +426,11 @@ export default function TestDetail() {
     }
     
     setIsAddingComment(true);
-    
-    try {
-      await addDoc(collection(db, 'testComments'), {
-        testId: testId,
-        userId: user.uid,
-        comment: commentText.trim(),
-        createdAt: serverTimestamp()
-      });
-      
-      toast({
-        title: "Yorum eklendi",
-        description: "Yorumunuz başarıyla eklendi.",
-        variant: "default",
-      });
-      
-      setCommentText("");
-      
-      // Refetch comments
-      refetchComments();
-    } catch (error) {
-      console.error("Error adding comment:", error);
-      toast({
-        title: "Hata",
-        description: "Yorum eklenirken bir hata oluştu.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsAddingComment(false);
-    }
+    addCommentMutation.mutate();
   };
 
   // Format time display
-  const formatTimeDisplay = (seconds: number): string => {
+  const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
@@ -421,7 +498,7 @@ export default function TestDetail() {
                     )}
                     <div className="flex items-center text-xs text-muted-foreground">
                       <Calendar className="h-3 w-3 mr-1" />
-                      {test.createdAt ? new Date(test.createdAt.toDate()).toLocaleDateString() : ""}
+                      {test.createdAt ? new Date(test.createdAt).toLocaleDateString() : ""}
                     </div>
                   </div>
                 </div>
@@ -431,7 +508,7 @@ export default function TestDetail() {
                     size="sm" 
                     onClick={handleLikeTest}
                     className="flex gap-1 items-center"
-                    disabled={hasLiked}
+                    disabled={likeTestMutation.isPending || hasLiked}
                   >
                     <ThumbsUp className="h-4 w-4" /> {test.likeCount || 0}
                   </Button>
@@ -447,7 +524,7 @@ export default function TestDetail() {
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-2 mb-4">
-                <User className="h-5 w-5 text-muted-foreground" />
+                <UserCircle2 className="h-5 w-5 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">
                   {test.isAnonymous || !test.creatorId 
                     ? "Anonim kullanıcı tarafından oluşturuldu" 
@@ -566,7 +643,7 @@ export default function TestDetail() {
                                 </span>
                                 <span className="text-xs text-muted-foreground">
                                   {comment.createdAt ? formatDistance(
-                                    new Date(comment.createdAt.toDate()), 
+                                    new Date(comment.createdAt), 
                                     new Date(), 
                                     { addSuffix: true, locale: tr }
                                   ) : ""}
@@ -623,7 +700,7 @@ export default function TestDetail() {
                           <div className="flex items-center gap-2">
                             <Badge variant="outline" className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />
-                              {score.completionTime ? formatTimeDisplay(score.completionTime) : "--:--"}
+                              {score.completionTime ? formatTime(score.completionTime) : "--:--"}
                             </Badge>
                             <div className="w-16 text-right font-mono">{score.score} puan</div>
                           </div>
@@ -657,59 +734,3 @@ export default function TestDetail() {
     </div>
   );
 }
-
-// Add missing components
-const Alert = ({ children, className }: { children: React.ReactNode, className?: string }) => (
-  <div className={`bg-muted/30 border rounded-lg p-4 ${className || ''}`}>
-    {children}
-  </div>
-);
-
-const AlertTitle = ({ children }: { children: React.ReactNode }) => (
-  <h5 className="text-base font-semibold mb-1">{children}</h5>
-);
-
-const AlertDescription = ({ children }: { children: React.ReactNode }) => (
-  <div className="text-sm text-muted-foreground">{children}</div>
-);
-
-const Avatar = ({ children, className }: { children: React.ReactNode, className?: string }) => (
-  <div className={`rounded-full overflow-hidden ${className || ''}`}>
-    {children}
-  </div>
-);
-
-const AvatarImage = ({ src, alt, className }: { src: string, alt: string, className?: string }) => (
-  <img src={src} alt={alt} className={`w-full h-full object-cover ${className || ''}`} />
-);
-
-const AvatarFallback = ({ children, className }: { children: React.ReactNode, className?: string }) => (
-  <div className={`bg-muted flex items-center justify-center text-muted-foreground font-medium ${className || ''}`}>
-    {children}
-  </div>
-);
-
-// Simplified formatDistance function
-const formatDistance = (date: Date, baseDate: Date, options: { addSuffix: boolean, locale: any }) => {
-  const seconds = Math.floor((baseDate.getTime() - date.getTime()) / 1000);
-  
-  if (seconds < 60) return 'az önce';
-  
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes} dakika önce`;
-  
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} saat önce`;
-  
-  const days = Math.floor(hours / 24);
-  if (days < 30) return `${days} gün önce`;
-  
-  const months = Math.floor(days / 30);
-  if (months < 12) return `${months} ay önce`;
-  
-  const years = Math.floor(months / 12);
-  return `${years} yıl önce`;
-};
-
-// Simplified tr locale
-const tr = {};
