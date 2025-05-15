@@ -163,7 +163,7 @@ export async function initializeSampleData() {
       },
       {
         name: 'Sanat',
-        description: 'Ünlü sanat eserleri ve sanatçılar',
+        description: 'Tablolar, heykeller ve diğer sanat eserleriyle ilgili testler',
         iconName: 'palette',
         color: '#EC4899', // pink-500
         backgroundColor: '#FDF2F8', // pink-50
@@ -239,39 +239,6 @@ export async function initializeSampleData() {
         difficulty: 1,
         playCount: 250,
         likeCount: 120,
-        active: true,
-        createdAt: serverTimestamp()
-      },
-      {
-        title: 'Lamborghini Aventador',
-        imageUrl: 'https://images.unsplash.com/photo-1544829099-b9a0c07fad1a?w=800',
-        categoryId: '1', // Will be updated after categories are created
-        answers: ['Lamborghini', 'Lamborghini Aventador', 'Aventador'],
-        difficulty: 2,
-        playCount: 180,
-        likeCount: 95,
-        active: true,
-        createdAt: serverTimestamp()
-      },
-      {
-        title: 'Eyfel Kulesi',
-        imageUrl: 'https://images.unsplash.com/photo-1543349689-9a4d426bee8e?w=800',
-        categoryId: '2', // Will be updated after categories are created
-        answers: ['Eyfel Kulesi', 'Eiffel Tower', 'Paris'],
-        difficulty: 1,
-        playCount: 220,
-        likeCount: 110,
-        active: true,
-        createdAt: serverTimestamp()
-      },
-      {
-        title: 'Harry Potter',
-        imageUrl: 'https://images.unsplash.com/photo-1551269901-5c5e14c25df7?w=800',
-        categoryId: '3', // Will be updated after categories are created
-        answers: ['Harry Potter', 'Hogwarts'],
-        difficulty: 1,
-        playCount: 240,
-        likeCount: 130,
         active: true,
         createdAt: serverTimestamp()
       }
@@ -645,6 +612,7 @@ export async function incrementImageLikeCount(id: string): Promise<void> {
 // Tests
 export async function getAllTests(): Promise<Test[]> {
   try {
+    // Base query
     const testsRef = collection(db, 'tests');
     const q = query(
       testsRef,
@@ -1133,7 +1101,7 @@ function getDefaultThumbnail(): string {
     'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=500',
     'https://images.unsplash.com/photo-1608889825103-eb5ed706fc64?w=500',
     'https://images.unsplash.com/photo-1423742774270-6884aac775fa?w=500',
-    'https://images.unsplash.com/photo-1627856013091-fed6e4e30025?w=500'
+    'https://images.unsplash.com/photo-1627853202273-797f1c22a38e?w=500'
   ];
   
   return defaultThumbnails[Math.floor(Math.random() * defaultThumbnails.length)];
