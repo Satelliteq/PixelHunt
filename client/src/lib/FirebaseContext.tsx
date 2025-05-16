@@ -33,9 +33,8 @@ const AUTHORIZED_DOMAINS = [
   'localhost:3000',
   'localhost:5173',
   'pixelhunt-7afa8.firebaseapp.com',
-  'zp1v56uxy8rdx5ypatb0ockcb9tr6a-oci3--3000--4d9fd228.local-credentialless.webcontainer-api.io',
-  'zp1v56uxy8rdx5ypatb0ockcb9tr6a-oci3--5000--4d9fd228.local-credentialless.webcontainer-api.io',
-  '.webcontainer-api.io'
+  '.local-credentialless.webcontainer.io',
+  '.webcontainer.io'
 ];
 
 // Hardcoded admin list for offline fallback
@@ -78,9 +77,14 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           break;
         }
       }
-      
+
       if (!isAuthorized) {
         console.error('Unauthorized domain:', currentDomain);
+        toast({
+          title: "Yetkisiz Alan Adı",
+          description: `Bu alan adı (${currentDomain}) üzerinden giriş yapılamaz. Lütfen geliştirme ortamınızı kontrol edin ve yetkili bir alan adı kullanın.`,
+          variant: "destructive"
+        });
         throw new Error('auth/unauthorized-domain');
       }
 
