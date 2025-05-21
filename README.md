@@ -61,13 +61,13 @@ Yerel geliştirme ortamını kurmak için aşağıdaki adımları izleyin:
     -   Projenize bir "Web uygulaması" ekleyin.
     -   Elde ettiğiniz Firebase yapılandırma bilgilerini (`apiKey`, `authDomain` vb.) proje kök dizininde `.env.local` adlı bir dosyaya aşağıdaki formatta kaydedin:
         ```env
-        VITE_FIREBASE_API_KEY=your_api_key
-        VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
-        VITE_FIREBASE_PROJECT_ID=your_project_id
-        VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
-        VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
-        VITE_FIREBASE_APP_ID=your_app_id
-        # VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id (opsiyonel)
+        FIREBASE_API_KEY=your_api_key
+        FIREBASE_AUTH_DOMAIN=your_auth_domain
+        FIREBASE_PROJECT_ID=your_project_id
+        FIREBASE_STORAGE_BUCKET=your_storage_bucket
+        FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+        FIREBASE_APP_ID=your_app_id
+        # FIREBASE_MEASUREMENT_ID=your_measurement_id (opsiyonel)
         ```
         *(Not: Vite, çevre değişkenlerinin `VITE_` önekiyle başlamasını gerektirir.)*
     -   Firebase Konsolu'nda:
