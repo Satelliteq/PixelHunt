@@ -13,90 +13,44 @@ service cloud.firestore {
          request.auth.uid == '108973046762004266106');
     }
     
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-    
-    // Allow read access to all collections
+    // Tüm koleksiyonlar için temel izinler
     match /{document=**} {
-      allow read;
+      allow read, write: if true;
     }
     
     // Users collection
     match /users/{userId} {
-      // Only the user or an admin can update their own document
-      allow update: if isOwner(userId) || isAdmin();
-      
-      // Only admins can create or delete users
-      allow create, delete: if isAdmin();
-      
-      // Users can create their own document during sign-up
-      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow read, write: if true;
     }
     
     // Categories collection
     match /categories/{categoryId} {
-      // Only admins can create, update, or delete categories
-      allow create, update, delete: if isAdmin();
+      allow read, write: if true;
     }
     
     // Images collection
     match /images/{imageId} {
-      // Only admins or the creator can update images
-      allow update: if isAdmin() || 
-        (isSignedIn() && resource.data.createdBy == request.auth.uid);
-      
-      // Only admins or authenticated users can create images
-      allow create: if isAdmin() || isSignedIn();
-      
-      // Only admins can delete images
-      allow delete: if isAdmin();
+      allow read, write: if true;
     }
     
     // Tests collection
     match /tests/{testId} {
-      // Only admins or the creator can update tests
-      allow update: if isAdmin() || 
-        (isSignedIn() && resource.data.creatorId == request.auth.uid);
-      
-      // Only authenticated users can create tests
-      allow create: if isSignedIn();
-      
-      // Only admins or the creator can delete tests
-      allow delete: if isAdmin() || 
-        (isSignedIn() && resource.data.creatorId == request.auth.uid);
+      allow read, write: if true;
     }
     
     // Test comments collection
     match /testComments/{commentId} {
-      // Only authenticated users can create comments
-      allow create: if isSignedIn();
-      
-      // Only admins or the comment author can update or delete comments
-      allow update, delete: if isAdmin() || 
-        (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow read, write: if true;
     }
     
     // Game scores collection
     match /gameScores/{scoreId} {
-      // Only authenticated users can create scores
-      allow create: if true; // Allow anonymous scores
-      
-      // Only admins can update or delete scores
-      allow update, delete: if isAdmin();
+      allow read, write: if true;
     }
     
     // User activities collection
     match /userActivities/{activityId} {
-      // Users can read their own activities, admins can read all
-      allow read: if isAdmin() || 
-        (isSignedIn() && resource.data.userId == request.auth.uid);
-      
-      // Only the system or admins can create activities
-      allow create: if isAdmin() || isSignedIn();
-      
-      // Only admins can update or delete activities
-      allow update, delete: if isAdmin();
+      allow read, write: if true;
     }
   }
 }

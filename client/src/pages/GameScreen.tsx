@@ -12,13 +12,14 @@ import { toast } from '@/hooks/use-toast';
 import { formatTime, checkAnswer, calculateScore, playSoundEffect } from '@/lib/gameHelpers';
 import ScoreDisplay from '@/components/game/ScoreDisplay';
 import ImageReveal from '@/components/game/ImageReveal';
-import ContentCard from '@/components/game/ContentCard';
+import { ContentCard } from '@/components/game/ContentCard';
 import { Separator } from '@/components/ui/separator';
 import { useLanguage } from '@/lib/LanguageContext';
 import { doc, getDoc, collection, addDoc, query, where, orderBy, getDocs, updateDoc, increment, serverTimestamp, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/lib/AuthContext';
 import { Badge } from '@/components/ui/badge';
+import { incrementTestPlayCount } from '@/lib/firebaseHelpers';
 
 export default function GameScreen() {
   const [, setLocation] = useLocation();
@@ -51,22 +52,32 @@ export default function GameScreen() {
         const testDoc = await getDoc(testRef);
         
         if (!testDoc.exists()) {
+          console.error("Test bulunamadı:", testId);
           return null;
         }
         
         const testData = testDoc.data();
-        
-        // Increment play count
-        await updateDoc(testRef, {
-          playCount: increment(1)
-        });
+        console.log("Test verileri:", testData);
         
         return {
           id: testDoc.id,
-          ...testData
+          title: testData.title,
+          description: testData.description || '',
+          creatorId: testData.creatorId,
+          categoryId: testData.categoryId,
+          questions: testData.questions || [],
+          thumbnailUrl: testData.thumbnailUrl || '',
+          playCount: testData.playCount || 0,
+          likeCount: testData.likeCount || 0,
+          isPublic: testData.isPublic !== false,
+          isAnonymous: testData.isAnonymous === true,
+          approved: testData.approved === true,
+          featured: testData.featured === true,
+          createdAt: testData.createdAt?.toDate() || new Date(),
+          updatedAt: testData.updatedAt?.toDate()
         };
       } catch (error) {
-        console.error("Error fetching test:", error);
+        console.error("Test getirme hatası:", error);
         return null;
       }
     },
@@ -177,20 +188,13 @@ export default function GameScreen() {
     }
   };
 
-  // Handle skip
-  const handleSkip = () => {
+  // Handle correct answer
+  const handleCorrectAnswer = () => {
     if (!test?.questions || currentImageIndex >= test.questions.length) return;
     
-    // Save score of 0 for skipped question
-    saveGameScore(0, false);
-    
-    // Show correct answer
-    const currentQuestion = test.questions[currentImageIndex];
-    toast({
-      title: "Soru Atlandı",
-      description: `Doğru cevap: ${currentQuestion.answers[0]}`,
-      variant: "default",
-    });
+    // Calculate score based on reveal percentage
+    const earnedScore = calculateScore(revealPercent);
+    setScore(prev => prev + earnedScore);
     
     // Move to next question
     if (currentImageIndex < test.questions.length - 1) {
@@ -200,18 +204,37 @@ export default function GameScreen() {
     } else {
       // Game finished
       setGameStatus('finished');
+      // Save final score
+      saveGameScore(score + earnedScore, true);
+    }
+  };
+
+  // Handle skip
+  const handleSkip = () => {
+    if (!test?.questions || currentImageIndex >= test.questions.length) return;
+    
+    // Move to next question
+    if (currentImageIndex < test.questions.length - 1) {
+      setCurrentImageIndex(prev => prev + 1);
+      setRevealPercent(30); // Reset reveal percentage
+      setGuessHistory([]);
+    } else {
+      // Game finished
+      setGameStatus('finished');
+      // Save final score
+      saveGameScore(score, true);
     }
   };
 
   // Save game score
-  const saveGameScore = async (earnedScore: number, completed: boolean) => {
+  const saveGameScore = async (finalScore: number, completed: boolean) => {
     try {
       if (!testId) return;
       
       const scoreData = {
         testId: testId,
         userId: user?.uid || null,
-        score: earnedScore,
+        score: finalScore,
         completionTime: timeElapsed,
         attemptsCount: guessHistory.length,
         completed: completed,
@@ -225,7 +248,7 @@ export default function GameScreen() {
           userId: user.uid,
           userName: user.displayName || user.email?.split('@')[0],
           activityType: 'play_test',
-          details: `Test oynandı: ${test?.title}, Skor: ${earnedScore}`,
+          details: `Test oynandı: ${test?.title}, Skor: ${finalScore}`,
           entityId: testId,
           entityType: 'test',
           createdAt: serverTimestamp()
@@ -377,6 +400,11 @@ export default function GameScreen() {
 
   // Game finished screen
   if (gameStatus === 'finished') {
+    // Test oynanma sayısını artır
+    incrementTestPlayCount(testId).catch(error => {
+      console.error("Test oynanma sayısı artırılırken hata:", error);
+    });
+
     return (
       <div className="max-w-4xl mx-auto px-4 py-8 flex justify-center">
         <div className="w-full max-w-2xl">

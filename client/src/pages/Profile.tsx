@@ -3,6 +3,7 @@ import { useLocation } from 'wouter';
 import { useAuth } from '@/lib/AuthContext';
 import { useLanguage } from '@/lib/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
+import { useQuery } from '@tanstack/react-query';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -13,10 +14,12 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import GameTimer from '@/components/game/GameTimer';
 import ScoreDisplay from '@/components/game/ScoreDisplay';
-import { UserCircle, Mail, KeyRound, LogOut, AlertTriangle, Sparkles, Globe, User, Settings, Heart, Calendar, Clock, Trophy, Medal, Award, BookOpen, History, Edit, Save, Loader2, Play, Eye, Plus } from 'lucide-react';
+import { UserCircle, Mail, KeyRound, LogOut, AlertTriangle, Sparkles, Globe, User, Settings, Heart, Calendar, Clock, Trophy, Medal, Award, BookOpen, History, Edit, Save, Loader2, Play, Eye, Plus, Pencil } from 'lucide-react';
 import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import ContentCard from '@/components/game/ContentCard';
+import { ContentCard } from "@/components/game/ContentCard";
+import { getAllCategories } from '@/lib/firebaseHelpers';
+import { fetchUserDocument } from '@/lib/firebaseHelpers';
 
 export default function Profile() {
   const [_, setLocation] = useLocation();
@@ -33,13 +36,44 @@ export default function Profile() {
   const [isLoadingTests, setIsLoadingTests] = useState(false);
   const [isLoadingScores, setIsLoadingScores] = useState(false);
   const [isLoadingActivities, setIsLoadingActivities] = useState(false);
+  const [userData, setUserData] = useState<any>(null);
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: getAllCategories
+  });
 
   // Initialize form values
   useEffect(() => {
     if (user) {
-      // Safely access user metadata with optional chaining and defaults
-      setDisplayName(user.displayName || user.email?.split('@')[0] || '');
-      setUsername(user.email?.split('@')[0] || '');
+      // Kullanıcı bilgilerini Firebase'den al
+      const fetchUserData = async () => {
+        try {
+          console.log('Auth kullanıcı bilgileri:', user); // Debug log
+          const userDoc = await fetchUserDocument(user.uid);
+          console.log('Firestore kullanıcı bilgileri:', userDoc); // Debug log
+          
+          if (userDoc) {
+            setUserData(userDoc);
+            setDisplayName(userDoc.displayName || user.displayName || user.email?.split('@')[0] || '');
+            setUsername(userDoc.username || user.email?.split('@')[0] || '');
+          } else {
+            console.log('Kullanıcı belgesi bulunamadı, auth verilerini kullanıyoruz'); // Debug log
+            // Eğer Firestore'da belge yoksa, auth verilerini kullan
+            setUserData({
+              uid: user.uid,
+              displayName: user.displayName,
+              email: user.email,
+              photoURL: user.photoURL,
+              username: user.email?.split('@')[0]
+            });
+          }
+        } catch (error) {
+          console.error('Kullanıcı bilgileri alınamadı:', error);
+        }
+      };
+
+      fetchUserData();
       
       // Load user tests
       loadUserTests();
@@ -248,12 +282,23 @@ export default function Profile() {
       <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl p-6 mb-8">
         <div className="flex flex-col md:flex-row md:items-center md:space-x-6 gap-4">
           <Avatar className="h-24 w-24 border-4 border-background">
-            <AvatarImage src={user.photoURL || undefined} />
-            <AvatarFallback className="text-2xl bg-primary text-primary-foreground">{user.email?.[0].toUpperCase()}</AvatarFallback>
+            <AvatarImage 
+              src={userData?.avatarUrl || undefined} 
+              alt={userData?.displayName || user.email?.split('@')[0] || 'Kullanıcı'}
+              onError={(e) => {
+                console.log('Profil görseli yüklenemedi:', e);
+                console.log('Kullanıcı verisi:', userData);
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+              }}
+            />
+            <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
+              {(userData?.displayName || user.email || 'K')[0].toUpperCase()}
+            </AvatarFallback>
           </Avatar>
           <div className="space-y-1 flex-1">
             <div className="flex items-center gap-2">
-              <h1 className="text-3xl font-bold">{user.displayName || user.email?.split('@')[0]}</h1>
+              <h1 className="text-3xl font-bold">{userData?.displayName || user.displayName || user.email?.split('@')[0]}</h1>
               {user.emailVerified && (
                 <Badge variant="outline" className="text-xs bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
                   ✓ Doğrulanmış
@@ -367,15 +412,27 @@ export default function Profile() {
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   {userTests.map((test) => (
-                    <ContentCard
-                      key={test.id}
-                      title={test.title}
-                      imageUrl={test.thumbnailUrl || 'https://images.unsplash.com/photo-1592198084033-aade902d1aae?w=500'}
-                      playCount={test.playCount || 0}
-                      likeCount={test.likeCount || 0}
-                      duration={`${test.questions?.length || 0} soru`}
-                      onClick={() => setLocation(`/test/${test.id}`)}
-                    />
+                    <div key={test.id} className="relative group">
+                      <ContentCard
+                        title={test.title}
+                        description={test.description}
+                        imageUrl={test.thumbnailUrl}
+                        category={categories.find(c => c.id === test.categoryId)?.name || 'Kategorisiz'}
+                        playCount={test.playCount}
+                        likeCount={test.likeCount}
+                        onClick={() => setLocation(`/test/${test.id}`)}
+                      />
+                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setLocation(`/edit-test/${test.id}`)}
+                        >
+                          <Pencil className="w-4 h-4 mr-2" />
+                          Testi Düzenle
+                        </Button>
+                      </div>
+                    </div>
                   ))}
                 </div>
               )}

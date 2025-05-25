@@ -1,55 +1,12 @@
 rules_version = '2';
+
 service firebase.storage {
   match /b/{bucket}/o {
-    // Helper functions
-    function isSignedIn() {
-      return request.auth != null;
-    }
-    
-    function isAdmin() {
-      return isSignedIn() && 
-        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
-    }
-    
-    // User avatars
-    match /user-avatars/{userId}/{fileName} {
-      // Anyone can read user avatars
-      allow read;
-      
-      // Only the user or an admin can upload their own avatar
-      allow write: if isSignedIn() && (request.auth.uid == userId || isAdmin());
-    }
-    
-    // Test images
-    match /test-images/{testId}/{fileName} {
-      // Anyone can read test images
-      allow read;
-      
-      // Only authenticated users can upload test images
-      allow write: if isSignedIn();
-    }
-    
-    // Test thumbnails
-    match /test-thumbnails/{testId}/{fileName} {
-      // Anyone can read test thumbnails
-      allow read;
-      
-      // Only authenticated users can upload test thumbnails
-      allow write: if isSignedIn();
-    }
-    
-    // General images
-    match /images/{imageId}/{fileName} {
-      // Anyone can read images
-      allow read;
-      
-      // Only authenticated users can upload images
-      allow write: if isSignedIn();
-    }
-    
-    // Default rule - deny all other access
     match /{allPaths=**} {
-      allow read, write: if false;
+      allow read: if true;
+      allow write: if request.auth != null 
+                   && request.resource.size < 5 * 1024 * 1024 
+                   && request.resource.contentType.matches('image/.*');
     }
   }
 }

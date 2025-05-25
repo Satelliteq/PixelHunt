@@ -26,6 +26,8 @@ import Contact from "@/pages/Contact";
 import HowToPlay from "@/pages/HowToPlay";
 import NotFound from "@/pages/not-found";
 import Admin from "@/pages/Admin";
+import CategoryDetail from "@/pages/CategoryDetail";
+import EditTest from "@/pages/EditTest";
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -46,6 +48,7 @@ function Router() {
       <Route path="/tests" component={Tests} />
       <Route path="/create" component={TestCreate} />
       <Route path="/create-test" component={TestCreate} />
+      <Route path="/edit-test/:id" component={EditTest} />
       <Route path="/support" component={() => 
         <div className="text-center p-10">
           <h1 className="text-2xl font-bold mb-4">Destek</h1>
@@ -57,6 +60,7 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/profile" component={Profile} />
       <Route path="/admin" component={Admin} />
+      <Route path="/category/:id" component={CategoryDetail} />
       <Route component={NotFound} />
     </Switch>
   );

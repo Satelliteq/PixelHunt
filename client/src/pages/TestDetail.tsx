@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
   AlertTriangle, Heart, Share2, Play, Clock, Calendar, User, MessageSquare, Loader2,
-  ThumbsUp, Check, X, Trophy, Eye, UserCircle2
+  ThumbsUp, Check, X, Trophy, Eye, UserCircle2, Layers
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistance } from 'date-fns';
@@ -21,6 +21,68 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
+// Benzer testleri getiren fonksiyon
+async function getSimilarTests(testId: string) {
+  try {
+    console.log("getSimilarTests çağrıldı, testId:", testId);
+    
+    // Önce mevcut testin bilgilerini al
+    const testRef = doc(db, 'tests', testId);
+    const testDoc = await getDoc(testRef);
+    
+    if (!testDoc.exists()) {
+      console.log("Test bulunamadı");
+      return [];
+    }
+    
+    const currentTest = testDoc.data();
+    console.log("Mevcut test verisi:", {
+      id: testDoc.id,
+      ...currentTest,
+      categoryId: currentTest.categoryId,
+      category: currentTest.category
+    });
+    
+    // Kategori ID'sini kontrol et
+    const categoryId = currentTest.categoryId || (currentTest.category && currentTest.category.id);
+    console.log("Kullanılacak kategori ID:", categoryId);
+    
+    if (!categoryId) {
+      console.log("Testin kategorisi yok");
+      return [];
+    }
+    
+    // Aynı kategorideki diğer testleri getir
+    const testsRef = collection(db, 'tests');
+    const q = query(
+      testsRef,
+      where('categoryId', '==', categoryId),
+      orderBy('playCount', 'desc')
+    );
+    
+    console.log("Sorgu oluşturuldu, categoryId:", categoryId);
+    
+    const querySnapshot = await getDocs(q);
+    const allTests = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    console.log("Tüm testler:", allTests);
+    
+    // Mevcut testi filtrele ve sonuçları döndür
+    const filteredTests = allTests
+      .filter(test => test.id !== testId)
+      .slice(0, 4);
+    
+    console.log("Filtrelenmiş testler:", filteredTests);
+    
+    return filteredTests;
+  } catch (error) {
+    console.error("Error fetching similar tests:", error);
+    return [];
+  }
+}
 
 export default function TestDetail() {
   const [, setLocation] = useLocation();
@@ -151,6 +213,13 @@ export default function TestDetail() {
       }
     },
     enabled: !!testId
+  });
+
+  // Benzer testleri getir
+  const { data: similarTests = [], isLoading: isSimilarTestsLoading } = useQuery({
+    queryKey: ["similarTests", test?.id, test?.category?.id],
+    queryFn: () => getSimilarTests(test?.id || ""),
+    enabled: !!test?.id && (!!test?.categoryId || !!test?.category?.id)
   });
 
   // Check if user has already liked this test
@@ -356,6 +425,10 @@ export default function TestDetail() {
   // Handle start test
   const handleStartTest = () => {
     setLocation(`/play/${testId}`);
+  };
+
+  const handleEditTest = () => {
+    setLocation(`/test/${testId}/edit`);
   };
 
   // Format time display
@@ -745,20 +818,77 @@ export default function TestDetail() {
           </Card>
           
           {/* Similar tests */}
-          <Card className="border shadow-md">
+          <Card className="border shadow-md mb-6">
             <CardHeader>
-              <CardTitle className="text-lg">Benzer Testler</CardTitle>
-              <CardDescription>
-                {test.category?.name || "Benzer"} kategorisindeki diğer testler
-              </CardDescription>
+              <CardTitle className="text-lg flex items-center">
+                <Layers className="h-5 w-5 mr-2 text-primary" />
+                Benzer Testler
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {/* This would be populated with similar tests */}
-                <div className="text-center py-4 text-muted-foreground">
-                  Bu kategoride başka test bulunamadı.
+              {isSimilarTestsLoading ? (
+                <div className="flex items-center justify-center py-6">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  <span className="ml-2 text-muted-foreground">Benzer testler yükleniyor...</span>
                 </div>
-              </div>
+              ) : similarTests.length > 0 ? (
+                <div className="grid grid-cols-1 gap-4">
+                  {similarTests.map((similarTest) => (
+                    <Card 
+                      key={similarTest.id}
+                      className="cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => setLocation(`/test/${similarTest.id}`)}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-4">
+                          <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-muted">
+                            {similarTest.thumbnailUrl ? (
+                              <img 
+                                src={similarTest.thumbnailUrl} 
+                                alt={similarTest.title}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-primary/10">
+                                <Play className="w-6 h-6 text-primary" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-medium truncate">{similarTest.title}</h3>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                              <Play className="w-4 h-4" />
+                              <span>{similarTest.playCount || 0}</span>
+                              <Heart className="w-4 h-4 ml-2" />
+                              <span>{similarTest.likeCount || 0}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 space-y-3">
+                  <Layers className="h-12 w-12 text-muted-foreground/40 mx-auto" />
+                  <p className="text-muted-foreground">
+                    {test.category?.name ? (
+                      <>
+                        <span className="font-medium">{test.category.name}</span> kategorisinde henüz başka test bulunmuyor.
+                      </>
+                    ) : (
+                      "Bu test henüz bir kategoriye ait değil."
+                    )}
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setLocation("/categories")}
+                  >
+                    Tüm Kategorileri Gör
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

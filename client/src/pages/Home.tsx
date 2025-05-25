@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Heart, Trophy, BookOpen, Filter, Clock, Users, Sparkles, Award, ChevronLeft, ChevronRight, Plus, Search, X, Loader2, Layers, Film, Music, Palette, Gamepad2, Dumbbell, FlaskConical, Landmark, Eye } from "lucide-react";
+import { Heart, Trophy, BookOpen, Filter, Clock, Users, Sparkles, Award, ChevronLeft, ChevronRight, Plus, Search, X, Loader2, Layers, Film, Music, Palette, Gamepad2, Dumbbell, FlaskConical, Landmark, Eye, PawPrint, Laptop, Smartphone, Server, Atom, Microscope, Pizza, Cake, Leaf, TreeDeciduous, Sun, BookOpenCheck, Star, Globe, Image, Book as BookIcon, Car, Map, Camera, Coffee } from "lucide-react";
 import { Test, Category } from "@shared/schema";
 import { useLanguage } from "@/lib/LanguageContext";
 import { getAllCategories, getPopularTests, getNewestTests, getFeaturedTests, searchTests } from "@/lib/firebaseHelpers";
 
-import ContentCard from "@/components/game/ContentCard";
+import { ContentCard } from "@/components/game/ContentCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -239,28 +239,47 @@ export default function Home() {
     return defaultEmojis[index % defaultEmojis.length];
   };
   
-  // Icon ismine göre Lucide icon komponenti döndüren yardımcı fonksiyon
-  const getCategoryIcon = (iconName: string | null | undefined) => {
+  // İkon adına göre ilgili komponenti döndüren yardımcı fonksiyon
+  const getCategoryIcon = (iconName: string | null | undefined): React.ReactNode => {
     if (!iconName) return null;
     
-    switch (iconName) {
-      case 'film':
-        return <Film className="w-6 h-6" />;
-      case 'music':
-        return <Music className="w-6 h-6" />;
-      case 'palette':
-        return <Palette className="w-6 h-6" />;
-      case 'gamepad-2':
-        return <Gamepad2 className="w-6 h-6" />;
-      case 'dumbbell':
-        return <Dumbbell className="w-6 h-6" />;
-      case 'flask-conical':
-        return <FlaskConical className="w-6 h-6" />;
-      case 'landmark':
-        return <Landmark className="w-6 h-6" />;
-      default:
-        return <Layers className="w-6 h-6" />;
-    }
+    const iconMap: { [key: string]: React.ElementType } = {
+      'star': Star,
+      'globe': Globe,
+      'film': Film,
+      'palette': Palette,
+      'image': Image,
+      'music': Music,
+      'book': BookIcon,
+      'book-open': BookOpen,
+      'car': Car,
+      'map': Map,
+      'camera': Camera,
+      'coffee': Coffee,
+      'trophy': Trophy,
+      'users': Users,
+      'heart': Heart,
+      'gamepad-2': Gamepad2,
+      'paw-print': PawPrint,
+      'laptop': Laptop,
+      'smartphone': Smartphone,
+      'server': Server,
+      'atom': Atom,
+      'microscope': Microscope,
+      'dumbbell': Dumbbell,
+      'pizza': Pizza,
+      'cake': Cake,
+      'leaf': Leaf,
+      'tree': TreeDeciduous,
+      'sun': Sun,
+      'landmark': Landmark,
+      'book-open-check': BookOpenCheck
+    };
+
+    const IconComponent = iconMap[iconName];
+    if (!IconComponent) return null;
+    
+    return React.createElement(IconComponent, { className: "w-5 h-5" });
   };
 
   return (

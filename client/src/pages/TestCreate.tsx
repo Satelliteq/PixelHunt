@@ -30,6 +30,8 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/hooks/use-toast";
 import { AlertTriangle, Trash, Upload, Plus, Image, Loader2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { X } from "lucide-react";
 
 const testFormSchema = z.object({
   title: z.string().min(5, "Başlık en az 5 karakter olmalıdır").max(100, "Başlık en fazla 100 karakter olabilir"),
@@ -37,7 +39,7 @@ const testFormSchema = z.object({
   categoryId: z.string().min(1, "Lütfen bir kategori seçin"),
   isPublic: z.boolean().default(true),
   isAnonymous: z.boolean().default(false),
-  thumbnailUrl: z.string().url("Geçerli bir URL girin veya boş bırakın").optional(),
+  thumbnailUrl: z.string().url("Geçerli bir URL girin veya boş bırakın").optional().default(""),
   images: z.array(
     z.object({
       imageUrl: z.string().url("Görsel için geçerli bir URL girmelisiniz"),
@@ -48,13 +50,88 @@ const testFormSchema = z.object({
 
 type TestFormValues = z.infer<typeof testFormSchema>;
 
-// Helper function to upload a single file to Firebase Storage
-const uploadFileToStorage = async (file: File, path: string): Promise<string> => {
-  const storageRef = ref(storage, `${path}/${createId()}_${file.name}`);
-  const snapshot = await uploadBytes(storageRef, file);
-  return getDownloadURL(snapshot.ref);
+// Görsel optimizasyon fonksiyonu
+const optimizeImage = async (file: File): Promise<Blob> => {
+  return new Promise((resolve, reject) => {
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(file);
+    
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const MAX_WIDTH = 1200;
+      const MAX_HEIGHT = 1200;
+      let width = img.width;
+      let height = img.height;
+      
+      if (width > height) {
+        if (width > MAX_WIDTH) {
+          height *= MAX_WIDTH / width;
+          width = MAX_WIDTH;
+        }
+      } else {
+        if (height > MAX_HEIGHT) {
+          width *= MAX_HEIGHT / height;
+          height = MAX_HEIGHT;
+        }
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('Canvas context oluşturulamadı'));
+        return;
+      }
+      
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      canvas.toBlob((blob) => {
+        if (blob) {
+          resolve(blob);
+        } else {
+          reject(new Error('Görsel optimizasyonu başarısız'));
+        }
+      }, 'image/jpeg', 0.8);
+    };
+    
+    img.onerror = () => {
+      reject(new Error('Görsel yüklenemedi'));
+    };
+  });
 };
 
+// Görsel yükleme fonksiyonu
+const uploadFileToStorage = async (file: File, path: string): Promise<string> => {
+  try {
+    // Dosya boyutu kontrolü (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      throw new Error('Dosya boyutu 5MB\'dan küçük olmalıdır');
+    }
+
+    // Dosya tipi kontrolü
+    if (!file.type.startsWith('image/')) {
+      throw new Error('Sadece görsel dosyaları yüklenebilir');
+    }
+
+    // Görsel optimizasyonu
+    const optimizedBlob = await optimizeImage(file);
+    const optimizedFile = new File([optimizedBlob], file.name, { type: 'image/jpeg' });
+    
+    // Storage referansı oluştur
+  const storageRef = ref(storage, `${path}/${createId()}_${file.name}`);
+    
+    // Dosyayı yükle
+    const snapshot = await uploadBytes(storageRef, optimizedFile);
+    
+    // İndirme URL'sini al
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    
+    return downloadURL;
+  } catch (error) {
+    console.error('Dosya yükleme hatası:', error);
+    throw new Error('Dosya yüklenirken bir hata oluştu');
+  }
+};
 
 export default function TestCreate() {
   const [, navigate] = useLocation();
@@ -65,13 +142,10 @@ export default function TestCreate() {
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null); // Yüklenecek thumbnail dosyası
 
   const [imageInputs, setImageInputs] = useState<{
-    id: string; // Her imaj için benzersiz ID
-    imageUrl: string; // URL veya dosya yüklendikten sonraki URL
+    id: string;
+    imageUrl: string;
     answers: string[];
     tempAnswer: string;
-    file?: File; // Yüklenecek dosya
-    isUploading?: boolean; // Bireysel imaj yükleme durumu
-    error?: string; // Bireysel imaj yükleme hatası
   }[]>([
     { id: createId(), imageUrl: "", answers: [], tempAnswer: "" }
   ]);
@@ -108,12 +182,17 @@ export default function TestCreate() {
   // Form 'images' alanını imageInputs ile senkronize et
   useEffect(() => {
     const validImagesForForm = imageInputs
-      .filter(img => img.imageUrl && img.answers.length > 0) // Sadece geçerli URL'si ve cevabı olanları al
+      .filter(img => img.imageUrl && img.answers.length > 0)
       .map(img => ({
         imageUrl: img.imageUrl,
         answers: img.answers
       }));
-    form.setValue("images", validImagesForForm, { shouldValidate: true });
+    
+    form.setValue("images", validImagesForForm, { 
+      shouldValidate: true,
+      shouldDirty: true,
+      shouldTouch: true
+    });
   }, [imageInputs, form]);
 
   const handleThumbnailFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -165,81 +244,30 @@ export default function TestCreate() {
     setIsSubmitting(true);
 
     try {
-      let finalThumbnailUrl = values.thumbnailUrl || ""; // Eğer URL girilmişse onu kullan
-
-      // 1. Thumbnail yüklemesi (eğer dosya seçilmişse)
-      if (thumbnailFile) {
-        try {
-          finalThumbnailUrl = await uploadFileToStorage(thumbnailFile, 'test-thumbnails');
-        } catch (error) {
-          console.error("Thumbnail yükleme hatası:", error);
-          toast({ title: "Hata", description: "Kapak fotoğrafı yüklenirken bir hata oluştu.", variant: "destructive" });
-          setIsSubmitting(false);
-          return;
-        }
-      }
-
-      // 2. Görselleri işle ve yükle
-      const processedQuestions = await Promise.all(
-        imageInputs.map(async (imgInput, idx) => {
-          setImageInputs(prev => prev.map(item => item.id === imgInput.id ? { ...item, isUploading: true, error: undefined } : item));
-          let imageUrl = imgInput.imageUrl;
-
-          if (imgInput.file) { // Eğer dosya varsa yükle
-            try {
-              imageUrl = await uploadFileToStorage(imgInput.file, 'test-images');
-              setImageInputs(prev => prev.map(item => item.id === imgInput.id ? { ...item, imageUrl, isUploading: false, file: undefined } : item));
-            } catch (error) {
-              console.error(`Görsel #${idx + 1} yükleme hatası:`, error);
-              setImageInputs(prev => prev.map(item => item.id === imgInput.id ? { ...item, isUploading: false, error: "Yükleme başarısız" } : item));
-              throw new Error(`Görsel #${idx + 1} yüklenemedi.`); // Promise.all'u durdur
-            }
-          } else if (!imgInput.imageUrl.startsWith('http')) {
-             // Eğer URL değilse ve dosya da yoksa bu bir hata (örneğin sadece blob: URL kalmışsa)
-             // Ancak zaten zod validasyonu URL olmasını istiyor, bu durum pek olası değil.
-             // Yine de güvenlik için kontrol eklenebilir.
-             console.warn(`Görsel #${idx + 1} için geçerli bir URL veya dosya bulunamadı.`);
-          }
-          
-          if (!imageUrl) { // Eğer hiçbir şekilde URL elde edilemediyse
-            setImageInputs(prev => prev.map(item => item.id === imgInput.id ? { ...item, isUploading: false, error: "Geçerli görsel yok" } : item));
-            throw new Error(`Görsel #${idx + 1} için geçerli bir görsel kaynağı bulunamadı.`);
-          }
-
-          return {
-            imageUrl: imageUrl,
-            answers: imgInput.answers,
-            // question: "Bu görselde ne görüyorsunuz?" // Bu sabitse ve gerekliyse ekleyin
-          };
-        })
-      );
-      
-      if (!finalThumbnailUrl && processedQuestions.length > 0 && processedQuestions[0].imageUrl) {
-        finalThumbnailUrl = processedQuestions[0].imageUrl; // İlk görseli thumbnail yap
-      }
-
-
+      // Test verilerini hazırla
       const testData = {
         title: values.title,
         description: values.description || "",
         categoryId: values.categoryId,
         creatorId: user.uid,
         creatorUsername: user.displayName || user.email?.split('@')[0] || "Anonim",
-        questions: processedQuestions,
-        thumbnailUrl: finalThumbnailUrl,
+        questions: values.images.map(img => ({
+          imageUrl: img.imageUrl,
+          answers: img.answers,
+          question: "Bu görselde ne görüyorsunuz?"
+        })),
+        thumbnailUrl: values.thumbnailUrl || values.images[0]?.imageUrl || "",
         isPublic: values.isPublic,
-        isAnonymous: values.isAnonymous,
-        // createdAt, updatedAt, scoreCounts vb. createTest helper'ı içinde halledilmeli
-        // approved: true, // Firebase helper'da yönetilmeli
-        // featured: false // Firebase helper'da yönetilmeli
+        isAnonymous: values.isAnonymous
       };
 
+      // Testi oluştur
       const createdTest = await createTest(testData);
 
       toast({
         title: "Test başarıyla oluşturuldu",
-        description: "Testiniz yayında!",
-        variant: "default",
+        description: "Testiniz onay için gönderildi!",
+        variant: "default"
       });
 
       navigate(`/test/${createdTest.id}`);
@@ -253,8 +281,6 @@ export default function TestCreate() {
       });
     } finally {
       setIsSubmitting(false);
-      // Hata durumunda bile bireysel yükleme durumlarını sıfırla
-      setImageInputs(prev => prev.map(item => ({ ...item, isUploading: false })));
     }
   };
 
@@ -395,96 +421,78 @@ export default function TestCreate() {
               )}
             />
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+            <FormField
+              control={form.control}
+              name="thumbnailUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Kapak Görseli URL</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="https://..." 
+                      {...field} 
+                      onChange={(e) => {
+                        field.onChange(e);
+                        setThumbnailPreview(e.target.value);
+                      }}
+                    />
+                  </FormControl>
+                  <FormDescription>Testiniz için bir kapak görseli URL'si girin.</FormDescription>
+                  <FormMessage />
+                  {field.value && (
+                    <div className="mt-4 relative aspect-video rounded-lg overflow-hidden bg-muted">
+                      <img
+                        src={field.value}
+                        alt="Kapak Görseli"
+                        className="object-contain w-full h-full"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                          toast({
+                            title: "Görsel Yüklenemedi",
+                            description: "Lütfen geçerli bir görsel URL'si girin.",
+                            variant: "destructive"
+                          });
+                        }}
+                      />
+                    </div>
+                  )}
+                </FormItem>
+              )}
+            />
+
+            <div className="flex gap-4 mt-4">
               <FormField
                 control={form.control}
                 name="isPublic"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Herkese Açık</FormLabel>
-                      <FormDescription>Bu test tüm kullanıcılar tarafından görülebilir.</FormDescription>
-                    </div>
+                  <FormItem className="flex items-center gap-2">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel className="!mt-0">Herkese Açık</FormLabel>
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="isAnonymous"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Anonim Olarak Paylaş</FormLabel>
-                      <FormDescription>Testi oluşturan kullanıcı bilgisi gizlenir.</FormDescription>
-                    </div>
+                  <FormItem className="flex items-center gap-2">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel className="!mt-0">Anonim Olarak Paylaş</FormLabel>
                   </FormItem>
                 )}
               />
             </div>
-
-            {/* Thumbnail Yükleme Alanı */}
-            <FormField
-                control={form.control}
-                name="thumbnailUrl" // Zod şeması bu alanı bekliyor, submit'te URL ile dolacak
-                render={({ field }) => ( // field'ı doğrudan kullanmıyoruz ama react-hook-form için gerekli
-                <FormItem className="mt-6">
-                  <FormLabel>Kapak Fotoğrafı (Opsiyonel)</FormLabel>
-                  <div className="flex flex-col sm:flex-row gap-4 items-start">
-                    <div className="flex-1">
-                      <FormControl>
-                        <>
-                          <Input
-                            type="url"
-                            placeholder="https://.../kapak.jpg veya dosya yükleyin"
-                            value={field.value || ""} // Eğer thumbnailFile seçilirse burası form submit'te URL ile dolacak
-                            onChange={(e) => {
-                                field.onChange(e.target.value); // Form değerini güncelle
-                                setThumbnailPreview(e.target.value); // URL girilince önizlemeyi güncelle
-                                setThumbnailFile(null); // URL girilince dosyayı temizle
-                            }}
-                            disabled={isSubmitting}
-                            className="mb-2"
-                          />
-                          <label htmlFor="thumbnail-upload" className="flex items-center justify-center cursor-pointer w-full py-2 px-3 border border-dashed rounded text-sm text-muted-foreground hover:bg-muted/50 transition-colors">
-                            <input
-                              id="thumbnail-upload"
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              onChange={handleThumbnailFileChange}
-                              disabled={isSubmitting}
-                            />
-                            <Upload className="h-4 w-4 mr-2" />
-                            {isSubmitting && thumbnailFile ? 'Yükleniyor...' : 'Bilgisayardan Seç'}
-                          </label>
-                        </>
-                      </FormControl>
-                      <FormDescription className="mt-2">
-                        Testiniz için öne çıkan bir görsel. (Max 5MB)
-                      </FormDescription>
-                      <FormMessage />
-                    </div>
-                    
-                    {thumbnailPreview ? (
-                      <div className="w-32 h-32 flex items-center justify-center border rounded overflow-hidden bg-muted">
-                        <img
-                          src={thumbnailPreview}
-                          alt="Kapak Fotoğrafı Önizleme"
-                          className="max-w-full max-h-full object-cover"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-32 h-32 flex flex-col items-center justify-center border rounded bg-muted/30 text-muted-foreground">
-                        <Image className="h-10 w-10  mb-2" />
-                        <span className="text-xs text-center px-2">Kapak Fotoğrafı</span>
-                      </div>
-                    )}
-                  </div>
-                </FormItem>
-              )}
-            />
           </div>
 
           {/* Görseller ve Cevaplar Kartı */}
@@ -494,16 +502,16 @@ export default function TestCreate() {
             {imageInputs.map((image, index) => (
               <div key={image.id} className="mb-6 p-4 border rounded-md bg-muted/20 relative">
                 {imageInputs.length > 1 && (
-                    <Button
+                  <Button
                     type="button"
                     variant="ghost"
                     size="icon"
                     className="absolute top-2 right-2 h-7 w-7 text-muted-foreground hover:text-destructive"
                     onClick={() => removeImage(image.id)}
                     disabled={isSubmitting}
-                    >
+                  >
                     <Trash className="h-4 w-4" />
-                    </Button>
+                  </Button>
                 )}
 
                 <h3 className="font-medium mb-1 text-sm">Görsel #{index + 1}</h3>
@@ -511,30 +519,18 @@ export default function TestCreate() {
                 {image.error && <p className="text-xs text-red-500">{image.error}</p>}
                 
                 <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 items-start mt-2">
-                  {/* Sol Taraf: URL Input ve Dosya Yükleme */}
+                  {/* Sol Taraf: URL Input */}
                   <div>
                     <FormLabel htmlFor={`image-url-${image.id}`} className="text-xs">Görsel URL</FormLabel>
                     <Input
                       id={`image-url-${image.id}`}
                       type="url"
                       placeholder="https://.../gorsel.jpg"
-                      value={image.imageUrl.startsWith('blob:') ? '' : image.imageUrl} // blob URL'leri gösterme, dosya seçildi demek
+                      value={image.imageUrl}
                       onChange={(e) => updateImageUrlInput(image.id, e.target.value)}
-                      disabled={isSubmitting || image.isUploading}
+                      disabled={isSubmitting}
                       className="mb-2"
                     />
-                    <label htmlFor={`image-file-${image.id}`} className="flex items-center justify-center cursor-pointer w-full py-2 px-3 border border-dashed rounded text-sm text-muted-foreground hover:bg-muted/50 transition-colors">
-                      <input
-                        id={`image-file-${image.id}`}
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => handleImageFileChange(index, e)} // index kullanmaya devam
-                        disabled={isSubmitting || image.isUploading}
-                      />
-                      <Upload className="h-4 w-4 mr-2" />
-                      {image.isUploading ? 'Yükleniyor...' : (image.file ? `${image.file.name.substring(0,15)}...` : 'Bilgisayardan Seç')}
-                    </label>
                   </div>
 
                   {/* Sağ Taraf: Görsel Önizleme */}
@@ -544,7 +540,7 @@ export default function TestCreate() {
                         src={image.imageUrl}
                         alt={`Görsel ${index + 1} Önizleme`}
                         className="max-w-full max-h-full object-contain"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; /* veya placeholder */ }}
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                       />
                     ) : (
                       <Image className="h-8 w-8 md:h-12 md:h-12" />
@@ -569,13 +565,13 @@ export default function TestCreate() {
                   </div>
                   <FormField
                     control={form.control}
-                    name={`images.${index}.answers`} // Bu form validasyonu için
-                    render={() => ( // Sadece FormMessage'ı göstermek için render kullanılıyor
+                    name={`images.${index}.answers`}
+                    render={() => (
                       <FormMessage className="mt-1" />
                     )}
                   />
                   {image.answers.length === 0 && !form.formState.errors.images?.[index]?.answers && (
-                     <p className="text-xs text-muted-foreground mt-1">Henüz cevap eklenmedi.</p>
+                    <p className="text-xs text-muted-foreground mt-1">Henüz cevap eklenmedi.</p>
                   )}
                   <div className="flex flex-wrap gap-2 mt-2">
                     {image.answers.map((answer, ansIndex) => (
@@ -605,17 +601,31 @@ export default function TestCreate() {
               </div>
             )}
 
-            <Button type="button" variant="outline" onClick={addImage} className="w-full mt-2" disabled={isSubmitting}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={addImage}
+              className="w-full mt-2"
+              disabled={isSubmitting}
+            >
               <Plus className="h-4 w-4 mr-2" />
               Yeni Görsel Alanı Ekle
             </Button>
           </div>
 
-          <div className="flex justify-end gap-3 mt-8">
-            <Button type="button" variant="outline" onClick={() => navigate("/")} disabled={isSubmitting}>
+          <div className="flex justify-end gap-4">
+            <Button
+              variant="outline"
+              onClick={() => navigate("/profile")}
+              className="min-w-[120px]"
+            >
               İptal
             </Button>
-            <Button type="submit" disabled={isSubmitting || !form.formState.isValid || categoriesLoading}>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="min-w-[150px] bg-primary hover:bg-primary/90"
+            >
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

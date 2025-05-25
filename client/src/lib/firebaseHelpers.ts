@@ -1,8 +1,29 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, connectAuthEmulator } from 'firebase/auth';
-import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
-import { getStorage, connectStorageEmulator } from 'firebase/storage';
-import { getDatabase, connectDatabaseEmulator } from 'firebase/database';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
+import { getDatabase } from 'firebase/database';
+import { 
+  collection, 
+  doc, 
+  getDoc, 
+  getDocs, 
+  query, 
+  where, 
+  orderBy, 
+  limit, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  increment, 
+  serverTimestamp,
+  DocumentData,
+  QueryDocumentSnapshot,
+  FirestoreDataConverter,
+  Query
+} from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { createId } from '@paralleldrive/cuid2';
 
 // Firebase configuration
 const firebaseConfig = {
@@ -21,18 +42,6 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 const rtdb = getDatabase(app);
-
-// Connect to emulators in development
-if (import.meta.env.DEV && window.location.hostname === 'localhost') {
-  try {
-    connectAuthEmulator(auth, 'http://localhost:9099');
-    connectFirestoreEmulator(db, 'localhost', 8080);
-    connectStorageEmulator(storage, 'localhost', 9199);
-    connectDatabaseEmulator(rtdb, 'localhost', 9000);
-  } catch (error) {
-    console.error('Error connecting to Firebase emulators:', error);
-  }
-}
 
 export { app, auth, db, storage, rtdb };
 
@@ -79,9 +88,11 @@ export interface Image {
 }
 
 export interface Question {
-  imageUrl: string;
-  answers: string[];
+  id?: string;
   question: string;
+  imageUrl?: string;
+  options: string[];
+  correctAnswer: number;
 }
 
 export interface Test {
@@ -422,28 +433,6 @@ export async function initializeSampleData() {
   }
 }
 
-// Import necessary Firebase functions
-import { 
-  collection, 
-  doc, 
-  getDoc, 
-  getDocs, 
-  query, 
-  where, 
-  orderBy, 
-  limit, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  increment, 
-  serverTimestamp,
-  DocumentData,
-  QueryDocumentSnapshot,
-  FirestoreDataConverter
-} from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { createId } from '@paralleldrive/cuid2';
-
 // Categories
 export async function getAllCategories(): Promise<Category[]> {
   try {
@@ -655,18 +644,19 @@ export async function getAllTests(): Promise<Test[]> {
     const testsRef = collection(db, 'tests');
     const q = query(
       testsRef,
-      where('isPublic', '==', true),
-      where('approved', '==', true),
       orderBy('createdAt', 'desc')
     );
     
     const querySnapshot = await getDocs(q);
+    console.log("Test sayısı:", querySnapshot.docs.length);
     
     return querySnapshot.docs.map(doc => {
       const data = doc.data();
+      console.log("Test verisi:", data);
+      
       return {
         id: doc.id,
-        uuid: data.uuid,
+        uuid: data.uuid || createId(),
         title: data.title,
         description: data.description || '',
         creatorId: data.creatorId,
@@ -801,43 +791,31 @@ export async function getTestsByCategory(categoryId: string): Promise<Test[]> {
 
 export async function createTest(testData: any): Promise<Test> {
   try {
-    // Process images
-    const processedQuestions = await Promise.all(
-      testData.questions.map(async (question: any) => {
-        return {
-          imageUrl: question.imageUrl,
-          answers: question.answers,
-          question: question.question || "Bu görselde ne görüyorsunuz?"
-        };
-      })
-    );
-    
-    // Create test in Firestore
+    // Test verilerini hazırla
     const newTest = {
       ...testData,
       uuid: createId(),
-      questions: processedQuestions,
-      thumbnailUrl: testData.thumbnailUrl || (processedQuestions[0]?.imageUrl || ''),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
       playCount: 0,
       likeCount: 0,
-      createdAt: serverTimestamp()
+      approved: true,
+      featured: false
     };
     
+    // Firestore'a ekle
     const docRef = await addDoc(collection(db, 'tests'), newTest);
     
-    // Return the created test
+    // Oluşturulan testi döndür
     return {
       id: docRef.id,
       ...newTest,
       createdAt: new Date(),
-      isPublic: newTest.isPublic !== false,
-      isAnonymous: newTest.isAnonymous === true,
-      approved: newTest.approved === true,
-      featured: newTest.featured === true
+      updatedAt: new Date()
     };
   } catch (error) {
-    console.error("Test creation error:", error);
-    throw new Error('Test creation failed');
+    console.error("Test oluşturma hatası:", error);
+    throw new Error('Test oluşturulamadı');
   }
 }
 
@@ -845,7 +823,16 @@ export async function incrementTestPlayCount(id: string): Promise<void> {
   try {
     const testRef = doc(db, 'tests', id);
     await updateDoc(testRef, {
-      playCount: increment(1)
+      playCount: increment(1),
+      lastPlayedAt: serverTimestamp()
+    });
+
+    // Oyun aktivitesini kaydet
+    await addDoc(collection(db, 'userActivities'), {
+      activityType: 'play_test',
+      entityId: id,
+      entityType: 'test',
+      createdAt: serverTimestamp()
     });
   } catch (error) {
     console.error(`Error incrementing play count for test ${id}:`, error);
@@ -985,11 +972,11 @@ export async function getFeaturedTests(limitCount: number = 5): Promise<Test[]> 
 }
 
 // Search function
-export async function searchTests(query: string, categoryId?: string): Promise<Test[]> {
+export async function searchTests(searchQuery: string, categoryId?: string): Promise<Test[]> {
   try {
     // Base query
     const testsRef = collection(db, 'tests');
-    let q = query(
+    const baseQuery = query(
       testsRef,
       where('isPublic', '==', true),
       where('approved', '==', true),
@@ -998,13 +985,28 @@ export async function searchTests(query: string, categoryId?: string): Promise<T
     );
     
     // Execute query
-    const querySnapshot = await getDocs(q);
+    const querySnapshot = await getDocs(baseQuery);
     
     // Filter results client-side for text search
-    // Note: Firestore doesn't support full-text search natively
-    // For production, consider using Algolia or Firebase Extensions for search
     let results = querySnapshot.docs.map(doc => {
-      const data = doc.data();
+      const data = doc.data() as {
+        uuid: string;
+        title: string;
+        description?: string;
+        creatorId?: string;
+        categoryId?: string;
+        questions: any[];
+        thumbnailUrl?: string;
+        playCount?: number;
+        likeCount?: number;
+        isPublic?: boolean;
+        isAnonymous?: boolean;
+        approved?: boolean;
+        featured?: boolean;
+        createdAt?: any;
+        updatedAt?: any;
+      };
+      
       return {
         id: doc.id,
         uuid: data.uuid,
@@ -1026,8 +1028,8 @@ export async function searchTests(query: string, categoryId?: string): Promise<T
     });
     
     // Filter by search query if provided
-    if (query && query.trim() !== '') {
-      const normalizedQuery = query.toLowerCase().trim();
+    if (searchQuery && searchQuery.trim() !== '') {
+      const normalizedQuery = searchQuery.toLowerCase().trim();
       results = results.filter(test => 
         test.title.toLowerCase().includes(normalizedQuery) || 
         (test.description && test.description.toLowerCase().includes(normalizedQuery))
@@ -1046,22 +1048,32 @@ export async function searchTests(query: string, categoryId?: string): Promise<T
   }
 }
 
-// File upload helper
+// Görsel yükleme yardımcı fonksiyonu
 export async function uploadFile(file: File, path: string): Promise<string> {
   try {
-    // Create a storage reference
-    const storageRef = ref(storage, path);
+    // Dosya boyutu kontrolü (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      throw new Error('Dosya boyutu 5MB\'dan küçük olmalıdır');
+    }
+
+    // Dosya tipi kontrolü
+    if (!file.type.startsWith('image/')) {
+      throw new Error('Sadece görsel dosyaları yüklenebilir');
+    }
+
+    // Storage referansı oluştur
+    const storageRef = ref(storage, `${path}/${createId()}_${file.name}`);
     
-    // Upload file
+    // Dosyayı yükle
     const snapshot = await uploadBytes(storageRef, file);
     
-    // Get download URL
+    // İndirme URL'sini al
     const downloadURL = await getDownloadURL(snapshot.ref);
     
     return downloadURL;
   } catch (error) {
-    console.error('Error uploading file:', error);
-    throw new Error('File upload failed');
+    console.error('Dosya yükleme hatası:', error);
+    throw new Error('Dosya yüklenemedi');
   }
 }
 
@@ -1138,3 +1150,218 @@ function getDefaultThumbnail(): string {
   
   return defaultThumbnails[Math.floor(Math.random() * defaultThumbnails.length)];
 }
+
+// Test güncelleme
+export const updateTest = async (test: any) => {
+  try {
+    const testRef = doc(db, "tests", test.id);
+    await updateDoc(testRef, {
+      title: test.title,
+      description: test.description,
+      categoryId: test.categoryId,
+      thumbnailUrl: test.thumbnailUrl,
+      questions: test.questions.map((q: any) => ({
+        id: q.id,
+        imageUrl: q.imageUrl,
+        answers: q.answers,
+        question: q.question
+      })),
+      isPublic: test.isPublic,
+      isAnonymous: test.isAnonymous,
+      approved: true,
+      updatedAt: serverTimestamp()
+    });
+    return test;
+  } catch (error) {
+    console.error("Test güncelleme hatası:", error);
+    throw error;
+  }
+};
+
+// Test getirme
+export async function getTestById(id: string): Promise<Test | null> {
+  try {
+    if (!id) {
+      console.error("Test ID'si boş olamaz");
+      return null;
+    }
+
+    const testRef = doc(db, "tests", id);
+    const testSnap = await getDoc(testRef);
+    
+    if (!testSnap.exists()) {
+      console.error("Test bulunamadı:", id);
+      return null;
+    }
+    
+    const data = testSnap.data();
+    console.log("Test verileri:", data);
+    
+    // Test public değilse ve kullanıcı admin değilse null dön
+    if (!data.isPublic && !data.approved) {
+      console.error("Test erişilebilir değil:", id);
+      return null;
+    }
+    
+    return {
+      id: testSnap.id,
+      uuid: data.uuid || createId(),
+      title: data.title,
+      description: data.description || '',
+      creatorId: data.creatorId,
+      categoryId: data.categoryId,
+      questions: data.questions || [],
+      thumbnailUrl: data.thumbnailUrl || getDefaultThumbnail(),
+      playCount: data.playCount || 0,
+      likeCount: data.likeCount || 0,
+      isPublic: data.isPublic !== false,
+      isAnonymous: data.isAnonymous === true,
+      approved: data.approved === true,
+      featured: data.featured === true,
+      createdAt: data.createdAt?.toDate() || new Date(),
+      updatedAt: data.updatedAt?.toDate()
+    };
+  } catch (error) {
+    console.error(`Test getirme hatası (${id}):`, error);
+    return null;
+  }
+}
+
+// Resim yükleme
+export const uploadImage = async (file: File, path: string): Promise<string> => {
+  try {
+    const storageRef = ref(storage, `${path}/${file.name}`);
+    const snapshot = await uploadBytes(storageRef, file);
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    return downloadURL;
+  } catch (error) {
+    console.error("Resim yükleme hatası:", error);
+    throw error;
+  }
+};
+
+// Benzer testleri getir
+export async function getSimilarTests(testId: string, limitCount: number = 3): Promise<Test[]> {
+  try {
+    // Önce mevcut testi al
+    const currentTest = await getTestById(testId);
+    if (!currentTest) {
+      console.log("Mevcut test bulunamadı:", testId);
+      return [];
+    }
+
+    console.log("Mevcut test:", currentTest);
+
+    // Aynı kategorideki diğer testleri getir
+    const testsRef = collection(db, 'tests');
+    const q = query(
+      testsRef,
+      where('categoryId', '==', currentTest.categoryId),
+      where('isPublic', '==', true),
+      where('approved', '==', true),
+      orderBy('playCount', 'desc'),
+      limit(limitCount + 1) // Mevcut testi de dahil etmek için +1
+    );
+    
+    const querySnapshot = await getDocs(q);
+    console.log("Benzer test sayısı:", querySnapshot.docs.length);
+    
+    // Mevcut testi hariç tut ve sonuçları döndür
+    const similarTests = querySnapshot.docs
+      .map(doc => {
+        const data = doc.data();
+        console.log("Test verisi:", data);
+        
+        return {
+          id: doc.id,
+          uuid: data.uuid || createId(),
+          title: data.title,
+          description: data.description || '',
+          creatorId: data.creatorId,
+          categoryId: data.categoryId,
+          questions: data.questions || [],
+          thumbnailUrl: data.thumbnailUrl || getDefaultThumbnail(),
+          playCount: data.playCount || 0,
+          likeCount: data.likeCount || 0,
+          isPublic: data.isPublic !== false,
+          isAnonymous: data.isAnonymous === true,
+          approved: data.approved === true,
+          featured: data.featured === true,
+          createdAt: data.createdAt?.toDate() || new Date(),
+          updatedAt: data.updatedAt?.toDate()
+        };
+      })
+      .filter(test => test.id !== testId) // Mevcut testi filtrele
+      .slice(0, limitCount); // İstenen sayıda test döndür
+
+    console.log("Filtrelenmiş benzer testler:", similarTests);
+    return similarTests;
+  } catch (error) {
+    console.error('Error fetching similar tests:', error);
+    return [];
+  }
+}
+
+// Kullanıcı belgesini getir
+export const fetchUserDocument = async (userId: string) => {
+  if (!userId) {
+    console.log('fetchUserDocument: userId boş');
+    return null;
+  }
+  try {
+    const userRef = doc(db, 'users', userId);
+    const docSnap = await getDoc(userRef);
+    
+    if (docSnap.exists()) {
+      const userData = docSnap.data();
+      console.log('Firestore kullanıcı verisi:', userData);
+      
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+      console.log('Auth kullanıcı verisi:', currentUser);
+      
+      // Avatar URL'sini kontrol et
+      const avatarUrl = userData.avatarUrl || userData.photoURL || currentUser?.photoURL;
+      console.log('Avatar URL:', avatarUrl);
+      
+      return {
+        id: docSnap.id,
+        uid: userId,
+        displayName: userData.displayName || currentUser?.displayName || null,
+        email: userData.email || currentUser?.email || null,
+        avatarUrl: avatarUrl,
+        username: userData.username || null,
+        role: userData.role || 'user',
+        score: userData.score || 0,
+        createdAt: userData.createdAt?.toDate() || new Date(),
+        lastLoginAt: userData.lastLoginAt?.toDate() || new Date()
+      };
+    } else {
+      console.log('Kullanıcı belgesi bulunamadı:', userId);
+      
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+      
+      if (currentUser) {
+        console.log('Auth verilerini kullanıyoruz');
+        return {
+          id: userId,
+          uid: userId,
+          displayName: currentUser.displayName,
+          email: currentUser.email,
+          avatarUrl: currentUser.photoURL,
+          username: currentUser.email?.split('@')[0] || null,
+          role: 'user',
+          score: 0,
+          createdAt: new Date(),
+          lastLoginAt: new Date()
+        };
+      }
+      
+      return null;
+    }
+  } catch (error) {
+    console.error('Kullanıcı belgesi alınamadı:', error);
+    return null;
+  }
+};

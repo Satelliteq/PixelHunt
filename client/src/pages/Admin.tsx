@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, UserX, Shield, Edit, Trash, Plus, Check, X, Star, Globe, Film, Palette, Gamepad, Image, Music, Book, BookOpen, Car, Map, Camera, Coffee, Trophy, Users, Heart, DivideIcon as LucideIcon } from "lucide-react";
+import { Loader2, UserX, Shield, Edit, Trash, Plus, Check, X, Star, Globe, Film, Palette, Gamepad2, Image, Music, Book, BookOpen, Car, Map, Camera, Coffee, Trophy, Users, Heart, PawPrint, Laptop, Smartphone, Server, Atom, Microscope, Dumbbell, Pizza, Cake, Leaf, TreeDeciduous, Sun, BookOpenCheck, Landmark, GamepadIcon } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -150,7 +150,21 @@ const availableIcons = [
   { name: "trophy", component: Trophy },
   { name: "users", component: Users },
   { name: "heart", component: Heart },
-  { name: "gamepad", component: Gamepad },
+  { name: "gamepad-2", component: Gamepad2 },
+  { name: "paw-print", component: PawPrint },
+  { name: "laptop", component: Laptop },
+  { name: "smartphone", component: Smartphone },
+  { name: "server", component: Server },
+  { name: "atom", component: Atom },
+  { name: "microscope", component: Microscope },
+  { name: "dumbbell", component: Dumbbell },
+  { name: "pizza", component: Pizza },
+  { name: "cake", component: Cake },
+  { name: "leaf", component: Leaf },
+  { name: "tree", component: TreeDeciduous },
+  { name: "sun", component: Sun },
+  { name: "landmark", component: Landmark },
+  { name: "gamepad", component: GamepadIcon }
 ];
 
 // İkon adına göre ilgili komponenti döndüren yardımcı fonksiyon
@@ -578,143 +592,151 @@ function AdminPanel() {
                       Yeni Kategori
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>
-                        {selectedCategory
-                          ? "Kategori Düzenle"
-                          : "Yeni Kategori Ekle"}
-                      </DialogTitle>
-                      <DialogDescription>
-                        Kategori detaylarını giriniz.
-                      </DialogDescription>
-                    </DialogHeader>
+                  <DialogContent className="max-h-[90vh] overflow-y-auto p-0">
+                    <div className="p-6">
+                      <DialogHeader className="mb-4">
+                        <DialogTitle>
+                          {selectedCategory
+                            ? "Kategori Düzenle"
+                            : "Yeni Kategori Ekle"}
+                        </DialogTitle>
+                        <DialogDescription>
+                          Kategori detaylarını giriniz.
+                        </DialogDescription>
+                      </DialogHeader>
 
-                    <Form {...categoryForm}>
-                      <form
-                        onSubmit={categoryForm.handleSubmit(
-                          handleCategorySubmit,
-                        )}
-                        className="space-y-4"
-                      >
-                        <FormField
-                          control={categoryForm.control}
-                          name="name"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Kategori Adı</FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  placeholder="Örn: Sanat, Bilim, Tarih..."
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
+                      <Form {...categoryForm}>
+                        <form
+                          onSubmit={categoryForm.handleSubmit(
+                            handleCategorySubmit,
                           )}
-                        />
-
-                        <FormField
-                          control={categoryForm.control}
-                          name="description"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Açıklama</FormLabel>
-                              <FormControl>
-                                <Textarea
-                                  {...field}
-                                  placeholder="Kategori hakkında kısa açıklama..."
-                                  rows={3}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={categoryForm.control}
-                          name="iconName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>İkon</FormLabel>
-                              <div className="grid grid-cols-4 gap-2 p-2 max-h-32 overflow-y-auto border rounded-md">
-                                {availableIcons.map((icon) => (
-                                  <div
-                                    key={icon.name}
-                                    onClick={() => field.onChange(icon.name)}
-                                    className={`flex flex-col items-center justify-center p-2 rounded-md cursor-pointer transition-colors ${
-                                      field.value === icon.name
-                                        ? "bg-primary/20 border border-primary"
-                                        : "hover:bg-muted"
-                                    }`}
-                                  >
-                                    {React.createElement(icon.component, {
-                                      className: "w-5 h-5 mb-1",
-                                    })}
-                                    <span className="text-xs truncate">{icon.name}</span>
-                                  </div>
-                                ))}
-                              </div>
-                              <FormDescription>
-                                Kategori için bir ikon seçin (isteğe bağlı)
-                              </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={categoryForm.control}
-                          name="active"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Durum</FormLabel>
-                              <Select
-                                onValueChange={(value) => field.onChange(value === "true")}
-                                defaultValue={field.value ? "true" : "false"}
-                              >
+                          className="space-y-6"
+                        >
+                          <FormField
+                            control={categoryForm.control}
+                            name="name"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Kategori Adı</FormLabel>
                                 <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Kategori durumu" />
-                                  </SelectTrigger>
+                                  <Input
+                                    {...field}
+                                    placeholder="Örn: Sanat, Bilim, Tarih..."
+                                  />
                                 </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="true">Aktif</SelectItem>
-                                  <SelectItem value="false">Pasif</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <FormDescription>
-                                Bu kategori aktif olarak kullanılsın mı?
-                              </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <DialogFooter>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => setIsCategoryDialogOpen(false)}
-                          >
-                            İptal
-                          </Button>
-                          <Button type="submit" disabled={isLoading}>
-                            {isLoading ? (
-                              <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Kaydediliyor...
-                              </>
-                            ) : selectedCategory ? (
-                              "Güncelle"
-                            ) : (
-                              "Ekle"
+                                <FormMessage />
+                              </FormItem>
                             )}
-                          </Button>
-                        </DialogFooter>
-                      </form>
-                    </Form>
+                          />
+
+                          <FormField
+                            control={categoryForm.control}
+                            name="description"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Açıklama</FormLabel>
+                                <FormControl>
+                                  <Textarea
+                                    {...field}
+                                    placeholder="Kategori hakkında kısa açıklama..."
+                                    rows={3}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={categoryForm.control}
+                            name="iconName"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>İkon</FormLabel>
+                                <div className="grid grid-cols-6 gap-2 p-3 max-h-[180px] overflow-y-auto border rounded-md bg-background">
+                                  {availableIcons.map((icon) => (
+                                    <div
+                                      key={icon.name}
+                                      onClick={() => field.onChange(icon.name)}
+                                      className={`flex flex-col items-center justify-center p-2 rounded-md cursor-pointer transition-colors ${
+                                        field.value === icon.name
+                                          ? "bg-primary/20 border border-primary"
+                                          : "hover:bg-muted border border-transparent"
+                                      }`}
+                                    >
+                                      {React.createElement(icon.component, {
+                                        className: "w-5 h-5 mb-1.5",
+                                      })}
+                                      <span className="text-xs text-center truncate w-full">{icon.name}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                                <FormDescription className="mt-1.5">
+                                  Kategori için bir ikon seçin (isteğe bağlı)
+                                </FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={categoryForm.control}
+                            name="active"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Durum</FormLabel>
+                                <Select
+                                  onValueChange={(value) => field.onChange(value === "true")}
+                                  defaultValue={field.value ? "true" : "false"}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Kategori durumu" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="true">Aktif</SelectItem>
+                                    <SelectItem value="false">Pasif</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormDescription>
+                                  Bu kategori aktif olarak kullanılsın mı?
+                                </FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </form>
+                      </Form>
+                    </div>
+
+                    <DialogFooter className="sticky bottom-0 bg-background border-t p-4 mt-0">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setIsCategoryDialogOpen(false)}
+                        >
+                          İptal
+                        </Button>
+                        <Button 
+                          type="submit" 
+                          disabled={isLoading}
+                          onClick={categoryForm.handleSubmit(handleCategorySubmit)}
+                        >
+                          {isLoading ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Kaydediliyor...
+                            </>
+                          ) : selectedCategory ? (
+                            "Güncelle"
+                          ) : (
+                            "Ekle"
+                          )}
+                        </Button>
+                      </div>
+                    </DialogFooter>
                   </DialogContent>
                 </Dialog>
               </div>

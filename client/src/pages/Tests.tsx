@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Test } from "@shared/schema";
 import { getDifficultyText } from "@/lib/gameHelpers";
-import ContentCard from "@/components/game/ContentCard";
+import { ContentCard } from "@/components/game/ContentCard";
 import { getAllTests, getPopularTests, getNewestTests, getFeaturedTests, getAllCategories } from "@/lib/firebaseHelpers";
 
 export default function Tests() {
