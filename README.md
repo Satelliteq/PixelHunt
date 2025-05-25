@@ -59,6 +59,7 @@ Yerel geliştirme ortamını kurmak için aşağıdaki adımları izleyin:
     ```
 
 3.  **Firebase Projesi Yapılandırması**:
+<<<<<<< HEAD
 
     - [Firebase Console](https://console.firebase.google.com/) üzerinden yeni bir proje oluşturun veya mevcut bir projeyi kullanın.
     - Projenize bir "Web uygulaması" ekleyin.
@@ -77,6 +78,25 @@ Yerel geliştirme ortamını kurmak için aşağıdaki adımları izleyin:
       - **Authentication** servisini etkinleştirin (E-posta/Şifre ve Google oturum açma yöntemlerini aktif edin).
       - **Firestore Database**'i oluşturun (Geliştirme için test modunda başlatılabilir). Güvenlik kurallarını projenizin gereksinimlerine göre yapılandırın.
       - **Storage** servisini oluşturun. Güvenlik kurallarını, yetkilendirilmiş kullanıcıların dosya yükleyebilmesi ve okuyabilmesi için yapılandırın.
+=======
+    -   [Firebase Console](https://console.firebase.google.com/) üzerinden yeni bir proje oluşturun veya mevcut bir projeyi kullanın.
+    -   Projenize bir "Web uygulaması" ekleyin.
+    -   Elde ettiğiniz Firebase yapılandırma bilgilerini (`apiKey`, `authDomain` vb.) proje kök dizininde `.env.local` adlı bir dosyaya aşağıdaki formatta kaydedin:
+        ```env
+        FIREBASE_API_KEY=your_api_key
+        FIREBASE_AUTH_DOMAIN=your_auth_domain
+        FIREBASE_PROJECT_ID=your_project_id
+        FIREBASE_STORAGE_BUCKET=your_storage_bucket
+        FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+        FIREBASE_APP_ID=your_app_id
+        # FIREBASE_MEASUREMENT_ID=your_measurement_id (opsiyonel)
+        ```
+        *(Not: Vite, çevre değişkenlerinin `VITE_` önekiyle başlamasını gerektirir.)*
+    -   Firebase Konsolu'nda:
+        -   **Authentication** servisini etkinleştirin (E-posta/Şifre ve Google oturum açma yöntemlerini aktif edin).
+        -   **Firestore Database**'i oluşturun (Geliştirme için test modunda başlatılabilir). Güvenlik kurallarını projenizin gereksinimlerine göre yapılandırın.
+        -   **Storage** servisini oluşturun. Güvenlik kurallarını, yetkilendirilmiş kullanıcıların dosya yükleyebilmesi ve okuyabilmesi için yapılandırın.
+>>>>>>> 4361e95d98a71a3ed65cc0e87bc318348def6348
 
 4.  **Geliştirme Sunucusunu Başlatın**:
     ```bash
