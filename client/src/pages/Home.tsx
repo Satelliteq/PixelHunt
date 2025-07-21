@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Heart, Trophy, BookOpen, Filter, Clock, Users, Sparkles, Award, ChevronLeft, ChevronRight, Plus, Search, X, Loader2, Layers, Film, Music, Palette, Gamepad2, Dumbbell, FlaskConical, Landmark, Eye, PawPrint, Laptop, Smartphone, Server, Atom, Microscope, Pizza, Cake, Leaf, TreeDeciduous, Sun, BookOpenCheck, Star, Globe, Image, Book as BookIcon, Car, Map, Camera, Coffee } from "lucide-react";
+import { Heart, Trophy, BookOpen, Filter, Clock, Users, Sparkles, Award, ChevronLeft, ChevronRight, Plus, Search, X, Loader2, Layers, Film, Music, Palette, Gamepad2, Dumbbell, FlaskConical, Landmark, Eye, PawPrint, Laptop, Smartphone, Server, Atom, Microscope, Pizza, Cake, Leaf, TreeDeciduous, Sun, BookOpenCheck, Star, Globe, Image, Book as BookIcon, Car, Map, Camera, Coffee, MessageSquare } from "lucide-react";
 import { Test, Category } from "@shared/schema";
 import { useLanguage } from "@/lib/LanguageContext";
 import { getAllCategories, getPopularTests, getNewestTests, getFeaturedTests, searchTests } from "@/lib/firebaseHelpers";
@@ -389,7 +389,7 @@ export default function Home() {
             <Card 
               key={category.id || index}
               className="group cursor-pointer hover:border-primary/50 transition-all duration-300 overflow-hidden"
-              onClick={() => navigate(`/categories/${category.id || index + 1}`)}
+              onClick={() => navigate(`/category/${category.id || index + 1}`)}
             >
               <CardContent className="p-3 flex flex-col items-center text-center">
                 <div 
@@ -594,6 +594,101 @@ export default function Home() {
             </Button>
           </CardFooter>
         </Card>
+      </section>
+
+      {/* Multiplayer Özellik Tanıtımı */}
+      <section className="py-32">
+        <div className="max-w-content mx-auto px-4">
+          <div className="bg-card rounded-xl overflow-hidden shadow-lg border border-border/50">
+            <div className="flex flex-col md:flex-row">
+              {/* Sol taraf - İçerik */}
+              <div className="p-8 md:p-12 flex flex-col justify-center w-full md:w-1/2">
+                <div className="flex items-center gap-2 mb-6">
+                  <Badge className="bg-primary/10 text-primary py-1 px-3 text-xs font-medium">
+                    <Users className="w-3 h-3 mr-1" />
+                    Çok Oyunculu Mod
+                  </Badge>
+                  <div className="h-4 w-px bg-border/50"></div>
+                  <span className="text-xs text-muted-foreground">Arkadaşlarınla Yarış</span>
+                </div>
+                
+                <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+                  Arkadaşlarınla <span className="text-primary">Yarış</span>
+                </h2>
+                
+                <p className="text-muted-foreground mb-8 leading-relaxed text-lg">
+                  PixelHunt'un çok oyunculu modu ile arkadaşlarınla aynı anda test çözebilir, 
+                  skorlarınızı karşılaştırabilir ve eğlenceli vakit geçirebilirsiniz.
+                </p>
+                
+                <ul className="space-y-6 mb-8">
+                  <li className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Users className="w-5 h-5 text-primary" />
+                    </div>
+                    <span className="text-base">Özel odalar oluşturun</span>
+                  </li>
+                  <li className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <MessageSquare className="w-5 h-5 text-primary" />
+                    </div>
+                    <span className="text-base">Gerçek zamanlı sohbet edin</span>
+                  </li>
+                  <li className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Trophy className="w-5 h-5 text-primary" />
+                    </div>
+                    <span className="text-base">Skor tablosunda yarışın</span>
+                  </li>
+                </ul>
+                
+                <Button 
+                  size="lg"
+                  className="w-full md:w-auto"
+                  onClick={() => navigate("/rooms")}
+                >
+                  <Users className="w-5 h-5 mr-2" />
+                  Odalara Göz At
+                </Button>
+              </div>
+              
+              {/* Sağ taraf - Görsel */}
+              <div className="w-full md:w-1/2 ">
+                <img 
+                  src="/public/gamification-concept-illustration.png" 
+                  alt="Multiplayer Preview" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Diğer Bölümler */}
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <h3 className="text-xl font-bold mb-2">Testler</h3>
+              <p className="text-muted-foreground">
+                Binlerce görsel test arasından seçim yapın
+              </p>
+            </div>
+            <div className="text-center">
+              <h3 className="text-xl font-bold mb-2">Yarışmalar</h3>
+              <p className="text-muted-foreground">
+                Arkadaşlarınızla yarışın ve skorlarınızı karşılaştırın
+              </p>
+            </div>
+            <div className="text-center">
+              <h3 className="text-xl font-bold mb-2">Sıralamalar</h3>
+              <p className="text-muted-foreground">
+                Lider tablosunda yerinizi alın
+              </p>
+            </div>
+          </div>
+        </div>
       </section>
     </div>
   );

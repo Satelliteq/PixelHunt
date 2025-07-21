@@ -200,6 +200,12 @@ const categoryFormSchema = z.object({
 
 type CategoryFormValues = z.infer<typeof categoryFormSchema>;
 
+// Kategori emojisini döndüren yardımcı fonksiyon
+const getCategoryEmoji = (name: string, index: number): string => {
+  const emojis = ['🎮', '🎨', '🎬', '🎵', '📚', '🚗', '🌍', '📸', '☕', '🏆', '👥', '❤️', '🐾', '💻', '📱', '🔬', '💪', '🍕', '🍰', '🌿', '🌳', '☀️', '🏛️', '🎯'];
+  return emojis[index % emojis.length];
+};
+
 // Admin Paneli Ana Bileşeni
 function AdminPanel() {
   const { toast } = useToast();
@@ -717,51 +723,51 @@ function AdminPanel() {
           <div className="flex items-center gap-2 mb-8">
             <Logo className="w-8 h-8" />
             <h2 className="text-xl font-bold">Admin Panel</h2>
-                </div>
+          </div>
           
           <nav className="space-y-2">
             <Button
               variant={activeTab === "dashboard" ? "default" : "ghost"}
               className="w-full justify-start"
               onClick={() => setActiveTab("dashboard")}
-                >
+            >
               <LayoutDashboard className="w-4 h-4 mr-2" />
               Dashboard
             </Button>
-                    <Button
+            <Button
               variant={activeTab === "categories" ? "default" : "ghost"}
               className="w-full justify-start"
               onClick={() => setActiveTab("categories")}
-                    >
+            >
               <FolderTree className="w-4 h-4 mr-2" />
               Kategoriler
-                    </Button>
+            </Button>
             <Button
               variant={activeTab === "tests" ? "default" : "ghost"}
               className="w-full justify-start"
               onClick={() => setActiveTab("tests")}
-                                    >
+            >
               <FileText className="w-4 h-4 mr-2" />
               Testler
             </Button>
-                        <Button
+            <Button
               variant={activeTab === "users" ? "default" : "ghost"}
               className="w-full justify-start"
               onClick={() => setActiveTab("users")}
-                        >
+            >
               <Users className="w-4 h-4 mr-2" />
               Kullanıcılar
-                        </Button>
-                        <Button 
+            </Button>
+            <Button 
               variant={activeTab === "activities" ? "default" : "ghost"}
               className="w-full justify-start"
               onClick={() => setActiveTab("activities")}
-                        >
+            >
               <Activity className="w-4 h-4 mr-2" />
               Aktiviteler
-                        </Button>
+            </Button>
           </nav>
-                      </div>
+        </div>
 
         {/* Main Content */}
         <div className="flex-1 p-8">
@@ -775,8 +781,8 @@ function AdminPanel() {
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-sm font-medium">Toplam Kullanıcı</CardTitle>
                     <Users className="w-4 h-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
+                  </CardHeader>
+                  <CardContent>
                     <div className="text-2xl font-bold">{users.length}</div>
                   </CardContent>
                 </Card>
@@ -809,10 +815,10 @@ function AdminPanel() {
                   <CardContent>
                     <div className="text-2xl font-bold">
                       {users.filter(user => !user.banned).length}
-                </div>
+                    </div>
                   </CardContent>
                 </Card>
-                </div>
+              </div>
 
               {/* Recent Activities */}
               <Card>
@@ -820,28 +826,28 @@ function AdminPanel() {
                   <CardTitle>Son Aktiviteler</CardTitle>
                 </CardHeader>
                 <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
                         <TableHead>Kullanıcı</TableHead>
                         <TableHead>Aktivite</TableHead>
                         <TableHead>Detay</TableHead>
                         <TableHead>Tarih</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
                       {activities.slice(0, 5).map((activity) => (
                         <TableRow key={activity.id}>
                           <TableCell>{activity.userName}</TableCell>
                           <TableCell>{activity.type}</TableCell>
                           <TableCell>{activity.details}</TableCell>
                           <TableCell>{new Date(activity.timestamp).toLocaleDateString()}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-            </CardContent>
-          </Card>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
             </div>
           )}
 
@@ -850,9 +856,9 @@ function AdminPanel() {
               <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-bold">Kategoriler</h1>
                 <Button onClick={() => setShowCategoryForm(true)}>
-                    <Plus className="w-4 h-4 mr-2" />
+                  <Plus className="w-4 h-4 mr-2" />
                   Yeni Kategori
-                  </Button>
+                </Button>
               </div>
 
               <Card>
@@ -866,13 +872,13 @@ function AdminPanel() {
                       Henüz kategori bulunmuyor.
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                       {categories.map((category, index) => (
                         <Card 
                           key={category.id}
                           className="cursor-pointer hover:border-primary/50 transition-all duration-300 overflow-hidden group"
                         >
-                          <div className="px-4 py-6 flex flex-col items-center text-center">
+                          <div className="p-6 flex flex-col items-center text-center">
                             <div className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl mb-4 transition-transform group-hover:scale-110 ${
                               index % 6 === 0 ? "bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400" : 
                               index % 6 === 1 ? "bg-sky-100 text-sky-600 dark:bg-sky-950 dark:text-sky-400" : 
@@ -886,23 +892,25 @@ function AdminPanel() {
                             <h3 className="text-lg font-medium mb-1">{category.name}</h3>
                             <p className="text-sm text-muted-foreground line-clamp-2">{category.description}</p>
                             
-                            <div className="mt-4 pt-4 border-t border-border/50 w-full flex justify-center space-x-2">
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="text-xs justify-center group-hover:bg-primary group-hover:text-primary-foreground"
-                                onClick={() => handleEditCategory(category)}
-                              >
-                                <Pencil className="h-3 w-3 mr-1" /> Düzenle
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="text-xs justify-center group-hover:bg-destructive group-hover:text-destructive-foreground"
-                                onClick={() => handleDeleteCategory(category.id)}
-                              >
-                                <Trash className="h-3 w-3 mr-1" /> Sil
-                              </Button>
+                            <div className="mt-4 pt-4 border-t border-border/50 w-full">
+                              <div className="flex justify-center gap-2">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="text-xs group-hover:bg-primary group-hover:text-primary-foreground"
+                                  onClick={() => handleEditCategory(category)}
+                                >
+                                  <Pencil className="h-3 w-3 mr-1" /> Düzenle
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="text-xs group-hover:bg-destructive group-hover:text-destructive-foreground"
+                                  onClick={() => handleDeleteCategory(category.id)}
+                                >
+                                  <Trash className="h-3 w-3 mr-1" /> Sil
+                                </Button>
+                              </div>
                             </div>
                           </div>
                         </Card>
@@ -918,91 +926,71 @@ function AdminPanel() {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-bold">Testler</h1>
-                <div className="flex items-center gap-2">
-                  <Input
-                    placeholder="Test ara..."
-                    className="w-64"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                  <Select value={filterStatus} onValueChange={setFilterStatus}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue placeholder="Durum" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Tümü</SelectItem>
-                      <SelectItem value="active">Aktif</SelectItem>
-                      <SelectItem value="inactive">Pasif</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
 
               <Card>
                 <CardContent className="p-6">
-              {isLoading ? (
-                <div className="flex justify-center py-8">
-                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                </div>
-              ) : tests.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  Henüz test bulunmuyor.
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {tests
-                    .filter(test => 
-                      test.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
-                      (filterStatus === 'all' || 
-                       (filterStatus === 'active' && test.isActive) ||
-                       (filterStatus === 'inactive' && !test.isActive))
-                    )
-                    .map((test) => (
-                      <Card 
-                        key={test.id}
-                        className="cursor-pointer hover:border-primary/50 transition-all duration-300 overflow-hidden group"
-                      >
-                        <div className="px-4 py-6 flex flex-col items-center text-center">
-                          <div className="w-16 h-16 rounded-full flex items-center justify-center text-2xl mb-4 transition-transform group-hover:scale-110 bg-primary/10 text-primary">
-                            <FileText className="w-8 h-8" />
-                          </div>
-                          <h3 className="text-lg font-medium mb-1">{test.title}</h3>
-                          <p className="text-sm text-muted-foreground line-clamp-2">
+                  {isLoading ? (
+                    <div className="flex justify-center py-8">
+                      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                    </div>
+                  ) : tests.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      Henüz test bulunmuyor.
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Test Adı</TableHead>
+                          <TableHead>Kategori</TableHead>
+                          <TableHead>Oluşturan</TableHead>
+                          <TableHead>Durum</TableHead>
+                          <TableHead className="text-right">İşlemler</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {tests
+                          .filter(test => 
+                            test.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
+                            (filterStatus === 'all' || 
+                             (filterStatus === 'active' && test.isActive) ||
+                             (filterStatus === 'inactive' && !test.isActive))
+                          )
+                          .map((test) => (
+                        <TableRow key={test.id}>
+                          <TableCell className="font-medium">{test.title}</TableCell>
+                          <TableCell>
                             {categories.find(c => c.id === test.categoryId)?.name || "Kategori yok"}
-                          </p>
-                          <div className="mt-2">
+                          </TableCell>
+                          <TableCell>{test.creatorName}</TableCell>
+                          <TableCell>
                             <Badge variant={test.isActive ? "success" : "secondary"}>
                               {test.isActive ? "Aktif" : "Pasif"}
                             </Badge>
-                          </div>
-                          
-                          <div className="mt-4 pt-4 border-t border-border/50 w-full flex justify-center space-x-2">
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="text-xs justify-center group-hover:bg-primary group-hover:text-primary-foreground"
-                              asChild
-                            >
-                              <Link to={`/test/${test.id}`}>
-                                <Eye className="h-3 w-3 mr-1" /> Görüntüle
-                              </Link>
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="text-xs justify-center group-hover:bg-destructive group-hover:text-destructive-foreground"
-                              onClick={() => handleDeleteTest(test.id)}
-                            >
-                              <Trash className="h-3 w-3 mr-1" /> Sil
-                            </Button>
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button variant="ghost" size="icon" asChild>
+                                <Link to={`/test/${test.id}`}>
+                                  <Eye className="w-4 h-4" />
+                                </Link>
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeleteTest(test.id)}
+                              >
+                                <Trash className="w-4 h-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </Table>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           )}
 
@@ -1030,28 +1018,28 @@ function AdminPanel() {
                 </div>
               </div>
 
-          <Card>
+              <Card>
                 <CardContent className="p-6">
-              {isLoading ? (
-                <div className="flex justify-center py-8">
-                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                </div>
-              ) : users.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  Henüz kullanıcı bulunmuyor.
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Kullanıcı Adı</TableHead>
-                      <TableHead>E-posta</TableHead>
-                      <TableHead>Rol</TableHead>
-                      <TableHead>Durum</TableHead>
-                      <TableHead className="text-right">İşlemler</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+                  {isLoading ? (
+                    <div className="flex justify-center py-8">
+                      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                    </div>
+                  ) : users.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      Henüz kullanıcı bulunmuyor.
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Kullanıcı Adı</TableHead>
+                          <TableHead>E-posta</TableHead>
+                          <TableHead>Rol</TableHead>
+                          <TableHead>Durum</TableHead>
+                          <TableHead className="text-right">İşlemler</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
                         {users
                           .filter(user => 
                             (user.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -1059,64 +1047,63 @@ function AdminPanel() {
                             (filterRole === 'all' || user.role === filterRole)
                           )
                           .map((user) => (
-                      <TableRow key={user.id}>
-                              <TableCell className="font-medium">
-                                {user.username || user.displayName || "Kullanıcı"}
-                              </TableCell>
-                        <TableCell>{user.email}</TableCell>
-                        <TableCell>
-                                <Badge variant={user.role === "admin" ? "default" : "outline"}>
-                            {user.role === "admin" ? "Admin" : "Kullanıcı"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {user.banned ? (
-                            <Badge variant="destructive">Banlı</Badge>
-                          ) : (
-                                  <Badge variant="success" className="bg-green-500/10 text-green-600 border-green-200">
-                                    Aktif
-                                  </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                                <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                                    onClick={() => handleToggleAdminRole(user.id, user.role)}
-                          >
-                                    {user.role === "admin" ? (
-                                      <UserMinus className="w-4 h-4" />
-                                    ) : (
-                                      <UserPlus className="w-4 h-4" />
-                                    )}
-                          </Button>
-                                  {user.banned ? (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleBanUser(user.id, false)}
-                            >
-                                      <Check className="w-4 h-4 text-success" />
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleBanUser(user.id, true)}
-                            >
-                                      <Ban className="w-4 h-4 text-destructive" />
-                            </Button>
-                          )}
-                                </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
+                        <TableRow key={user.id}>
+                          <TableCell className="font-medium">
+                            {user.username || user.displayName || "Kullanıcı"}
+                          </TableCell>
+                          <TableCell>{user.email}</TableCell>
+                          <TableCell>
+                            <Badge variant={user.role === "admin" ? "default" : "outline"}>
+                              {user.role === "admin" ? "Admin" : "Kullanıcı"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {user.banned ? (
+                              <Badge variant="destructive">Banlı</Badge>
+                            ) : (
+                              <Badge variant="success" className="bg-green-500/10 text-green-600 border-green-200">
+                                Aktif
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleToggleAdminRole(user.id, user.role)}
+                              >
+                                {user.role === "admin" ? (
+                                  <UserMinus className="w-4 h-4" />
+                                ) : (
+                                  <UserPlus className="w-4 h-4" />
+                                )}
+                              </Button>
+                              {user.banned ? (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleBanUser(user.id, false)}
+                                >
+                                  <Check className="w-4 h-4 text-success" />
+                                </Button>
+                              ) : (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleBanUser(user.id, true)}
+                                >
+                                  <Ban className="w-4 h-4 text-destructive" />
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </Table>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           )}
 
@@ -1125,11 +1112,11 @@ function AdminPanel() {
               <h1 className="text-3xl font-bold">Aktiviteler</h1>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
+                <Card>
+                  <CardHeader>
                     <CardTitle>Son Aktiviteler</CardTitle>
-            </CardHeader>
-            <CardContent>
+                  </CardHeader>
+                  <CardContent>
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -1146,7 +1133,7 @@ function AdminPanel() {
                             <TableCell>{activity.type}</TableCell>
                             <TableCell>{activity.details}</TableCell>
                             <TableCell>{new Date(activity.timestamp).toLocaleDateString()}</TableCell>
-                            </TableRow>
+                          </TableRow>
                         ))}
                       </TableBody>
                     </Table>
@@ -1160,7 +1147,7 @@ function AdminPanel() {
                   <CardContent>
                     <Table>
                       <TableHeader>
-                          <TableRow>
+                        <TableRow>
                           <TableHead>Test</TableHead>
                           <TableHead>Kategori</TableHead>
                           <TableHead>Oynanma</TableHead>
@@ -1178,13 +1165,13 @@ function AdminPanel() {
                         ))}
                       </TableBody>
                     </Table>
-                            </CardContent>
-                          </Card>
+                  </CardContent>
+                </Card>
               </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Category Form Dialog */}
       <Dialog open={showCategoryForm} onOpenChange={setShowCategoryForm}>
@@ -1248,7 +1235,7 @@ function AdminPanel() {
                             }`}
                           >
                             <IconComponent className="w-6 h-6" />
-                </div>
+                          </div>
                         );
                       })}
                     </div>

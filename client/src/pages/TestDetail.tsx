@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
   AlertTriangle, Heart, Share2, Play, Clock, Calendar, User, MessageSquare, Loader2,
-  ThumbsUp, Check, X, Trophy, Eye, UserCircle2, Layers
+  ThumbsUp, Check, X, Trophy, Eye, UserCircle2, Layers, Users, Edit
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistance } from 'date-fns';
@@ -137,16 +137,23 @@ export default function TestDetail() {
           }
         }
         
-        // Increment play count
-        await updateDoc(testRef, {
-          playCount: increment(1)
-        });
-        
         return {
           id: testDoc.id,
           ...testData,
           category,
-          creator
+          creator,
+          title: testData.title,
+          description: testData.description,
+          thumbnailUrl: testData.thumbnailUrl,
+          questions: testData.questions || [],
+          playCount: testData.playCount || 0,
+          likeCount: testData.likeCount || 0,
+          isPublic: testData.isPublic !== false,
+          isAnonymous: testData.isAnonymous === true,
+          approved: testData.approved === true,
+          featured: testData.featured === true,
+          createdAt: testData.createdAt?.toDate() || new Date(),
+          updatedAt: testData.updatedAt?.toDate()
         };
       } catch (error) {
         console.error("Error fetching test:", error);
@@ -423,12 +430,76 @@ export default function TestDetail() {
   };
 
   // Handle start test
-  const handleStartTest = () => {
-    setLocation(`/play/${testId}`);
+  const handleStartTest = async () => {
+    if (!testId) return;
+    
+    try {
+      // Increment play count
+      const testRef = doc(db, 'tests', testId);
+      await updateDoc(testRef, {
+        playCount: increment(1),
+        lastPlayedAt: serverTimestamp()
+      });
+
+      // Add user activity
+      if (user) {
+        await addDoc(collection(db, 'userActivities'), {
+          userId: user.uid,
+          activityType: 'play_test',
+          entityId: testId,
+          entityType: 'test',
+          createdAt: serverTimestamp()
+        });
+      }
+
+      // Navigate to game screen
+      setLocation(`/play/${testId}`);
+    } catch (error) {
+      console.error('Error starting test:', error);
+      toast({
+        title: "Hata",
+        description: "Test başlatılırken bir hata oluştu. Lütfen tekrar deneyin.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleStartMultiplayer = async () => {
+    if (!test || !testId) return;
+    
+    try {
+      // Increment play count
+      const testRef = doc(db, 'tests', testId);
+      await updateDoc(testRef, {
+        playCount: increment(1),
+        lastPlayedAt: serverTimestamp()
+      });
+
+      // Add user activity
+      if (user) {
+        await addDoc(collection(db, 'userActivities'), {
+          userId: user.uid,
+          activityType: 'play_test',
+          entityId: testId,
+          entityType: 'test',
+          createdAt: serverTimestamp()
+        });
+      }
+
+      // Navigate to rooms page
+      setLocation(`/rooms?testId=${test.id}`);
+    } catch (error) {
+      console.error('Error starting multiplayer test:', error);
+      toast({
+        title: "Hata",
+        description: "Çok oyunculu oyun başlatılırken bir hata oluştu. Lütfen tekrar deneyin.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleEditTest = () => {
-    setLocation(`/test/${testId}/edit`);
+    setLocation(`/edit-test/${testId}`);
   };
 
   // Format time display
@@ -582,13 +653,34 @@ export default function TestDetail() {
                 </div>
               </div>
               
-              <Button 
-                className="w-full" 
-                size="lg"
-                onClick={handleStartTest}
-              >
-                <Play className="mr-2 h-5 w-5" /> Testi Başlat
-              </Button>
+              <div className="flex gap-4 mt-6">
+                <Button
+                  onClick={handleStartTest}
+                  className="flex-1"
+                  size="lg"
+                >
+                  <Play className="w-4 h-4 mr-2" />
+                  Tek Başına Oyna
+                </Button>
+                <Button
+                  onClick={() => setLocation(`/rooms?testId=${test.id}`)}
+                  className="w-full"
+                  size="lg"
+                >
+                  <Users className="w-4 h-4 mr-2" />
+                  Arkadaşlarla Oyna
+                </Button>
+                {test.creatorId === user?.uid && (
+                  <Button
+                    onClick={handleEditTest}
+                    variant="outline"
+                    size="lg"
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    Düzenle
+                  </Button>
+                )}
+              </div>
             </CardContent>
           </Card>
           

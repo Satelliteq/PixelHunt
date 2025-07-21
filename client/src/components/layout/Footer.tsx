@@ -1,5 +1,5 @@
 import React from "react";
-import { Logo, LogoWithText } from "@/components/icons/Logo";
+import { Logo } from "@/components/icons/Logo";
 import { IconButton } from "@/components/ui/icon-button";
 import { Link } from "wouter";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -26,7 +26,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Logo ve açıklama */}
           <div className="col-span-1 md:col-span-1">
-            <LogoWithText className="h-8" textClassName="text-lg" />
+            <Logo className="h-8" />
             <p className="text-sm text-muted-foreground mt-3">
               {t('language') === 'tr' 
                 ? 'Görsel tespit ve hafıza geliştirme oyunları platformu. Testler oluşturun, arkadaşlarınızla paylaşın ve eğlenin!' 

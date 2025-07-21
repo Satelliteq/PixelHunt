@@ -28,6 +28,10 @@ import NotFound from "@/pages/not-found";
 import Admin from "@/pages/Admin";
 import CategoryDetail from "@/pages/CategoryDetail";
 import EditTest from "@/pages/EditTest";
+import MultiplayerRoom from "@/pages/MultiplayerRoom";
+import CreateRoom from "@/pages/CreateRoom";
+import JoinRoom from "@/pages/JoinRoom";
+import Support from "@/pages/Support";
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -46,15 +50,14 @@ function Router() {
       <Route path="/test/:testId" component={TestDetail} />
       <Route path="/categories" component={Categories} />
       <Route path="/tests" component={Tests} />
+      <Route path="/rooms" component={CreateRoom} />
       <Route path="/create" component={TestCreate} />
       <Route path="/create-test" component={TestCreate} />
       <Route path="/edit-test/:id" component={EditTest} />
-      <Route path="/support" component={() => 
-        <div className="text-center p-10">
-          <h1 className="text-2xl font-bold mb-4">Destek</h1>
-          <p className="text-muted-foreground">Bu sayfa geliştirme aşamasındadır.</p>
-        </div>
-      } />
+      <Route path="/room/create" component={CreateRoom} />
+      <Route path="/room/join" component={JoinRoom} />
+      <Route path="/room/:roomId" component={MultiplayerRoom} />
+      <Route path="/support" component={Support} />
       <Route path="/contact" component={Contact} />
       <Route path="/how-to-play" component={HowToPlay} />
       <Route path="/login" component={Login} />

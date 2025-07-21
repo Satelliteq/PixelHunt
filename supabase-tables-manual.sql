@@ -98,6 +98,53 @@ CREATE TABLE IF NOT EXISTS "public"."user_activities" (
   "created_at" TIMESTAMP DEFAULT NOW()
 );
 
+-- Çok oyunculu oyun odaları tablosu
+CREATE TABLE IF NOT EXISTS rooms (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    host_id TEXT NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    test_id TEXT NOT NULL REFERENCES tests(id) ON DELETE CASCADE,
+    status TEXT NOT NULL CHECK (status IN ('waiting', 'playing', 'finished')),
+    current_question_index INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+    started_at TIMESTAMP WITH TIME ZONE,
+    finished_at TIMESTAMP WITH TIME ZONE,
+    has_password BOOLEAN DEFAULT FALSE,
+    password TEXT
+);
+
+-- Oda oyuncuları tablosu
+CREATE TABLE IF NOT EXISTS room_players (
+    id TEXT PRIMARY KEY DEFAULT uuid_generate_v4(),
+    room_id TEXT NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
+    user_id TEXT NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    score INTEGER DEFAULT 0,
+    joined_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+    UNIQUE(room_id, user_id)
+);
+
+-- Oda mesajları tablosu
+CREATE TABLE IF NOT EXISTS room_messages (
+    id TEXT PRIMARY KEY DEFAULT uuid_generate_v4(),
+    room_id TEXT NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
+    user_id TEXT NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    is_correct_guess BOOLEAN DEFAULT FALSE,
+    is_close_guess BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- Oda oyun sonuçları tablosu
+CREATE TABLE IF NOT EXISTS room_results (
+    id TEXT PRIMARY KEY DEFAULT uuid_generate_v4(),
+    room_id TEXT NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
+    user_id TEXT NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    final_score INTEGER NOT NULL,
+    correct_guesses INTEGER DEFAULT 0,
+    close_guesses INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
 -- Tablolara RLS (Row Level Security) ekleyin
 ALTER TABLE "public"."users" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."categories" ENABLE ROW LEVEL SECURITY;
@@ -130,3 +177,43 @@ CREATE POLICY "Allow all for admins" ON "public"."categories" FOR ALL USING (aut
 CREATE POLICY "Allow all for admins" ON "public"."images" FOR ALL USING (auth.role() = 'admin');
 CREATE POLICY "Allow all for admins" ON "public"."tests" FOR ALL USING (auth.role() = 'admin');
 CREATE POLICY "Allow all for admins" ON "public"."test_comments" FOR ALL USING (auth.role() = 'admin');
+
+-- RLS politikaları
+ALTER TABLE rooms ENABLE ROW LEVEL SECURITY;
+ALTER TABLE room_players ENABLE ROW LEVEL SECURITY;
+ALTER TABLE room_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE room_results ENABLE ROW LEVEL SECURITY;
+
+-- Odalar için politikalar
+CREATE POLICY "Herkes odaları görebilir" ON rooms
+    FOR SELECT USING (true);
+
+CREATE POLICY "Yetkilendirilmiş kullanıcılar oda oluşturabilir" ON rooms
+    FOR INSERT WITH CHECK (auth.uid() = host_id);
+
+CREATE POLICY "Oda sahibi odayı güncelleyebilir" ON rooms
+    FOR UPDATE USING (auth.uid() = host_id);
+
+-- Oda oyuncuları için politikalar
+CREATE POLICY "Herkes oda oyuncularını görebilir" ON room_players
+    FOR SELECT USING (true);
+
+CREATE POLICY "Yetkilendirilmiş kullanıcılar odaya katılabilir" ON room_players
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Oyuncular kendi skorlarını güncelleyebilir" ON room_players
+    FOR UPDATE USING (auth.uid() = user_id);
+
+-- Oda mesajları için politikalar
+CREATE POLICY "Herkes oda mesajlarını görebilir" ON room_messages
+    FOR SELECT USING (true);
+
+CREATE POLICY "Yetkilendirilmiş kullanıcılar mesaj gönderebilir" ON room_messages
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Oda sonuçları için politikalar
+CREATE POLICY "Herkes oda sonuçlarını görebilir" ON room_results
+    FOR SELECT USING (true);
+
+CREATE POLICY "Yetkilendirilmiş kullanıcılar sonuç ekleyebilir" ON room_results
+    FOR INSERT WITH CHECK (auth.uid() = user_id);

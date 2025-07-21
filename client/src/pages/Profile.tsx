@@ -400,16 +400,7 @@ export default function Profile() {
                 <div className="flex justify-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
-              ) : userTests.length === 0 ? (
-                <div className="text-center py-8 bg-muted/20 rounded-lg">
-                  <BookOpen className="h-12 w-12 text-muted-foreground/40 mx-auto mb-2" />
-                  <p className="text-muted-foreground mb-4">Henüz test oluşturmadınız.</p>
-                  <Button onClick={() => setLocation("/create-test")}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    İlk Testinizi Oluşturun
-                  </Button>
-                </div>
-              ) : (
+              ) : userTests.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   {userTests.map((test) => (
                     <div key={test.id} className="relative group">
@@ -417,7 +408,7 @@ export default function Profile() {
                         title={test.title}
                         description={test.description}
                         imageUrl={test.thumbnailUrl}
-                        category={categories.find(c => c.id === test.categoryId)?.name || 'Kategorisiz'}
+                        category={categories.find(c => c.id === test.categoryId)?.name}
                         playCount={test.playCount}
                         likeCount={test.likeCount}
                         onClick={() => setLocation(`/test/${test.id}`)}
@@ -434,6 +425,10 @@ export default function Profile() {
                       </div>
                     </div>
                   ))}
+                </div>
+              ) : (
+                <div className="text-center p-8 bg-muted/30 rounded-lg">
+                  <p className="text-muted-foreground">Henüz test oluşturmadınız.</p>
                 </div>
               )}
             </CardContent>

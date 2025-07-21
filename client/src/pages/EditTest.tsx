@@ -284,7 +284,47 @@ export default function EditTest() {
       <h1 className="text-3xl font-bold mb-8">Test Düzenle</h1>
       
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          {/* Kapak Fotoğrafı */}
+          <FormField
+            control={form.control}
+            name="thumbnailUrl"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Kapak Görseli URL</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="https://..." 
+                    {...field} 
+                    onChange={(e) => {
+                      field.onChange(e);
+                      setThumbnailPreview(e.target.value);
+                    }}
+                  />
+                </FormControl>
+                <FormDescription>Testiniz için bir kapak görseli URL'si girin.</FormDescription>
+                <FormMessage />
+                {field.value && (
+                  <div className="mt-4 relative aspect-video rounded-lg overflow-hidden bg-muted">
+                    <img
+                      src={field.value}
+                      alt="Kapak Görseli"
+                      className="object-contain w-full h-full"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                        toast({
+                          title: "Görsel Yüklenemedi",
+                          description: "Lütfen geçerli bir görsel URL'si girin.",
+                          variant: "destructive"
+                        });
+                      }}
+                    />
+                  </div>
+                )}
+              </FormItem>
+            )}
+          />
+
           {/* Test Bilgileri Kartı */}
           <div className="bg-card p-6 rounded-lg border shadow-sm">
             <h2 className="text-xl font-semibold mb-4">Test Bilgileri</h2>

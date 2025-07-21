@@ -102,23 +102,25 @@ export default function Contact() {
     {
       name: 'Emirhan Sevimli',
       role: 'Kurucu & Yazılım Geliştirici',
-      imageUrl: '/images/team/emirhan.jpg',
+      imageUrl: 'https://avatars.githubusercontent.com/u/129343992?v=4',
       github: 'https://github.com/emirhansevimli',
       twitter: 'https://twitter.com/emirhansevimli',
       email: 'emirhan@pixelhunt.com',
     },
     {
-      name: 'Yusuf Yeşilyaprak',
+      name: 'Emirhan Sevimli',
       role: 'Kurucu & Yazılım İçerik Yöneticisi ve Geliştiricisi',
-      imageUrl: '/images/team/yusuf.jpg',
+      imageUrl: 'https://avatars.githubusercontent.com/u/129343992?v=4',
       github: 'https://github.com/yusufyesilyaprak',
       twitter: 'https://twitter.com/yusufyesilyaprak',
       email: 'yusuf@pixelhunt.com',
     },
+
+    
     {
-      name: 'Nizam Vural',
+      name: 'Emirhan Sevimli',
       role: 'Köstek',
-      imageUrl: '/images/team/nizam.jpg',
+      imageUrl: 'https://avatars.githubusercontent.com/u/129343992?v=4',
       github: 'https://github.com/nizamvural',
       twitter: 'https://twitter.com/nizamvural',
       email: 'nizam@pixelhunt.com',

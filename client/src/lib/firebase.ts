@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { getAuth, setPersistence, browserLocalPersistence, connectAuthEmulator } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
@@ -18,10 +18,16 @@ const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
 // Auth'u yapılandır
 const auth = getAuth(app);
+
+// Auth persistence ayarları
 setPersistence(auth, browserLocalPersistence)
   .catch((error) => {
     console.error("Auth persistence hatası:", error);
   });
+
+// Auth popup ayarları
+auth.useDeviceLanguage();
+auth.settings.appVerificationDisabledForTesting = false;
 
 // Firestore'u başlat
 const db = getFirestore(app);

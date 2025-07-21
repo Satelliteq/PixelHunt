@@ -175,6 +175,22 @@ async function createTables() {
 // Add sample data
 async function addSampleData() {
   try {
+    // Önce mevcut kategorileri kontrol et
+    const { data: existingCategories, error: selectError } = await supabase
+      .from('categories')
+      .select('name');
+    
+    if (selectError) {
+      console.error('Kategoriler kontrol edilirken hata oluştu:', selectError);
+      return;
+    }
+    
+    // Eğer kategoriler zaten varsa, işlemi sonlandır
+    if (existingCategories && existingCategories.length > 0) {
+      console.log('Kategoriler zaten mevcut. Yeni kategori eklenmeyecek.');
+      return;
+    }
+
     // Add sample categories
     const categories = [
       {

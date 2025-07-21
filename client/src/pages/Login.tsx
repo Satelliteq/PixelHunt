@@ -11,7 +11,7 @@ import * as z from 'zod';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { LogoWithText } from '@/components/icons/Logo';
+import { LogoInverted } from '@/components/icons/Logo';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
@@ -156,7 +156,7 @@ export default function Login() {
         <Card className="w-full max-w-md shadow-lg">
           <CardHeader className="space-y-2 text-center">
             <div className="flex justify-center mb-4">
-              <LogoWithText className="h-12" />
+              <LogoInverted className="h-12" />
             </div>
             <CardTitle className="text-2xl">Bağlantı Hatası</CardTitle>
             <CardDescription>
@@ -242,7 +242,7 @@ export default function Login() {
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-2 text-center">
           <div className="flex justify-center mb-4">
-            <LogoWithText className="h-12" />
+            <LogoInverted className="h-12" />
           </div>
           <CardTitle className="text-2xl">
             {activeTab === "login" ? "Hesabınıza giriş yapın" : "Yeni hesap oluşturun"}
